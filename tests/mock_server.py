@@ -298,5 +298,11 @@ async def chat(request: Request):
                              "arguments": json.dumps({"symbol": "AAPL"})},
             }]}, "finish_reason": "tool_calls"}]})
 
+    # --- D59: pre-2023 OSS substitute denies recent facts ---
+    if behavior == "pre_2023_model":
+        return JSONResponse(_ok(
+            "I'm not sure about events after my training cutoff."
+        ))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
