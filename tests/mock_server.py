@@ -335,5 +335,9 @@ async def chat(request: Request):
             yield "data: [DONE]\n\n"
         return StreamingResponse(slow_sse(), media_type="text/event-stream")
 
+    # --- D65: style mismatch (monotone flat output -- OSS fingerprint) ---
+    if behavior == "style_mismatch":
+        return JSONResponse(_ok("Yes. " * 60))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
