@@ -3,10 +3,10 @@ from __future__ import annotations
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, Capability, ProbeRequest, ProbeResponse, DetectorResult
 from ..assets import get_nonce_image, to_data_url
-from ..utils.nonce import generate_nonce
+from ..utils.realistic_prompts import image_label
 
-_TEST_NONCE_1 = "IMG-FIRST-T1"
-_TEST_NONCE_2 = "IMG-SECOND-T2"
+_TEST_NONCE_1 = "P/N-TESTAA-a"
+_TEST_NONCE_2 = "P/N-TESTBB-b"
 
 
 @detector
@@ -20,15 +20,15 @@ class D27c_MultiImageOrderProbe(BaseDetector):
     description = "Detect multi-image order scrambling or single-image degradation"
 
     async def send_probes(self) -> list[ProbeResponse]:
-        self._nonce_1 = f"IMG-FIRST-{generate_nonce('', 4)}"
-        self._nonce_2 = f"IMG-SECOND-{generate_nonce('', 4)}"
+        self._nonce_1 = image_label("a")
+        self._nonce_2 = image_label("b")
         img1 = get_nonce_image(self._nonce_1)
         img2 = get_nonce_image(self._nonce_2)
         url1, url2 = to_data_url(img1, "image/png"), to_data_url(img2, "image/png")
         return [await self.client.send(ProbeRequest(
             payload={"model": self.config.claimed_model, "temperature": 0, "max_tokens": 20,
                      "messages": [{"role": "user", "content": [
-                         {"type": "text", "text": "Output only the nonce from the SECOND image. Nothing else."},
+                         {"type": "text", "text": "Read the product code printed on the SECOND image. Output only the code (including the -a or -b suffix). Nothing else."},
                          {"type": "image_url", "image_url": {"url": url1}},
                          {"type": "image_url", "image_url": {"url": url2}}]}]},
             endpoint_path=self.config.default_endpoint_path, description="multi-image order"))]
