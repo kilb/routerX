@@ -1,4 +1,4 @@
-# 阶段 3 P1 质量违规 — 完整规格（13 个 Detector）
+# 阶段 3 P1 质量违规 — 完整规格（20 个 Detector）
 
 FAIL → 降级标记 Tier 2，不拉黑，不短路。
 
@@ -530,3 +530,17 @@ def generate_probe_audio(text="CRIMSON FORTY TWO"):
 | 状态流转 | queued → running → succeeded | 跳变异常 → **P1 FAIL** |
 | 产物 | A 和 B 产物在像素级有差异 | 完全相同 → **P1 FAIL**（缓存重放） |
 | nonce（加分） | A 含 A7M2，B 含 B8K5 | 不影响 PASS/FAIL |
+
+---
+
+## Phase A+B+C Expansion (7 new P1 detectors)
+
+One-line summary entries. Full implementations in `src/detectors/`.
+
+- **D42 ContextWindowHonesty** — verify router preserves long-context inputs; FAIL when middle canary placed deep in a near-cap context window is dropped, proving silent truncation.
+- **D52 ResponseFormatJSON** — verify `response_format={"type":"json_object"}` honored; FAIL when router strips the flag and returns prose or malformed JSON.
+- **D56 ToolChoiceHonor** — verify `tool_choice` forces the target function; FAIL when router drops tool_choice and model answers in text or calls a different tool.
+- **D59 KnowledgeCutoff** — probe recall of widely-known post-2023 events; FAIL when the backing model clearly predates the claimed cutoff (recalled 0/3 or 1/3 canonical facts).
+- **D62 LogprobsHonesty** — verify `logprobs`/`top_logprobs` returns genuine per-token distributions; FAIL when flag is dropped, values are flat-constant, or chosen token never appears in top_logprobs.
+- **D64 StreamingChunkShape** — inspect SSE chunk cadence/distribution; FAIL when stream is a 1-2 giant chunks burst replay (router buffered then fake-streamed).
+- **D70 LogitBiasHonor** — verify `logit_bias` suppression works; FAIL when suppressed token frequency matches an unbiased baseline (bias dropped silently).

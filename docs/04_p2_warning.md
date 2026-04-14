@@ -1,4 +1,4 @@
-# 阶段 4 P2 一般违规 — 完整规格（4 个 Detector）
+# 阶段 4 P2 一般违规 — 完整规格（12 个 Detector）
 
 FAIL → 警告，记录，不拉黑，不短路。
 
@@ -155,3 +155,18 @@ def check_usage_detail(usage):
         return "P2_FAIL"  # 只有 total_tokens，详情被隐藏
     return "PASS"
 ```
+
+---
+
+## Phase A+B+C Expansion (8 new P2 detectors)
+
+One-line summary entries. Full implementations in `src/detectors/`.
+
+- **D43 MaxTokensHonor** — verify `max_tokens` upper bound honored; FAIL when router silently clamps max_tokens far below requested (output stops well before the cap with finish_reason=length at a router-specific ceiling).
+- **D44 TopPSensitivity** — verify `top_p` shapes the distribution; FAIL when outputs under top_p=0.1 vs top_p=1.0 show identical token diversity (parameter ignored).
+- **D51 UserStopSequence** — verify user-supplied `stop` sequences trigger termination; FAIL when output continues past the specified stop marker (router dropped stop param).
+- **D57 ResponseIDUniqueness** — verify `id` field differs across responses; FAIL when all responses share one fixed id or obvious static pattern (cached/replayed).
+- **D60 LatencyFingerprint** — measure TTFT and inter-chunk latency band; FAIL when latency profile deviates grossly from the claimed model/provider fingerprint.
+- **D61 TemperatureSensitivity** — compare creative (temp=1.3) vs deterministic (temp=0) output spreads; FAIL when both groups produce identical distributions (temperature dropped).
+- **D65 StyleFingerprint** — compare lexical/syntactic style markers to the claimed model family; FAIL when style metrics land far outside the expected on-family band.
+- **D68 FrequencyPenaltyHonor** — verify `frequency_penalty` reduces repeat tokens; FAIL when penalized and unpenalized runs show identical repeated-token counts at similar lengths.

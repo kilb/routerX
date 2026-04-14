@@ -505,7 +505,7 @@ curl -X POST http://localhost:8900/api/v1/tests \
 | FAIL 但实际是模型随机性 | 非确定性 Detector 用了 ONCE | 改为 MAJORITY_2_OF_2 |
 | Anthropic 渠道 401 | 用了 Bearer 认证 | 声明 `auth_method = "x-api-key"` |
 
-## 31 个 Detector 的条件依赖速查
+## 53 个 Detector 的条件依赖速查
 
 | Detector | provider | capability | direct | single_route | 判定模式 |
 |----------|----------|-----------|--------|-------------|---------|
@@ -543,3 +543,18 @@ curl -X POST http://localhost:8900/api/v1/tests \
 | D37 | any | text | - | - | once |
 | D11 | any | text | - | - | once |
 | D53 | any | text | ✅ 可选 | - | once/降级 |
+| D42 | any | text | - | - | once |
+| D43 | any | text | - | - | once |
+| D44 | any | text | - | - | 2/2 |
+| D51 | any | text | - | - | once |
+| D52 | any | text | - | - | once |
+| D56 | any | tool_calling | - | - | once |
+| D57 | any | text | - | - | once |
+| D59 | any | text | - | - | once |
+| D60 | any | text | - | - | 2/2 |
+| D61 | any | text | - | - | 2/2 |
+| D62 | any | text | - | - | once |
+| D64 | any | text | - | - | once |
+| D65 | any | text | - | - | 2/2 |
+| D68 | any | text | - | - | 2/2 |
+| D70 | any | text | - | - | once |
