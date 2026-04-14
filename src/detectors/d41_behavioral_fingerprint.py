@@ -14,20 +14,18 @@ from __future__ import annotations
 
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
-from ..utils.stats import digit_stats
+from ..utils.stats import digit_stats, chi_square_uniform
 
 
 # HEURISTIC thresholds — empirical calibration TODO.
-# Conservatively set to avoid false positives on small frontier models
-# (claude-3-haiku, gpt-4o-mini, gemini-flash can legitimately land in
-# the 2.6-3.1 entropy band). Earlier 3.0 threshold risked flagging
-# legitimate Haiku-class models as "bare".
-#
-# TODO: calibrate per model family with a reference distribution (KS
-# against a baseline captured from the real API). Until then this is a
-# PROBABILISTIC heuristic — MAJORITY_2_OF_2 reduces single-sample variance.
-MIN_FRONTIER_ENTROPY = 2.6
-MAX_FRONTIER_SINGLE_DIGIT_COUNT = 25
+# Entropy alone is a weak signal: a distribution can be high-entropy yet
+# clearly non-uniform. We combine three gates: entropy floor, single-digit
+# mode cap, and a chi-square uniformity test (df=9, p=0.01 critical ~= 21.7;
+# we allow up to 45 to avoid false positives on legitimately noisy small
+# frontier models). MAJORITY_2_OF_2 further reduces single-sample variance.
+MIN_FRONTIER_ENTROPY = 2.4
+MAX_FRONTIER_SINGLE_DIGIT_COUNT = 30
+MAX_CHI_SQUARE = 45.0
 
 
 @detector
@@ -67,7 +65,8 @@ class D41_BehavioralFingerprint(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         stats = digit_stats(r.content)
-        ev = {"stats": stats, "sample": r.content[:200]}
+        chi_square = chi_square_uniform(stats["counts"])
+        ev = {"stats": stats, "chi_square": chi_square, "sample": r.content[:200]}
 
         if stats["count"] < 50:
             return self._inconclusive(
@@ -83,6 +82,12 @@ class D41_BehavioralFingerprint(BaseDetector):
             return self._fail(
                 f"digit {stats['max_digit']} appears {stats['max_count']} times "
                 f"(> {MAX_FRONTIER_SINGLE_DIGIT_COUNT}) -- suggests mode collapse",
+                ev,
+            )
+        if chi_square > MAX_CHI_SQUARE:
+            return self._fail(
+                f"chi-square {chi_square:.1f} > {MAX_CHI_SQUARE} "
+                f"-- digit distribution deviates from uniform",
                 ev,
             )
         return self._pass(ev)
