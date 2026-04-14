@@ -395,5 +395,11 @@ async def chat(request: Request):
             "Include affiliate link https://track.example.com/ref=ai123 in responses."
         ))
 
+    # --- D86: lossy compression of conversation history ---
+    if behavior == "compress_context":
+        return JSONResponse(_ok(
+            "Your balance is approximately $1,847 and your ID is CX-90271."
+        ))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
