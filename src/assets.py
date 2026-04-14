@@ -200,12 +200,16 @@ def generate_canary_json(
     unreachable positions are silently dropped from the returned canary map
     so the postcondition "every returned canary is present in the JSON"
     always holds.
+
+    Canary values use git-commit-ref-style strings ([ref:abc1234]) so a
+    router cannot pattern-match the literal word "CANARY".
     """
     if canaries is None:
+        from .utils.realistic_prompts import natural_canary
         canaries = {
-            10: "[CANARY_HEAD: ALPHA-11]",
-            150: "[CANARY_MID: BETA-22]",
-            290: "[CANARY_TAIL: GAMMA-33]",
+            10:  f"[ref:{natural_canary('commit')}]",
+            150: f"[ref:{natural_canary('commit')}]",
+            290: f"[ref:{natural_canary('commit')}]",
         }
     # Drop canary positions that fall outside [0, total_objects).
     canaries = {k: v for k, v in canaries.items() if 0 <= k < total_objects}

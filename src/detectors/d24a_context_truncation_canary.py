@@ -10,11 +10,11 @@ from ..models import (
 )
 from ..registry import BaseDetector, detector
 
-# All three canary values must appear in the response for a PASS.
-_CANARY_POSITIONS = {
-    10: "[CANARY_HEAD: ALPHA-11]",
-    150: "[CANARY_MID: BETA-22]",
-    290: "[CANARY_TAIL: GAMMA-33]",
+# Fallback canary map used only in self-test when send_probes is not called.
+_TEST_CANARY_POSITIONS = {
+    10: "[ref:aabbcc1]",
+    150: "[ref:ddeeff2]",
+    290: "[ref:112233a]",
 }
 
 
@@ -32,7 +32,9 @@ class D24a_ContextTruncationCanary(BaseDetector):
         json_str, canaries = generate_canary_json()
         prompt_text = (
             f"{json_str}\n\n"
-            "Please exactly output the three CANARY passwords hidden in the JSON."
+            "Three of the objects in the JSON have a special field called 'canary' "
+            "whose value looks like '[ref:XXXXXXX]'. Extract all three values and "
+            "output them on separate lines."
         )
         # Cache for judge() + D29 consumption; avoids regenerating ~MB of
         # JSON string twice per run.
@@ -61,15 +63,12 @@ class D24a_ContextTruncationCanary(BaseDetector):
             return self._inconclusive("empty content")
 
         # Reuse cached prompt/canaries from send_probes. self_test mocks
-        # skip send_probes, so regenerate on cache miss.
+        # skip send_probes, so fall back to fixed test canaries on cache miss.
         prompt_text = getattr(self, "_prompt_text", None)
         canaries = getattr(self, "_canaries", None)
         if prompt_text is None or canaries is None:
-            json_str, canaries = generate_canary_json()
-            prompt_text = (
-                f"{json_str}\n\n"
-                "Please exactly output the three CANARY passwords hidden in the JSON."
-            )
+            canaries = _TEST_CANARY_POSITIONS
+            prompt_text = ""
 
         missing = [v for v in canaries.values() if v not in content]
         evidence: dict = {
@@ -87,9 +86,9 @@ class D24a_ContextTruncationCanary(BaseDetector):
     def _test_cases(cls):
         """Test cases covering PASS, FAIL (mid missing), FAIL (all missing),
         INCONCLUSIVE (network error), and INCONCLUSIVE (empty content)."""
-        all_canaries = " ".join(_CANARY_POSITIONS.values())
+        all_canaries = " ".join(_TEST_CANARY_POSITIONS.values())
         head_and_tail = (
-            f"{_CANARY_POSITIONS[10]} and {_CANARY_POSITIONS[290]}"
+            f"{_TEST_CANARY_POSITIONS[10]} and {_TEST_CANARY_POSITIONS[290]}"
         )
 
         def resp(content: str, status_code: int = 200) -> ProbeResponse:
