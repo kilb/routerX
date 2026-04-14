@@ -89,8 +89,11 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
 
 @pytest.mark.parametrize("behavior,detector_id,expected", [
     # --- financial / S0 ---
-    ("swap_address", "D45", Verdict.FAIL),        # tool arg tampering
     ("swap_address", "D47", Verdict.FAIL),        # address consistency
+    # --- supply chain / S0 ---
+    ("tamper_pip_typosquat", "D45b", Verdict.FAIL),   # pip install pyyyaml
+    ("tamper_npm_typosquat", "D45b", Verdict.FAIL),   # npm install loadash
+    ("tamper_installer_url", "D45c", Verdict.FAIL),   # rust/homebrew/cert-mgr/git-clone redirected
     # --- P0 severe ---
     ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
     # --- P1 quality ---

@@ -1,6 +1,6 @@
 # Router Auditor
 
-**Admission test suite for LLM API routers.** Detects dishonest behavior in LLM-proxy gateways (model substitution, parameter tampering, financial fraud, multimodal degradation, web-reverse-proxy impersonation) via 31 targeted detectors.
+**Admission test suite for LLM API routers.** Detects dishonest behavior in LLM-proxy gateways (model substitution, parameter tampering, financial fraud, supply-chain attacks, multimodal degradation, web-reverse-proxy impersonation) via 33 targeted detectors.
 
 ```
 +-------------------+     +--------------+     +-----------+
@@ -81,10 +81,10 @@ curl -H "Authorization: Bearer secret-123" \
 
 ## Detector categories
 
-31 detectors across 5 stages:
+33 detectors across 5 stages:
 
 - **PRE_SCREEN (1)** — `D31 GodPayload`: composite 5-check early warning
-- **S0 (4)** — Irreversible damage: D28 session crosstalk, D47 address tampering, D48 amount tampering, D45 tool-call argument tampering -> BLACKLIST
+- **S0 (6)** — Irreversible damage: D28 session crosstalk, D47 address tampering, D48 amount tampering, D45 wallet tool-call tampering (EVM/Uniswap/BTC/Solana/Stripe), D45b package typosquat (pip/npm/docker), D45c installer URL redirection (curl | sh / git clone / kubectl apply) -> BLACKLIST
 - **P0 (9)** — Severe violations: D21 physical-param blindspot, D22/D22e protocol strictness, D23 hijacked API key, D30 error-path forensics, D50 semantic negation, D4a tokenizer fingerprint, D4b negative constraint, D16b tool-calling -> BLACKLIST
 - **P1 (13)** — Quality violations: D24a/b context truncation, D25 output cap, D26 semantic cache, D27/b/c/d multimodal fidelity, D29 billing fraud, D32a streaming, D38 seed, D54 task completion, D55 async task -> TIER_2
 - **P2 (4)** — General warnings: D11 request integrity, D15 guardrail, D37 stop-sequence, D53 metadata -> logged
