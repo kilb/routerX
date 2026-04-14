@@ -1,34 +1,16 @@
 from __future__ import annotations
 
 import json
+import random
+
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..utils.realistic_prompts import natural_canary
 
 EXPECTED_FUNCTION = "submit_probe"
-EXPECTED_ARGS = {"mode": "alpha", "nonce": "TOOL-88ZX"}
 
-TOOL_SCHEMA = {
-    "type": "function",
-    "function": {
-        "name": EXPECTED_FUNCTION,
-        "description": "Submit a probe with specified mode and nonce.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "mode": {
-                    "type": "string",
-                    "enum": ["alpha", "beta"],
-                },
-                "nonce": {
-                    "type": "string",
-                    "enum": ["TOOL-88ZX"],
-                },
-            },
-            "required": ["mode", "nonce"],
-            "additionalProperties": False,
-        },
-    },
-}
+_TEST_NONCE = "TESTNONCE"
+_TEST_MODE = "alpha"
 
 
 @detector
@@ -42,15 +24,40 @@ class D16b_ToolCallingProbe(BaseDetector):
 
     async def send_probes(self) -> list[ProbeResponse]:
         """Send a probe that forces a specific tool call via tool_choice."""
+        self._expected_nonce = natural_canary("commit")
+        self._expected_mode = random.choice(["alpha", "beta"])
+        tool_schema = {
+            "type": "function",
+            "function": {
+                "name": EXPECTED_FUNCTION,
+                "description": "Submit a probe with specified mode and nonce.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "type": "string",
+                            "enum": ["alpha", "beta"],
+                        },
+                        "nonce": {
+                            "type": "string",
+                            "enum": [self._expected_nonce],
+                        },
+                    },
+                    "required": ["mode", "nonce"],
+                    "additionalProperties": False,
+                },
+            },
+        }
         return [await self.client.send(ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
                 "temperature": 0,
                 "messages": [{"role": "user", "content": (
-                    "Call the function with mode=alpha and nonce=TOOL-88ZX. "
+                    f"Call the function with mode={self._expected_mode} "
+                    f"and nonce={self._expected_nonce}. "
                     "Do not answer in natural language."
                 )}],
-                "tools": [TOOL_SCHEMA],
+                "tools": [tool_schema],
                 "tool_choice": {
                     "type": "function",
                     "function": {"name": EXPECTED_FUNCTION},
@@ -67,6 +74,10 @@ class D16b_ToolCallingProbe(BaseDetector):
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
             return self._inconclusive(f"status {r.status_code}")
+
+        expected_nonce = getattr(self, "_expected_nonce", _TEST_NONCE)
+        expected_mode = getattr(self, "_expected_mode", _TEST_MODE)
+        expected_args = {"mode": expected_mode, "nonce": expected_nonce}
 
         tool_calls = r.tool_calls
         if not tool_calls:
@@ -91,9 +102,9 @@ class D16b_ToolCallingProbe(BaseDetector):
                 "raw_arguments": raw_args,
             })
 
-        if args != EXPECTED_ARGS:
+        if args != expected_args:
             return self._fail("tool call arguments do not match expected", {
-                "expected": EXPECTED_ARGS,
+                "expected": expected_args,
                 "got": args,
             })
 
@@ -129,6 +140,8 @@ class D16b_ToolCallingProbe(BaseDetector):
                 body={"choices": [{"message": {"content": content}, "finish_reason": "stop"}]},
             )
 
+        test_args = {"mode": _TEST_MODE, "nonce": _TEST_NONCE}
+
         anthropic_tool_resp = ProbeResponse(
             status_code=200,
             body={
@@ -137,7 +150,7 @@ class D16b_ToolCallingProbe(BaseDetector):
                         "type": "tool_use",
                         "id": "toolu_01",
                         "name": EXPECTED_FUNCTION,
-                        "input": {"mode": "alpha", "nonce": "TOOL-88ZX"},
+                        "input": test_args,
                     }
                 ],
                 "stop_reason": "tool_use",
@@ -147,7 +160,7 @@ class D16b_ToolCallingProbe(BaseDetector):
         return [
             # PASS: correct tool call with exact args (OpenAI format)
             ("PASS: correct tool call (OpenAI)",
-             [make_openai_tool_resp(EXPECTED_FUNCTION, EXPECTED_ARGS)],
+             [make_openai_tool_resp(EXPECTED_FUNCTION, test_args)],
              "pass"),
 
             # PASS: correct tool call (Anthropic format)
@@ -157,22 +170,22 @@ class D16b_ToolCallingProbe(BaseDetector):
 
             # FAIL: plain text instead of tool call
             ("FAIL: plain text response instead of tool call",
-             [make_text_resp("The mode is alpha and the nonce is TOOL-88ZX.")],
+             [make_text_resp(f"The mode is {_TEST_MODE} and the nonce is {_TEST_NONCE}.")],
              "fail"),
 
             # FAIL: wrong function name
             ("FAIL: wrong function name",
-             [make_openai_tool_resp("different_function", EXPECTED_ARGS)],
+             [make_openai_tool_resp("different_function", test_args)],
              "fail"),
 
             # FAIL: wrong argument values
             ("FAIL: wrong argument values",
-             [make_openai_tool_resp(EXPECTED_FUNCTION, {"mode": "beta", "nonce": "TOOL-88ZX"})],
+             [make_openai_tool_resp(EXPECTED_FUNCTION, {"mode": "beta", "nonce": _TEST_NONCE})],
              "fail"),
 
             # FAIL: extra fields in arguments
             ("FAIL: extra fields in arguments",
-             [make_openai_tool_resp(EXPECTED_FUNCTION, {**EXPECTED_ARGS, "extra": "field"})],
+             [make_openai_tool_resp(EXPECTED_FUNCTION, {**test_args, "extra": "field"})],
              "fail"),
 
             # INCONCLUSIVE: network error
