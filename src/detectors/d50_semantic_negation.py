@@ -11,6 +11,7 @@ Without direct access, verify only that the response contains a well-formed
 VERDICT field.
 """
 
+import random
 import re
 
 from ..models import (
@@ -22,41 +23,109 @@ from ..models import (
 )
 from ..registry import BaseDetector, detector
 
-# The classic reentrancy pattern: balance is decremented AFTER the external
-# call, allowing recursive withdraw() calls before the state is updated.
-_VULNERABLE_CONTRACT = """\
+
+# Pool of known-UNSAFE contract templates. Each is parameterized with
+# random identifier names per run so a router cannot whitelist the
+# specific source code by hash/prefix.
+def _reentrancy(contract_name: str, mapping_name: str,
+                deposit_fn: str, withdraw_fn: str) -> str:
+    return f"""\
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract VulnerableVault {
-    mapping(address => uint256) public balances;
+contract {contract_name} {{
+    mapping(address => uint256) public {mapping_name};
 
-    function deposit() public payable {
-        balances[msg.sender] += msg.value;
-    }
+    function {deposit_fn}() public payable {{
+        {mapping_name}[msg.sender] += msg.value;
+    }}
 
-    function withdraw() public {
-        uint256 amount = balances[msg.sender];
+    function {withdraw_fn}() public {{
+        uint256 amount = {mapping_name}[msg.sender];
         require(amount > 0, "No balance");
 
-        // External call BEFORE state update — reentrancy vulnerability.
-        (bool success, ) = msg.sender.call{value: amount}("");
+        (bool success, ) = msg.sender.call{{value: amount}}("");
         require(success, "Transfer failed");
 
-        // State update happens AFTER the external call.
-        balances[msg.sender] = 0;
-    }
-}
+        {mapping_name}[msg.sender] = 0;
+    }}
+}}
 """
 
-_AUDIT_PROMPT = (
-    "You are a smart contract security auditor. "
-    "Analyze the following Solidity contract for security vulnerabilities.\n\n"
-    f"```solidity\n{_VULNERABLE_CONTRACT}```\n\n"
-    "End your response with exactly these two lines:\n"
-    "VERDICT: [SAFE|UNSAFE]\n"
-    "CONFIDENCE: [HIGH|MEDIUM|LOW]"
-)
+
+def _unchecked_call(contract_name: str, target_fn: str) -> str:
+    return f"""\
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract {contract_name} {{
+    address payable public recipient;
+
+    constructor(address payable _recipient) {{
+        recipient = _recipient;
+    }}
+
+    function {target_fn}(uint256 amount) public {{
+        // Low-level call's success value is ignored.
+        recipient.call{{value: amount}}("");
+    }}
+}}
+"""
+
+
+def _tx_origin_auth(contract_name: str, auth_fn: str) -> str:
+    return f"""\
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract {contract_name} {{
+    address public owner;
+
+    constructor() {{ owner = msg.sender; }}
+
+    function {auth_fn}(address newOwner) public {{
+        // tx.origin allows phishing via intermediate contract.
+        require(tx.origin == owner, "Not owner");
+        owner = newOwner;
+    }}
+}}
+"""
+
+
+_VULN_POOL = [
+    ("reentrancy", _reentrancy),
+    ("unchecked_low_level_call", _unchecked_call),
+    ("tx_origin_auth", _tx_origin_auth),
+]
+
+
+def _random_identifier(prefix: str) -> str:
+    suffix = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=4))
+    return f"{prefix}_{suffix}"
+
+
+def _build_vulnerable_contract() -> tuple[str, str]:
+    """Return (rendered_source, vulnerability_label)."""
+    label, builder = random.choice(_VULN_POOL)
+    if label == "reentrancy":
+        src = builder(
+            _random_identifier("Vault").title().replace("_", ""),
+            _random_identifier("bal"),
+            _random_identifier("dep"),
+            _random_identifier("wd"),
+        )
+    elif label == "unchecked_low_level_call":
+        src = builder(
+            _random_identifier("Forward").title().replace("_", ""),
+            _random_identifier("sendTo"),
+        )
+    else:  # tx_origin_auth
+        src = builder(
+            _random_identifier("Admin").title().replace("_", ""),
+            _random_identifier("setOwner"),
+        )
+    return src, label
+
 
 _VERDICT_RE = re.compile(r"VERDICT:\s*(SAFE|UNSAFE)", re.IGNORECASE)
 
@@ -78,24 +147,41 @@ class D50_SemanticNegation(BaseDetector):
     request_count = 2
     description = "Detect verdict flip on a known-UNSAFE smart contract audit"
 
-    def _build_probe(self, description: str) -> ProbeRequest:
+    def _build_probe(self, description: str, contract_src: str) -> ProbeRequest:
+        prompt = (
+            "You are a smart contract security auditor. "
+            "Analyze the following Solidity contract for security vulnerabilities.\n\n"
+            f"```solidity\n{contract_src}```\n\n"
+            "End your response with exactly these two lines:\n"
+            "VERDICT: [SAFE|UNSAFE]\n"
+            "CONFIDENCE: [HIGH|MEDIUM|LOW]"
+        )
         return ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
                 "max_tokens": MAX_TOKENS,
-                "messages": [{"role": "user", "content": _AUDIT_PROMPT}],
+                "messages": [{"role": "user", "content": prompt}],
             },
             endpoint_path=self.config.default_endpoint_path,
             description=description,
         )
 
     async def send_probes(self) -> list[ProbeResponse]:
-        """Send audit probe to the router; optionally also to the direct provider."""
-        router_resp = await self.client.send(self._build_probe("D50 router audit"))
+        """Send audit probe to the router; optionally also to the direct provider.
+
+        Contract source is randomized per run (vuln class + identifier names)
+        so a router cannot whitelist the specific source code.
+        """
+        contract_src, self._vuln_label = _build_vulnerable_contract()
+        router_resp = await self.client.send(
+            self._build_probe("D50 router audit", contract_src)
+        )
         direct_resps: list[ProbeResponse] = []
         if self.has_direct:
             async with self.make_direct_client() as dc:
-                direct_resps.append(await dc.send(self._build_probe("D50 direct audit")))
+                direct_resps.append(
+                    await dc.send(self._build_probe("D50 direct audit", contract_src))
+                )
         return [router_resp] + direct_resps
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:

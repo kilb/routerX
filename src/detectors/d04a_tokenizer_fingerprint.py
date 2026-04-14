@@ -1,21 +1,21 @@
 from __future__ import annotations
 
+import random
+
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 from ..tokenizer import token_counter
 from ..config import TOKENIZER_FINGERPRINTS, TOKENIZER_PROBE_STRINGS
 
-PROBE_WORD = "SolidGoldMagikarp"
-SELF_TOKENIZE_PROMPT = (
-    f'Split the word "{PROBE_WORD}" into its exact tokenizer subword pieces. '
-    "List each piece on its own line, no extra text."
-)
 FALLBACK_CONFIDENCE = 0.50
 
+# Default probe word used only in self-test when send_probes hasn't run.
+_TEST_PROBE_WORD = "SolidGoldMagikarp"
 
-def _identify_family(tokens: list[str]) -> str | None:
+
+def _identify_family(tokens: list[str], probe_word: str) -> str | None:
     """Return a matching tokenizer family name from TOKENIZER_FINGERPRINTS, or None."""
-    candidates = TOKENIZER_FINGERPRINTS.get(PROBE_WORD, {})
+    candidates = TOKENIZER_FINGERPRINTS.get(probe_word, {})
     for family, expected in candidates.items():
         if tokens == expected:
             return family
@@ -48,7 +48,13 @@ class D4a_TokenizerFingerprint(BaseDetector):
     description = "Detect model family substitution via tokenizer boundary fingerprinting"
 
     async def send_probes(self) -> list[ProbeResponse]:
-        """Send a logprobs probe for the fingerprint word."""
+        """Send a logprobs probe for a randomly-chosen fingerprint word.
+
+        Picks from TOKENIZER_PROBE_STRINGS so a router cannot whitelist the
+        specific word ``SolidGoldMagikarp``. All words in the pool are
+        equally useful for tokenizer-family discrimination.
+        """
+        self._probe_word = random.choice(TOKENIZER_PROBE_STRINGS)
         return [await self.client.send(ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
@@ -57,7 +63,7 @@ class D4a_TokenizerFingerprint(BaseDetector):
                 "logprobs": True,
                 "top_logprobs": 1,
                 "messages": [{"role": "user", "content": (
-                    f"Repeat exactly without any changes: {PROBE_WORD}"
+                    f"Repeat exactly without any changes: {self._probe_word}"
                 )}],
             },
             endpoint_path=self.config.default_endpoint_path,
@@ -92,19 +98,20 @@ class D4a_TokenizerFingerprint(BaseDetector):
     ) -> DetectorResult:
         """Core comparison: observed tokens vs expected for claimed model."""
         claimed_model = self.config.claimed_model
-        expected = token_counter.tokenize(PROBE_WORD, model=claimed_model)
+        probe_word = getattr(self, "_probe_word", _TEST_PROBE_WORD)
+        expected = token_counter.tokenize(probe_word, model=claimed_model)
 
         if observed == expected:
             return self._pass({
-                "probe_word": PROBE_WORD,
+                "probe_word": probe_word,
                 "tokens": observed,
                 "claimed_model": claimed_model,
             })
 
         # Mismatch: attempt to identify actual family
-        actual_family = _identify_family(observed)
+        actual_family = _identify_family(observed, probe_word)
         evidence = {
-            "probe_word": PROBE_WORD,
+            "probe_word": probe_word,
             "claimed_model": claimed_model,
             "expected_tokens": expected,
             "observed_tokens": observed,
@@ -141,7 +148,7 @@ class D4a_TokenizerFingerprint(BaseDetector):
         # tiktoken for gpt-4o actually uses cl100k: ["Solid", "Gold", "Mag", "ik", "arp"]
         # Test PASS cases must use what tiktoken actually returns for the test
         # harness's claimed_model = "gpt-4o".
-        actual_expected = token_counter.tokenize(PROBE_WORD, model="gpt-4o")
+        actual_expected = token_counter.tokenize(_TEST_PROBE_WORD, model="gpt-4o")
 
         return [
             # PASS: logprobs tokens match claimed model's tokenizer

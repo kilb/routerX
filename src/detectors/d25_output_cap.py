@@ -1,12 +1,34 @@
+"""D25 OutputCapProbe -- detect gateway-level max_tokens truncation.
+
+Asks the model to repeat a chosen word a specific number of times.
+Word and target count are randomized per-run so a router cannot
+fingerprint the probe by prompt string match. The word is chosen from
+a pool of real-looking nouns (product names, event labels) rather
+than the literal "BETA" which was the original probe's tell.
+"""
 from __future__ import annotations
+
+import random
 
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 
-MIN_EXPECTED_BETAS = 400  # hard FAIL below this
-HEALTHY_BETAS = 700       # PASS requires at least this many + finish_reason=stop
-TARGET_BETAS = 800
-MAX_TOKENS = 2048
+
+# Pool of short, simple, real-looking words. Chosen to be distinct from
+# common English function words so counting is unambiguous.
+_REPEAT_WORDS = [
+    "SIGMA", "DELTA", "KAPPA", "OMEGA", "ZULU", "TANGO", "ECHO", "CHARLIE",
+    "MATRIX", "NEBULA", "QUANTUM", "VERTEX", "ORBIT", "PRISM", "VOLT", "NOVA",
+]
+
+# Thresholds relative to target (as fractions, not absolute counts, so they
+# scale with whatever target the run chose).
+MIN_OK_FRACTION = 0.50   # < 50% of target = FAIL
+HEALTHY_FRACTION = 0.875 # >= 87.5% of target + finish=stop = definite PASS
+
+# Fixed values for self_test fallback when send_probes isn't called.
+_TEST_WORD = "SIGMA"
+_TEST_TARGET = 800
 
 
 @detector
@@ -19,14 +41,16 @@ class D25_OutputCapProbe(BaseDetector):
     description = "Detect router secretly lowering max_tokens at gateway level"
 
     async def send_probes(self) -> list[ProbeResponse]:
-        """Send a single probe requesting 800 BETA repetitions with max_tokens=2048."""
+        self._word = random.choice(_REPEAT_WORDS)
+        self._target = random.choice([600, 700, 800, 900, 1000])
         return [await self.client.send(ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
-                "max_tokens": MAX_TOKENS,
+                "max_tokens": 2048,
                 "messages": [{"role": "user", "content": (
-                    f"Please repeat the word 'BETA' exactly {TARGET_BETAS} times, "
-                    "separated by spaces. Do not include anything else."
+                    f"Please repeat the word '{self._word}' exactly {self._target} "
+                    "times, separated by single spaces. Do not include anything else "
+                    "in your response."
                 )}],
             },
             endpoint_path=self.config.default_endpoint_path,
@@ -34,60 +58,54 @@ class D25_OutputCapProbe(BaseDetector):
         ))]
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
-        """Count BETA occurrences; fail if too few given finish_reason."""
         r = responses[0]
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         content = r.content
         if not content:
             return self._inconclusive("empty content")
-        beta_count = content.split().count("BETA")
+        word = getattr(self, "_word", _TEST_WORD)
+        target = getattr(self, "_target", _TEST_TARGET)
+        count = content.split().count(word)
         finish_reason = r.finish_reason
-        ev = {"beta_count": beta_count, "finish_reason": finish_reason}
-        if beta_count < MIN_EXPECTED_BETAS and finish_reason == "length":
+        min_ok = int(target * MIN_OK_FRACTION)
+        healthy = int(target * HEALTHY_FRACTION)
+        ev = {
+            "word": word, "target": target, "count": count,
+            "finish_reason": finish_reason,
+        }
+        if count < min_ok and finish_reason == "length":
             return self._fail("output capped", ev)
-        if beta_count < MIN_EXPECTED_BETAS and finish_reason == "stop":
+        if count < min_ok and finish_reason == "stop":
             return self._fail("semantic truncation", ev)
-        # Spec: PASS requires >= 700 BETAs AND finish_reason == "stop"
-        if beta_count >= HEALTHY_BETAS and finish_reason == "stop":
+        if count >= healthy and finish_reason == "stop":
             return self._pass(ev)
-        # Ambiguous zone (400-699 or finish_reason != stop): suspicious
-        return self._pass(ev)  # lenient — not enough signal to FAIL
+        # Middle zone (count between min_ok and healthy, or unusual finish): lenient PASS
+        return self._pass(ev)
 
     @classmethod
     def _test_cases(cls):
-        """Test cases: PASS, FAIL-capped, FAIL-semantic, and edge cases."""
-        def make_resp(content: str, finish_reason: str, status_code: int = 200) -> ProbeResponse:
+        def make_resp(content: str, finish_reason: str,
+                      status_code: int = 200) -> ProbeResponse:
             return ProbeResponse(
                 status_code=status_code,
-                body={"choices": [{"message": {"content": content}, "finish_reason": finish_reason}]},
+                body={"choices": [{"message": {"content": content},
+                                   "finish_reason": finish_reason}]},
             )
 
         return [
-            # PASS: model returns all 800 BETAs with stop
-            ("PASS: 800 betas",
-             [make_resp(" ".join(["BETA"] * 800), "stop")],
-             "pass"),
-            # FAIL: router capped tokens, only 200 BETAs returned with length finish
-            ("FAIL: output capped by router",
-             [make_resp(" ".join(["BETA"] * 200), "length")],
-             "fail"),
-            # FAIL: model truncated semantically, too few BETAs with stop finish
-            ("FAIL: semantic truncation",
-             [make_resp(" ".join(["BETA"] * 100), "stop")],
-             "fail"),
-            # INCONCLUSIVE: network error
+            ("PASS: 800 words at target",
+             [make_resp(" ".join([_TEST_WORD] * 800), "stop")], "pass"),
+            ("FAIL: capped by router (200 words, length)",
+             [make_resp(" ".join([_TEST_WORD] * 200), "length")], "fail"),
+            ("FAIL: semantic truncation (100 words, stop)",
+             [make_resp(" ".join([_TEST_WORD] * 100), "stop")], "fail"),
             ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            # INCONCLUSIVE: empty content
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
             ("INCONCLUSIVE: empty content",
-             [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})],
-             "inconclusive"),
-            # PASS: edge case — exactly 400 BETAs is acceptable
-            ("PASS: exactly 400 betas",
-             [make_resp(" ".join(["BETA"] * 400), "stop")],
-             "pass"),
+             [make_resp("", "stop")], "inconclusive"),
+            ("PASS: exactly at min_ok (400 words)",
+             [make_resp(" ".join([_TEST_WORD] * 400), "stop")], "pass"),
         ]
 
 

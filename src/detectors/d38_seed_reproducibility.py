@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from itertools import combinations
 
 from ..models import (
@@ -13,9 +14,20 @@ from ..models import (
 from ..registry import BaseDetector, detector
 
 PROBE_COUNT = 3
-SEED = 42
 TEMPERATURE = 0
-PROMPT = "Write a Python function to compute the 10th Fibonacci number."
+
+# Pool of prompts + seed values. Per run, we pick one prompt and one seed
+# at random. A router that whitelists a specific test prompt cannot cover
+# all variants.
+_PROMPT_POOL = [
+    "Write a Python function to compute the nth Fibonacci number iteratively.",
+    "Write a JavaScript function that reverses a string in place.",
+    "Write a SQL query to find the second-highest salary in an employees table.",
+    "Write a bash one-liner that counts unique IP addresses in a log file.",
+    "Write a Go function that reads a file and returns its SHA-256 hex digest.",
+    "Write a Rust function that validates an IPv4 address string.",
+]
+_SEED_POOL = [42, 123, 2024, 7, 98765]
 
 
 @detector
@@ -29,14 +41,16 @@ class D38_SeedReproducibility(BaseDetector):
     required_provider = ProviderType.OPENAI
 
     async def send_probes(self) -> list[ProbeResponse]:
-        """Send 3 identical seeded requests and collect responses."""
+        """Send 3 identical seeded requests (randomized prompt+seed) and collect responses."""
+        self._prompt = random.choice(_PROMPT_POOL)
+        self._seed = random.choice(_SEED_POOL)
         probe = ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
                 "temperature": TEMPERATURE,
-                "seed": SEED,
+                "seed": self._seed,
                 "max_tokens": 100,
-                "messages": [{"role": "user", "content": PROMPT}],
+                "messages": [{"role": "user", "content": self._prompt}],
             },
             endpoint_path=self.config.default_endpoint_path,
             description="seed reproducibility probe",
@@ -69,14 +83,14 @@ class D38_SeedReproducibility(BaseDetector):
             return self._pass({
                 "matched_pair": [i, j],
                 "valid_response_count": len(valid),
-                "seed": SEED,
+                "seed": getattr(self, "_seed", 42),
             })
 
         return self._fail(
             "seed parameter ignored: all responses differ",
             {
                 "valid_response_count": len(valid),
-                "seed": SEED,
+                "seed": getattr(self, "_seed", 42),
                 "response_previews": [c[:80] for c in contents],
             },
         )
