@@ -26,12 +26,12 @@ def test_health_endpoint(api_client):
     assert body["active_tasks"] == 0
 
 
-def test_list_detectors_returns_53(api_client):
-    """38 previous + Phase A/B/C expansion (15 new) = 53."""
+def test_list_detectors_returns_60(api_client):
+    """53 previous + 7 novel-attack detectors (D81-D87) = 60."""
     r = api_client.get("/api/v1/detectors")
     assert r.status_code == 200
     detectors = r.json()
-    assert len(detectors) == 53
+    assert len(detectors) == 60
     ids = {d["detector_id"] for d in detectors}
     for did in ("D25", "D28", "D45", "D45b", "D45c", "D24c", "D29b"):
         assert did in ids, f"missing {did}"
