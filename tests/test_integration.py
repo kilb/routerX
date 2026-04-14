@@ -126,6 +126,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("style_mismatch", "D65", Verdict.FAIL),
     ("inject_stop_seq", "D37", Verdict.FAIL),     # truncated at first \n\n
     ("drop_frequency_penalty", "D68", Verdict.FAIL),
+    ("wrong_model_field", "D87", Verdict.FAIL),
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
     """Full detection matrix: each attack behavior caught by its targeted detector."""

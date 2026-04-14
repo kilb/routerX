@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -400,6 +401,13 @@ async def chat(request: Request):
         return JSONResponse(_ok(
             "Your balance is approximately $1,847 and your ID is CX-90271."
         ))
+
+    # --- D87: return wrong model field in response ---
+    if behavior == "wrong_model_field":
+        resp = _ok("ok")
+        resp["model"] = "gpt-4o-mini-2024-07-18"
+        resp["created"] = int(time.time())
+        return JSONResponse(resp)
 
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
