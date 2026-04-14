@@ -318,5 +318,22 @@ async def chat(request: Request):
         resp["id"] = "chatcmpl-FAKEIDXYZ"  # pinned, never rotates
         return JSONResponse(resp)
 
+    # --- D60: slow TTFT (router holds first token for 8s -- OSS on shared VM) ---
+    if behavior == "slow_ttft":
+        async def slow_sse():
+            await asyncio.sleep(8.0)
+            yield (
+                "data: "
+                + json.dumps({"choices": [{"delta": {"content": "ok"}}]})
+                + "\n\n"
+            )
+            yield (
+                "data: "
+                + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                + "\n\n"
+            )
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(slow_sse(), media_type="text/event-stream")
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
