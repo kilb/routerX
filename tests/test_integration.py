@@ -108,6 +108,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("trim_history", "D24c", Verdict.FAIL),       # multi-turn history trimmed
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
+    ("chunky_stream", "D64", Verdict.FAIL),
     ("drop_logprobs", "D62", Verdict.FAIL),
     # --- P2 warnings ---
     ("clamp_max_tokens", "D43", Verdict.FAIL),

@@ -347,5 +347,16 @@ async def chat(request: Request):
     if behavior == "drop_logprobs":
         return JSONResponse(_ok("It is sunny today."))
 
+    # --- D64: re-streamed non-streaming upstream (3 giant chunks) ---
+    if behavior == "chunky_stream":
+        full = ("The internet began as ARPANET in the late 1960s. " * 20)
+        async def chunky_sse():
+            for piece in (full[:len(full)//3], full[len(full)//3:2*len(full)//3], full[2*len(full)//3:]):
+                yield "data: " + json.dumps({"choices": [{"delta": {"content": piece}}]}) + "\n\n"
+                await asyncio.sleep(0.05)
+            yield "data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]}) + "\n\n"
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(chunky_sse(), media_type="text/event-stream")
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
