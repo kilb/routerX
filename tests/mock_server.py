@@ -308,5 +308,9 @@ async def chat(request: Request):
     if behavior == "drop_top_p":
         return JSONResponse(_ok("The body was cold."))
 
+    # --- D51: user-supplied stop sequence silently dropped ---
+    if behavior == "drop_stop_seq":
+        return JSONResponse(_ok("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE"))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
