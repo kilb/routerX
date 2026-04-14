@@ -308,6 +308,10 @@ async def chat(request: Request):
     if behavior == "drop_top_p":
         return JSONResponse(_ok("The body was cold."))
 
+    # --- D61: temperature silently dropped (same output regardless of temp) ---
+    if behavior == "drop_temperature":
+        return JSONResponse(_ok("A dragon awoke beneath the mountain."))
+
     # --- D51: user-supplied stop sequence silently dropped ---
     if behavior == "drop_stop_seq":
         return JSONResponse(_ok("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE"))

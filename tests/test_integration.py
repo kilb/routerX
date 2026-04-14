@@ -111,6 +111,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     # --- P2 warnings ---
     ("clamp_max_tokens", "D43", Verdict.FAIL),
     ("drop_top_p", "D44", Verdict.FAIL),
+    ("drop_temperature", "D61", Verdict.FAIL),
     ("drop_stop_seq", "D51", Verdict.FAIL),
     ("fixed_response_id", "D57", Verdict.FAIL),
     ("style_mismatch", "D65", Verdict.FAIL),

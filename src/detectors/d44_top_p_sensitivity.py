@@ -6,33 +6,13 @@ word sets within each group. Genuine sampling: diverse group >> focused.
 """
 from __future__ import annotations
 
-from itertools import combinations
-import re
-
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..utils.diversity import mean_jaccard_dist
 
 
 _PROMPT = "Write one short, creative opening line for a mystery novel. Just the line, nothing else."
 _N_PER_GROUP = 4
-_WORD_RE = re.compile(r"[a-z']+")
-
-
-def _word_set(text: str) -> set[str]:
-    return set(_WORD_RE.findall(text.lower()))
-
-
-def _mean_jaccard_dist(texts: list[str]) -> float:
-    sets = [_word_set(t) for t in texts if t]
-    if len(sets) < 2:
-        return 0.0
-    dists = []
-    for a, b in combinations(sets, 2):
-        union = a | b
-        if not union:
-            continue
-        dists.append(1 - len(a & b) / len(union))
-    return sum(dists) / len(dists) if dists else 0.0
 
 
 @detector
@@ -69,8 +49,8 @@ class D44_TopPSensitivity(BaseDetector):
                    if not r.is_network_error and r.status_code == 200]
         if len(focused) < 2 or len(diverse) < 2:
             return self._inconclusive("not enough successful responses")
-        mf = _mean_jaccard_dist(focused)
-        md = _mean_jaccard_dist(diverse)
+        mf = mean_jaccard_dist(focused)
+        md = mean_jaccard_dist(diverse)
         ev = {"mean_focused_dist": mf, "mean_diverse_dist": md,
               "delta": md - mf}
         if md - mf >= 0.05:
