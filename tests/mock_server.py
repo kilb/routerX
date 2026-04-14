@@ -343,5 +343,9 @@ async def chat(request: Request):
     if behavior == "style_mismatch":
         return JSONResponse(_ok("Yes. " * 60))
 
+    # --- D62: router silently drops logprobs flag ---
+    if behavior == "drop_logprobs":
+        return JSONResponse(_ok("It is sunny today."))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
