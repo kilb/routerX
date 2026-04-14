@@ -312,5 +312,11 @@ async def chat(request: Request):
     if behavior == "drop_stop_seq":
         return JSONResponse(_ok("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE"))
 
+    # --- D57: router returns hardcoded/templated response id every call ---
+    if behavior == "fixed_response_id":
+        resp = _ok("ok")
+        resp["id"] = "chatcmpl-FAKEIDXYZ"  # pinned, never rotates
+        return JSONResponse(resp)
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))

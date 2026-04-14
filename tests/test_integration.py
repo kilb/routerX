@@ -112,6 +112,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("clamp_max_tokens", "D43", Verdict.FAIL),
     ("drop_top_p", "D44", Verdict.FAIL),
     ("drop_stop_seq", "D51", Verdict.FAIL),
+    ("fixed_response_id", "D57", Verdict.FAIL),
     ("inject_stop_seq", "D37", Verdict.FAIL),     # truncated at first \n\n
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
