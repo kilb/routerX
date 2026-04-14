@@ -370,6 +370,13 @@ async def chat(request: Request):
             "preserving the texts of the classical era."
         ))
 
+    # --- D82: inflate reasoning_tokens in usage to pad billing ---
+    if behavior == "inflate_reasoning_tokens":
+        resp = _ok("4")
+        resp["usage"]["completion_tokens"] = 5
+        resp["usage"]["completion_tokens_details"] = {"reasoning_tokens": 2000}
+        return JSONResponse(resp)
+
     # --- D81: router injects hidden system prompt ---
     if behavior == "inject_hidden_system":
         return JSONResponse(_ok(

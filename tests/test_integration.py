@@ -109,6 +109,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
     ("trim_history", "D24c", Verdict.FAIL),       # multi-turn history trimmed
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger
+    ("inflate_reasoning_tokens", "D82", Verdict.FAIL),  # hidden thinking token inflation
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
     ("chunky_stream", "D64", Verdict.FAIL),
     ("drop_logprobs", "D62", Verdict.FAIL),
