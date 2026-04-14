@@ -110,6 +110,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
     ("chunky_stream", "D64", Verdict.FAIL),
     ("drop_logprobs", "D62", Verdict.FAIL),
+    ("drop_logit_bias", "D70", Verdict.FAIL),
     # --- P2 warnings ---
     ("clamp_max_tokens", "D43", Verdict.FAIL),
     ("drop_top_p", "D44", Verdict.FAIL),

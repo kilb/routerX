@@ -362,5 +362,13 @@ async def chat(request: Request):
     if behavior == "drop_frequency_penalty":
         return JSONResponse(_ok(" ".join(["apple"] * 30)))
 
+    # --- D70: router drops logit_bias (returns same 'the'-heavy text) ---
+    if behavior == "drop_logit_bias":
+        return JSONResponse(_ok(
+            "The library of the ancient world was the crown jewel of "
+            "the Mediterranean. The scholars gathered at the site "
+            "preserving the texts of the classical era."
+        ))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
