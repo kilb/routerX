@@ -17,7 +17,7 @@ from ..models import (
     ProbeResponse,
 )
 from ..registry import BaseDetector, detector
-from ..utils.nonce import generate_nonce
+from ..utils.realistic_prompts import scramble_cache_nonce
 
 SLEEP_BETWEEN_PROBES = 2  # seconds; gives cache time to populate
 MAX_TOKENS = 120
@@ -35,8 +35,8 @@ class D26_SemanticCacheBuster(BaseDetector):
 
     async def send_probes(self) -> list[ProbeResponse]:
         """Send probe A, sleep briefly, then send probe B with a different nonce."""
-        self._nonce_a = f"CACHE-A-{generate_nonce('TS', 8)}"
-        self._nonce_b = f"CACHE-B-{generate_nonce('TS', 8)}"
+        self._nonce_a = scramble_cache_nonce("TX")
+        self._nonce_b = scramble_cache_nonce("REF")
 
         resp_a = await self.client.send(self._build_request(self._nonce_a, "probe A"))
         await asyncio.sleep(SLEEP_BETWEEN_PROBES)
@@ -51,7 +51,7 @@ class D26_SemanticCacheBuster(BaseDetector):
                 "max_tokens": MAX_TOKENS,
                 "messages": [{"role": "user", "content": (
                     f"Write Python quicksort. "
-                    f"Put this exact nonce in the first comment line: {nonce}"
+                    f"Put this exact reference id in the first comment line: {nonce}"
                 )}],
             },
             endpoint_path=self.config.default_endpoint_path,
@@ -69,8 +69,8 @@ class D26_SemanticCacheBuster(BaseDetector):
         if not content_b:
             return self._inconclusive("empty content in probe B")
 
-        nonce_a = getattr(self, "_nonce_a", "CACHE-A-UNKNOWN")
-        nonce_b = getattr(self, "_nonce_b", "CACHE-B-UNKNOWN")
+        nonce_a = getattr(self, "_nonce_a", "TX-TESTABCDEF01")
+        nonce_b = getattr(self, "_nonce_b", "REF-TESTABCDEF01")
 
         if nonce_a in content_b:
             return self._fail(
@@ -95,8 +95,8 @@ class D26_SemanticCacheBuster(BaseDetector):
                 body={"choices": [{"message": {"content": content}, "finish_reason": "stop"}]},
             )
 
-        nonce_a = "CACHE-A-TS-TESTAAAA"
-        nonce_b = "CACHE-B-TS-TESTBBBB"
+        nonce_a = "TX-TESTABCDEF01"
+        nonce_b = "REF-TESTABCDEF01"
 
         def with_nonces(inst: D26_SemanticCacheBuster) -> None:
             inst._nonce_a = nonce_a
@@ -129,12 +129,12 @@ class D26_SemanticCacheBuster(BaseDetector):
              [resp_b_replay, resp_b_identical],
              "fail"),
 
-            # FAIL: explicit cache-A nonce in B — use a response that matches
-            # the getattr fallback value "CACHE-A-UNKNOWN"
+            # FAIL: explicit nonce A in B — use a response that matches
+            # the getattr fallback value "TX-TESTABCDEF01"
             ("FAIL: probe B contains fallback nonce A text",
              [
-                 make_resp("# CACHE-A-UNKNOWN\ndef quicksort(arr): ..."),
-                 make_resp("# CACHE-A-UNKNOWN\ndef quicksort(arr): ..."),
+                 make_resp("# TX-TESTABCDEF01\ndef quicksort(arr): ..."),
+                 make_resp("# TX-TESTABCDEF01\ndef quicksort(arr): ..."),
              ],
              "fail"),
 
