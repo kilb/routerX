@@ -376,6 +376,10 @@ async def chat(request: Request):
         resp["usage"]["completion_tokens"] = 50
         return JSONResponse(resp)
 
+    # --- D84: inject zero-width characters for tracking/watermarking ---
+    if behavior == "inject_zero_width":
+        return JSONResponse(_ok("Paris\u200b is\u200c the\u200d capital."))
+
     # --- D82: inflate reasoning_tokens in usage to pad billing ---
     if behavior == "inflate_reasoning_tokens":
         resp = _ok("4")
