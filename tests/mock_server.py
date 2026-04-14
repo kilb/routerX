@@ -284,5 +284,9 @@ async def chat(request: Request):
         resp["choices"][0]["finish_reason"] = "length"
         return JSONResponse(resp)
 
+    # --- D52: response_format=json_object silently dropped ---
+    if behavior == "drop_json_format":
+        return JSONResponse(_ok("Sure! Here is a person: Ada is 30 and likes chess."))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))

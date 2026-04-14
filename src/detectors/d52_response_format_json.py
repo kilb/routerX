@@ -1,0 +1,94 @@
+"""D52 ResponseFormatJSON -- verify response_format json_object is enforced.
+
+User sends response_format={"type":"json_object"} and asks for structured data.
+Router should return valid JSON. Fraud mode: router silently drops the flag
+and returns prose; model might embed JSON in markdown or return English.
+"""
+from __future__ import annotations
+
+import json
+
+from ..registry import detector, BaseDetector
+from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+
+
+@detector
+class D52_ResponseFormatJSON(BaseDetector):
+    detector_id = "D52"
+    detector_name = "ResponseFormatJSON"
+    priority = Priority.P1
+    judge_mode = JudgeMode.ONCE
+    request_count = 1
+    description = "Detect response_format=json_object being silently dropped."
+
+    async def send_probes(self) -> list[ProbeResponse]:
+        return [await self.client.send(ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 200,
+                "temperature": 0,
+                "response_format": {"type": "json_object"},
+                "messages": [
+                    {"role": "system", "content": "Return JSON only."},
+                    {"role": "user", "content":
+                        "Give me an object with keys: name (string), "
+                        "age (int), hobbies (string array). Fabricate any values."},
+                ],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description="D52 response_format probe",
+        ))]
+
+    def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
+        r = responses[0]
+        if r.is_network_error:
+            return self._inconclusive(r.error or "network error")
+        if r.status_code != 200:
+            return self._inconclusive(f"status {r.status_code}")
+        content = (r.content or "").strip()
+        ev = {"content_excerpt": content[:300]}
+
+        # Strip common markdown fencing first (some providers add it even with
+        # json_object -- debatable but we allow it since the core obligation is
+        # well-formed JSON, not text/plain wire format).
+        stripped = content
+        if stripped.startswith("```"):
+            stripped = stripped.strip("`")
+            if stripped.startswith("json"):
+                stripped = stripped[4:]
+        stripped = stripped.strip()
+        try:
+            parsed = json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            return self._fail(
+                f"response_format=json_object ignored -- response is not valid JSON ({exc})",
+                ev,
+            )
+        if not isinstance(parsed, dict):
+            return self._fail("JSON parsed but not an object", ev | {"parsed": parsed})
+        return self._pass(ev | {"parsed_keys": list(parsed.keys())})
+
+    @classmethod
+    def _test_cases(cls):
+        def mk(content: str) -> ProbeResponse:
+            return ProbeResponse(
+                status_code=200,
+                body={"choices": [{"message": {"content": content},
+                                   "finish_reason": "stop"}]},
+            )
+        good = mk('{"name":"Ada","age":30,"hobbies":["chess","math"]}')
+        fenced = mk('```json\n{"name":"Ada","age":30,"hobbies":[]}\n```')
+        prose = mk("Sure! Here's a person: Ada is 30 and likes chess.")
+        malformed = mk('{"name":"Ada",}')  # trailing comma
+        return [
+            ("PASS: valid JSON", [good], "pass"),
+            ("PASS: fenced JSON", [fenced], "pass"),
+            ("FAIL: prose instead of JSON", [prose], "fail"),
+            ("FAIL: malformed JSON", [malformed], "fail"),
+            ("INCONCLUSIVE: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+        ]
+
+
+if __name__ == "__main__":
+    D52_ResponseFormatJSON.self_test()
