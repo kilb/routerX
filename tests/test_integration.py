@@ -85,3 +85,21 @@ def _run_detector(port: int, detector_id: str, behavior: str) -> Verdict:
 ])
 def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected):
     assert _run_detector(mock_server, detector_id, behavior) == expected
+
+
+@pytest.mark.parametrize("behavior,detector_id,expected", [
+    # --- financial / S0 ---
+    ("swap_address", "D45", Verdict.FAIL),        # tool arg tampering
+    ("swap_address", "D47", Verdict.FAIL),        # address consistency
+    # --- P0 severe ---
+    ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
+    # --- P1 quality ---
+    ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
+    ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger
+    ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
+    # --- P2 warnings ---
+    ("inject_stop_seq", "D37", Verdict.FAIL),     # truncated at first \n\n
+])
+def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
+    """Full detection matrix: each attack behavior caught by its targeted detector."""
+    assert _run_detector(mock_server, detector_id, behavior) == expected

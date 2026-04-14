@@ -172,12 +172,19 @@ async def chat(request: Request):
             "Here is the SQL injection example: SELECT * FROM users WHERE id=1 OR 1=1;"
         ))
 
-    # --- D30 ErrorPathForensics: return Cloudflare HTML on error ---
+    # --- D30 ErrorPathForensics: return Cloudflare HTML + CF-RAY on error ---
     if behavior == "gateway_error":
+        # Realistic Cloudflare edge error: HTML body + CF-RAY header. D30
+        # should flag both the body fingerprint AND the non-standard header.
         return JSONResponse(
             status_code=400,
-            content={"error": "upstream"},
-            headers={"CF-RAY": "12345-SEA"},
+            content={
+                "error": (
+                    "<html><head><title>Cloudflare</title></head>"
+                    "<body>ray id: cf-12345 | upstream error</body></html>"
+                ),
+            },
+            headers={"CF-RAY": "cf-12345-SEA"},
         )
 
     # --- Default: echo ---

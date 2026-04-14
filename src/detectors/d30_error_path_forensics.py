@@ -5,11 +5,20 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 from ..config import KNOWN_FAKE_PATTERNS, KNOWN_PROVIDER_HEADERS
 
 # Non-standard gateway header names that indicate middleware interception.
+# Includes both proxy-fingerprint vendors (oneapi / new-api / Poe) and
+# CDN edge identifiers (Cloudflare CF-RAY, Akamai X-Akamai-*) that should
+# never appear between a legitimate Anthropic/OpenAI/Gemini API and a
+# direct caller.
 GATEWAY_HEADER_INDICATORS: frozenset[str] = frozenset({
     "x-oneapi-version",
     "x-new-api-version",
     "x-forwarded-by-oneapi",
     "x-poe-ray-id",
+    "cf-ray",                    # Cloudflare — should not front a real LLM API
+    "cf-cache-status",
+    "x-akamai-request-id",
+    "x-served-by",               # Fastly
+    "x-amz-cf-id",               # CloudFront
 })
 
 # Models used in probes: use well-known names that legitimate providers will
