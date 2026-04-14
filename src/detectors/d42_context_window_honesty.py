@@ -73,7 +73,10 @@ class D42_ContextWindowHonesty(BaseDetector):
         # 4xx with context-length signalling is a legitimate refusal -> PASS.
         if 400 <= r.status_code < 500:
             body_str = (r.raw_text or "").lower()
-            if any(kw in body_str for kw in ("context", "length", "too")):
+            if any(kw in body_str for kw in (
+                "context_length", "context length", "too long",
+                "too many tokens", "maximum context",
+            )):
                 return self._pass({
                     "note": "legitimate 4xx refusal",
                     "status": r.status_code,

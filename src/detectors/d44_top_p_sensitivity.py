@@ -26,10 +26,10 @@ class D44_TopPSensitivity(BaseDetector):
     description = "Detect top_p being silently dropped by the router."
 
     async def send_probes(self) -> list[ProbeResponse]:
-        out: list[ProbeResponse] = []
+        probes: list[ProbeRequest] = []
         for top_p in (0.1, 1.0):
             for _ in range(_N_PER_GROUP):
-                out.append(await self.client.send(ProbeRequest(
+                probes.append(ProbeRequest(
                     payload={
                         "model": self.config.claimed_model,
                         "max_tokens": 60,
@@ -39,8 +39,8 @@ class D44_TopPSensitivity(BaseDetector):
                     },
                     endpoint_path=self.config.default_endpoint_path,
                     description=f"D44 top_p={top_p}",
-                )))
-        return out
+                ))
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         focused = [r.content or "" for r in responses[:_N_PER_GROUP]

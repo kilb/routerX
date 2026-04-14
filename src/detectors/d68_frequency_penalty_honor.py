@@ -17,7 +17,7 @@ _HIGH_PENALTY = 1.8
 
 
 def _count_word(text: str, word: str) -> int:
-    return sum(1 for w in text.lower().split() if word in w)
+    return sum(1 for w in text.lower().split() if w.strip(".,!?;:\"'") == word)
 
 
 @detector

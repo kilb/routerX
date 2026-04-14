@@ -10,6 +10,8 @@ We DO NOT test edge-of-cutoff facts (models often hedge on those).
 """
 from __future__ import annotations
 
+import re
+
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 
@@ -17,6 +19,9 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 # Each probe: (question, list_of_acceptable_substrings_case_insensitive).
 # Chosen so answers are definitive and widely known by 2024-era models but
 # often unknown to pre-2023 OSS bases (Llama-2, Qwen-1).
+#
+# The third probe uses a regex for "x" so sentence-boundary occurrences
+# like "rebranded to X." or "X is the new name" are caught.
 _PROBES = [
     ("Who was announced as the 2023 Nobel Prize in Chemistry laureate for "
      "work on quantum dots? Name one of the three.",
@@ -24,8 +29,10 @@ _PROBES = [
     ("What AI assistant did OpenAI launch publicly in November 2022?",
      ["chatgpt", "chat gpt"]),
     ("Twitter was rebranded to what single-letter name in 2023?",
-     [" x ", '"x"', "'x'", "letter x", "rebranded to x"]),
+     ["letter x", "rebranded to x", "called x", "named x", "known as x"]),
 ]
+
+_X_WORD_RE = re.compile(r"\bx\b", re.IGNORECASE)
 
 
 @detector
@@ -38,19 +45,17 @@ class D59_KnowledgeCutoff(BaseDetector):
     description = "Detect model substitution via post-2022 factual recall."
 
     async def send_probes(self) -> list[ProbeResponse]:
-        out = []
-        for q, _ in _PROBES:
-            out.append(await self.client.send(ProbeRequest(
-                payload={
-                    "model": self.config.claimed_model,
-                    "max_tokens": 120,
-                    "temperature": 0,
-                    "messages": [{"role": "user", "content": q}],
-                },
-                endpoint_path=self.config.default_endpoint_path,
-                description="D59 cutoff probe",
-            )))
-        return out
+        probes = [ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 120,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": q}],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description="D59 cutoff probe",
+        ) for q, _ in _PROBES]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         hits = 0
@@ -61,6 +66,10 @@ class D59_KnowledgeCutoff(BaseDetector):
                 continue
             content = (r.content or "").lower()
             ok = any(n in content for n in needles)
+            # Fallback regex for the Twitter/X probe — catches "X." at
+            # sentence boundaries where substring needles miss.
+            if not ok and "rebranded" in q.lower():
+                ok = bool(_X_WORD_RE.search(content))
             if ok:
                 hits += 1
             per_probe.append({"q": q[:60], "ok": ok, "excerpt": content[:150]})

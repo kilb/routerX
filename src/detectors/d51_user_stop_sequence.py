@@ -48,6 +48,11 @@ class D51_UserStopSequence(BaseDetector):
         content = r.content or ""
         finish = (r.finish_reason or "").lower()
         ev = {"content": content, "finish_reason": finish}
+        # Verify the model actually attempted the counting task; if it
+        # refused or misunderstood, we cannot judge stop-sequence behavior.
+        attempted = any(tok in content for tok in ("ONE", "TWO", "THREE"))
+        if not attempted:
+            return self._inconclusive("model did not attempt the counting task")
         has_stop = _STOP in content
         has_after = any(tok in content for tok in ("FOUR", "FIVE"))
         if not has_stop and not has_after:

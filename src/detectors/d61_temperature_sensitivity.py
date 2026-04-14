@@ -29,10 +29,10 @@ class D61_TemperatureSensitivity(BaseDetector):
     description = "Detect temperature being silently dropped by the router."
 
     async def send_probes(self) -> list[ProbeResponse]:
-        out: list[ProbeResponse] = []
+        probes: list[ProbeRequest] = []
         for temperature in (0.0, 1.0):
             for _ in range(_N_PER_GROUP):
-                out.append(await self.client.send(ProbeRequest(
+                probes.append(ProbeRequest(
                     payload={
                         "model": self.config.claimed_model,
                         "max_tokens": 60,
@@ -41,8 +41,8 @@ class D61_TemperatureSensitivity(BaseDetector):
                     },
                     endpoint_path=self.config.default_endpoint_path,
                     description=f"D61 temperature={temperature}",
-                )))
-        return out
+                ))
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         deterministic = [r.content or "" for r in responses[:_N_PER_GROUP]

@@ -53,9 +53,11 @@ class D52_ResponseFormatJSON(BaseDetector):
         # well-formed JSON, not text/plain wire format).
         stripped = content
         if stripped.startswith("```"):
-            stripped = stripped.strip("`")
-            if stripped.startswith("json"):
-                stripped = stripped[4:]
+            lines = stripped.split("\n")
+            lines = lines[1:]  # drop opening fence line ("```json" etc.)
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            stripped = "\n".join(lines)
         stripped = stripped.strip()
         try:
             parsed = json.loads(stripped)

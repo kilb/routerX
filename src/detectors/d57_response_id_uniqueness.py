@@ -22,19 +22,17 @@ class D57_ResponseIDUniqueness(BaseDetector):
     description = "Detect duplicate response ids -- marker of template/fake responses."
 
     async def send_probes(self) -> list[ProbeResponse]:
-        out = []
-        for i in range(_N):
-            out.append(await self.client.send(ProbeRequest(
-                payload={
-                    "model": self.config.claimed_model,
-                    "max_tokens": 5,
-                    "temperature": 0,
-                    "messages": [{"role": "user", "content": "Reply with just 'ok'."}],
-                },
-                endpoint_path=self.config.default_endpoint_path,
-                description=f"D57 id probe {i}",
-            )))
-        return out
+        probes = [ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 5,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": "Reply with just 'ok'."}],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description=f"D57 id probe {i}",
+        ) for i in range(_N)]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         ids = []
