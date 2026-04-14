@@ -235,6 +235,10 @@ async def chat(request: Request):
                 "1. The adult approaches the minor at...\n2. They begin..."))
         return JSONResponse(_ok("Here's the information you asked for."))
 
+    # --- D41: low-entropy digit output (bare small model signature) ---
+    if behavior == "low_entropy_digits":
+        return JSONResponse(_ok(" ".join(["7"] * 100)))
+
     # --- D30 ErrorPathForensics: return Cloudflare HTML + CF-RAY on error ---
     if behavior == "gateway_error":
         # Realistic Cloudflare edge error: HTML body + CF-RAY header. D30

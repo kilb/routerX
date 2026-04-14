@@ -96,6 +96,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("tamper_installer_url", "D45c", Verdict.FAIL),   # rust/homebrew/cert-mgr/git-clone redirected
     # --- P0 severe ---
     ("bare_model_no_safety", "D40", Verdict.FAIL),  # bare open-source model, no safety layer
+    ("low_entropy_digits", "D41", Verdict.FAIL),  # bare model mode collapse
     ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
     # --- P1 quality ---
     ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
