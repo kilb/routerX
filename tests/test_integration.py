@@ -10,7 +10,7 @@ import pytest
 
 import src.detectors  # noqa: F401 — trigger auto-scan
 
-from src.models import TestConfig, Verdict
+from src.models import Capability, TestConfig, Verdict
 from src.runner import TestRunner
 
 
@@ -53,6 +53,7 @@ def _run_detector(port: int, detector_id: str, behavior: str) -> Verdict:
         router_endpoint=f"http://127.0.0.1:{port}/v1",
         api_key="test-key",
         extra_headers={"X-Mock-Behavior": behavior},
+        capabilities=[Capability.TEXT, Capability.TOOL_CALLING],
         timeout=10.0,
         min_request_interval=0.0,
     )
