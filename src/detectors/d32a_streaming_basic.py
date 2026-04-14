@@ -49,7 +49,8 @@ class D32a_StreamingBasicProbe(BaseDetector):
     @staticmethod
     def _chunk_content(chunk: dict) -> str:
         try:
-            return chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
+            c = chunk.get("choices", [{}])[0].get("delta", {}).get("content")
+            return c if c is not None else ""
         except (KeyError, IndexError):
             return ""
 

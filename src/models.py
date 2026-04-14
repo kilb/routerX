@@ -272,8 +272,12 @@ class TestConfig(BaseModel):
         # Strip known API path suffixes from endpoint so users can pass
         # either "https://api.x.ai/v1" or "https://api.x.ai/v1/chat/completions"
         # without causing double-path concatenation (→ 404).
+        # Order matters: longest suffix first so "/v1/chat/completions"
+        # is stripped before "/v1" alone.
         _KNOWN_SUFFIXES = (
-            "/chat/completions", "/v1/messages", "/messages",
+            "/v1/chat/completions", "/chat/completions",
+            "/v1/messages", "/messages",
+            "/v1",
         )
         for suffix in _KNOWN_SUFFIXES:
             if self.router_endpoint.rstrip("/").endswith(suffix):
@@ -294,7 +298,7 @@ class TestConfig(BaseModel):
     def default_endpoint_path(self) -> str:
         if self.api_format == ApiFormat.ANTHROPIC:
             return "/v1/messages"
-        return "/chat/completions"
+        return "/v1/chat/completions"
 
 
 class TestReport(BaseModel):
