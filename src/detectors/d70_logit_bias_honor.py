@@ -7,7 +7,7 @@ Fraud: router drops logit_bias -> both runs show natural 'the' frequency.
 from __future__ import annotations
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 from ..tokenizer import token_counter
 
 
@@ -79,6 +79,13 @@ class D70_LogitBiasHonor(BaseDetector):
             return self._pass(ev)
         ratio = bias_count / base_count
         if bias_count >= 5 and ratio > 0.5:
+            # Anthropic/Gemini don't support logit_bias; dropping it is
+            # correct proxy behavior, not fraud.
+            if self.config.claimed_provider in (ProviderType.ANTHROPIC,
+                                                  ProviderType.GEMINI):
+                return self._inconclusive(
+                    "logit_bias not supported by claimed provider"
+                )
             return self._fail(
                 f"suppressed run still has {bias_count} 'the's "
                 f"(base={base_count}, ratio={ratio:.0%}) "

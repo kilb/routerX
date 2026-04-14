@@ -14,6 +14,7 @@ from ..models import (
     DetectorResult,
     JudgeMode,
     Priority,
+    ProviderType,
     ProbeRequest,
     ProbeResponse,
 )
@@ -28,9 +29,13 @@ _TAIL_MARKER = "ENDMARKER_9F7A2C"
 # Fallback used by ``self_test`` when ``send_probes`` never ran.
 _TEST_FALLBACK_LOCAL = 15000
 
-# Ratios on reported/local prompt_tokens.
-MIN_OK_RATIO = 0.5         # below this = router trimmed input (FAIL)
-MARKER_GATE_RATIO = 0.85   # below this + missing marker = FAIL
+# Ratios on reported/local prompt_tokens. Non-OpenAI providers use a
+# different tokenizer than tiktoken, so allow wider divergence to avoid
+# false positives from legitimate tokenizer differences (~15-25%).
+MIN_OK_RATIO_OPENAI = 0.50
+MIN_OK_RATIO_OTHER = 0.35
+MARKER_GATE_RATIO_OPENAI = 0.85
+MARKER_GATE_RATIO_OTHER = 0.65
 
 
 @detector
@@ -100,14 +105,17 @@ class D42_ContextWindowHonesty(BaseDetector):
 
         marker_echoed = _TAIL_MARKER in content
         ratio = reported / max(local, 1)
+        is_openai = self.config.claimed_provider == ProviderType.OPENAI
+        min_ok = MIN_OK_RATIO_OPENAI if is_openai else MIN_OK_RATIO_OTHER
+        marker_gate = MARKER_GATE_RATIO_OPENAI if is_openai else MARKER_GATE_RATIO_OTHER
 
-        if ratio < MIN_OK_RATIO:
+        if ratio < min_ok:
             return self._fail(
-                f"reported prompt_tokens ({reported}) is < 50% of local "
+                f"reported prompt_tokens ({reported}) is < {min_ok:.0%} of local "
                 f"count ({local}) -- router likely trimmed input",
                 ev,
             )
-        if not marker_echoed and ratio < MARKER_GATE_RATIO:
+        if not marker_echoed and ratio < marker_gate:
             return self._fail(
                 f"tail marker missing AND reported ({reported}) / local "
                 f"({local}) ratio {ratio:.2f} < 0.85 -- truncation suspected",

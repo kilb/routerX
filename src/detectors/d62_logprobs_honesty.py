@@ -11,7 +11,7 @@ from __future__ import annotations
 import statistics
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 
 
 _MIN_POSITION_MATCH_RATE = 0.8
@@ -66,6 +66,13 @@ class D62_LogprobsHonesty(BaseDetector):
             return self._inconclusive("empty body")
         positions = _extract_logprobs(r.body)
         if positions is None:
+            # Anthropic/Gemini APIs don't support logprobs natively;
+            # absence is expected, not fraud.
+            if self.config.claimed_provider in (ProviderType.ANTHROPIC,
+                                                  ProviderType.GEMINI):
+                return self._inconclusive(
+                    "logprobs not supported by claimed provider"
+                )
             return self._fail("logprobs flag dropped -- no logprobs block in response", {})
         if not positions:
             return self._fail("logprobs.content is empty", {})

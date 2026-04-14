@@ -15,7 +15,7 @@ from ..utils.diversity import mean_jaccard_dist
 
 _PROMPT = "Write one short imaginative first-line for a fantasy novel. Just the line."
 _N_PER_GROUP = 4
-_MIN_DELTA = 0.05
+_MIN_DELTA = 0.10
 
 
 @detector

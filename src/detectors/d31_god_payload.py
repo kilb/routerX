@@ -4,7 +4,7 @@ import json
 import re
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 from ..tokenizer import token_counter
 from ..config import LOGIT_BIAS_CANDIDATES, HIJACKED_KEYWORDS
 
@@ -66,15 +66,23 @@ class D31_GodPayload(BaseDetector):
         content = body.get("full_content", "") or r.content
         usage = body.get("usage")
         subs = []
-        # Check 1: JSON schema compliance
-        try:
-            parsed = json.loads(content)
-            subs.append(("json_schema", isinstance(parsed.get("code"), (int, float)), "valid JSON"))
-        except (json.JSONDecodeError, TypeError):
-            subs.append(("json_schema", False, "not JSON"))
-        # Check 2: logit_bias
+        _skip_oai = self.config.claimed_provider in (
+            ProviderType.ANTHROPIC, ProviderType.GEMINI,
+        )
+        # Check 1: JSON schema compliance (strict json_schema is OpenAI-only)
+        if _skip_oai:
+            subs.append(("json_schema", None, "skipped: strict json_schema is OpenAI-only"))
+        else:
+            try:
+                parsed = json.loads(content)
+                subs.append(("json_schema", isinstance(parsed.get("code"), (int, float)), "valid JSON"))
+            except (json.JSONDecodeError, TypeError):
+                subs.append(("json_schema", False, "not JSON"))
+        # Check 2: logit_bias (OpenAI-only)
         ban = getattr(self, "_ban_word", None)
-        if ban:
+        if _skip_oai:
+            subs.append(("logit_bias", None, "skipped: logit_bias is OpenAI-only"))
+        elif ban:
             found = ban.lower() in content.lower()
             subs.append(("logit_bias", not found, f"banned '{ban}' {'found' if found else 'absent'}"))
         # Check 3: algebra (5 * var_B = 50)

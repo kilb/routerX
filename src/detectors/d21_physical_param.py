@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 from ..tokenizer import token_counter
 from ..config import LOGIT_BIAS_CANDIDATES
 from ..utils.text_analysis import readable_bigram_ratio
@@ -64,16 +64,24 @@ class D21_PhysicalParamProbe(BaseDetector):
             ratio = readable_bigram_ratio(r_a.content)
             ok = ratio < BIGRAM_THRESHOLD
             subs.append(("21a_temp", ok, f"bigram={ratio:.2f}"))
-        # 21b: logit_bias
-        if r_b.is_network_error:
+        # 21b: logit_bias (OpenAI-only; skip for Anthropic/Gemini but run
+        # for ANY since we can't rule out an OpenAI backend).
+        _skip_oai_params = self.config.claimed_provider in (
+            ProviderType.ANTHROPIC, ProviderType.GEMINI,
+        )
+        if _skip_oai_params:
+            subs.append(("21b_logit", None, "skipped: logit_bias not supported by provider"))
+        elif r_b.is_network_error:
             subs.append(("21b_logit", None, r_b.error or "error"))
         elif ban_word:
             found = ban_word.lower() in r_b.content.lower()
             subs.append(("21b_logit", not found, f"banned '{ban_word}' {'found' if found else 'absent'}"))
         else:
             subs.append(("21b_logit", None, "no ban word"))
-        # 21c: logprobs
-        if r_c.is_network_error:
+        # 21c: logprobs (OpenAI-only; skip for Anthropic/Gemini)
+        if _skip_oai_params:
+            subs.append(("21c_logprobs", None, "skipped: logprobs not supported by provider"))
+        elif r_c.is_network_error:
             subs.append(("21c_logprobs", None, "network error"))
         elif r_c.body:
             lp = None

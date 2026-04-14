@@ -53,7 +53,7 @@ class D44_TopPSensitivity(BaseDetector):
         md = mean_jaccard_dist(diverse)
         ev = {"mean_focused_dist": mf, "mean_diverse_dist": md,
               "delta": md - mf}
-        if md - mf >= 0.05:
+        if md - mf >= 0.10:
             return self._pass(ev)
         return self._fail(
             f"diverse-group diversity ({md:.2f}) not meaningfully > "

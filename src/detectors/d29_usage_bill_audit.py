@@ -14,6 +14,7 @@ from ..models import (
     DetectorResult,
     JudgeMode,
     Priority,
+    ProviderType,
     ProbeRequest,
     ProbeResponse,
     Verdict,
@@ -23,8 +24,12 @@ from ..tokenizer import token_counter
 
 FALLBACK_PROBE_TEXT = "Hello, this is a test prompt for token counting. " * 20
 MAX_FALLBACK_TOKENS = 50
-TOKEN_INFLATION_THRESHOLD = 0.10     # > 10% deviation = inflation fraud
-TRUNCATION_BILLING_THRESHOLD = 0.05  # < 5% deviation when truncated = yin-yang ledger
+# tiktoken vs non-OpenAI tokenizers can diverge 15-25%, so the threshold
+# must be wider when the claimed provider is not OpenAI. For OpenAI
+# endpoints tiktoken is authoritative and tight tolerance is appropriate.
+TOKEN_INFLATION_THRESHOLD_OPENAI = 0.10   # > 10% deviation = fraud
+TOKEN_INFLATION_THRESHOLD_OTHER = 0.30    # > 30% deviation for non-OpenAI
+TRUNCATION_BILLING_THRESHOLD = 0.05       # < 5% deviation when truncated
 
 
 @detector
@@ -36,6 +41,12 @@ class D29_UsageBillAuditor(BaseDetector):
     request_count = 0
     depends_on = ("D24a",)
     description = "Detect token billing fraud: over-reported usage or billing for truncated content"
+
+    @property
+    def _inflation_threshold(self) -> float:
+        if self.config.claimed_provider == ProviderType.OPENAI:
+            return TOKEN_INFLATION_THRESHOLD_OPENAI
+        return TOKEN_INFLATION_THRESHOLD_OTHER
 
     async def send_probes(self) -> list[ProbeResponse]:
         """Skip I/O when D24a data is available; otherwise send a fallback probe."""
@@ -94,7 +105,7 @@ class D29_UsageBillAuditor(BaseDetector):
 
         if d24a_failed and deviation < TRUNCATION_BILLING_THRESHOLD:
             return self._fail("content truncated but usage reports full tokens", ev)
-        if deviation > TOKEN_INFLATION_THRESHOLD:
+        if deviation > self._inflation_threshold:
             return self._fail(f"token count deviation {deviation:.2%}", ev)
         return self._pass(ev)
 
@@ -122,7 +133,7 @@ class D29_UsageBillAuditor(BaseDetector):
         ev = self._deviation_evidence(router_tokens, local_tokens, "fallback")
         deviation = ev.pop("_deviation")
 
-        if deviation > TOKEN_INFLATION_THRESHOLD:
+        if deviation > self._inflation_threshold:
             return self._fail(f"token count deviation {deviation:.2%} (fallback mode)", ev)
         return self._pass(ev)
 
