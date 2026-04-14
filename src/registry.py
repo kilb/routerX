@@ -188,12 +188,25 @@ class BaseDetector(ABC):
         }))
         return result
 
+    @staticmethod
+    def _all_network_errors(responses: list) -> bool:
+        """True if the list is non-empty AND every non-None response is a
+        network error. Detectors like D22 intentionally place ``None`` for
+        sub-probes that don't apply to the current provider; those are not
+        "network errors" and shouldn't count either way.
+        """
+        actual = [r for r in responses if r is not None]
+        if not actual:
+            return False
+        return all(r.is_network_error for r in actual)
+
     async def _execute(self) -> DetectorResult:
         if self.judge_mode == JudgeMode.MAJORITY_2_OF_2:
             return await self._run_majority()
         responses = await self.send_probes()
-        if responses and all(r.is_network_error for r in responses):
-            return self._inconclusive(f"all probes failed: {responses[0].error}")
+        if self._all_network_errors(responses):
+            first = next(r for r in responses if r is not None)
+            return self._inconclusive(f"all probes failed: {first.error}")
         return self.judge(responses)
 
     async def _run_majority(self) -> DetectorResult:
@@ -201,7 +214,7 @@ class BaseDetector(ABC):
         net_failures = 0
         for _ in range(2):
             responses = await self.send_probes()
-            if responses and all(r.is_network_error for r in responses):
+            if self._all_network_errors(responses):
                 net_failures += 1
                 # Record the error as INCONCLUSIVE so the second iteration
                 # can decide whether BOTH runs are unusable.
