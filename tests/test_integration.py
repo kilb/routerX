@@ -98,6 +98,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("bare_model_no_safety", "D40", Verdict.FAIL),  # bare open-source model, no safety layer
     ("low_entropy_digits", "D41", Verdict.FAIL),  # bare model mode collapse
     ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
+    ("collapse_parallel_tools", "D16c", Verdict.FAIL),  # parallel tool calls collapsed
     # --- P1 quality ---
     ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger

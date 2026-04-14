@@ -239,6 +239,20 @@ async def chat(request: Request):
     if behavior == "low_entropy_digits":
         return JSONResponse(_ok(" ".join(["7"] * 100)))
 
+    # --- D16c: collapse parallel tool calls to one ---
+    if behavior == "collapse_parallel_tools":
+        import json as _j
+        return JSONResponse({"choices": [{"message": {
+            "content": None,
+            "tool_calls": [{
+                "id": "call_1", "type": "function",
+                "function": {
+                    "name": "get_weather",
+                    "arguments": _j.dumps({"city": "Tokyo"}),
+                },
+            }],
+        }, "finish_reason": "tool_calls"}]})
+
     # --- D30 ErrorPathForensics: return Cloudflare HTML + CF-RAY on error ---
     if behavior == "gateway_error":
         # Realistic Cloudflare edge error: HTML body + CF-RAY header. D30
