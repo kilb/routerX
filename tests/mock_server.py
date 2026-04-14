@@ -272,5 +272,11 @@ async def chat(request: Request):
             headers={"CF-RAY": "cf-12345-SEA"},
         )
 
+    # --- D42: trim huge context, report misleadingly low prompt_tokens ---
+    if behavior == "trim_context":
+        resp = _ok("I couldn't find a marker.")
+        resp["usage"]["prompt_tokens"] = 2000
+        return JSONResponse(resp)
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))

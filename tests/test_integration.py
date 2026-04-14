@@ -100,6 +100,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
     ("collapse_parallel_tools", "D16c", Verdict.FAIL),  # parallel tool calls collapsed
     # --- P1 quality ---
+    ("trim_context", "D42", Verdict.FAIL),
     ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
     ("trim_history", "D24c", Verdict.FAIL),       # multi-turn history trimmed
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger

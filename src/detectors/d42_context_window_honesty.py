@@ -1,0 +1,150 @@
+"""D42 ContextWindowHonesty -- compare reported vs local prompt_tokens.
+
+A compliant router should either:
+  (a) return ``usage.prompt_tokens`` close to the local tiktoken count, OR
+  (b) reject the request with a 4xx ``context_length_exceeded`` error.
+
+Fraud modes caught:
+  - router silently trims the prompt and reports the trimmed count as full
+  - router fabricates a plausible-looking number unrelated to the payload
+"""
+from __future__ import annotations
+
+from ..models import (
+    DetectorResult,
+    JudgeMode,
+    Priority,
+    ProbeRequest,
+    ProbeResponse,
+)
+from ..registry import BaseDetector, detector
+from ..tokenizer import token_counter
+
+# ~15k tokens of filler: big enough to expose silent-truncation routers but
+# safely under every mainstream 32k+ context window.
+_FILLER = "The quick brown fox jumps over the lazy dog. " * 1500
+_TAIL_MARKER = "ENDMARKER_9F7A2C"
+
+# Fallback used by ``self_test`` when ``send_probes`` never ran.
+_TEST_FALLBACK_LOCAL = 15000
+
+# Ratios on reported/local prompt_tokens.
+MIN_OK_RATIO = 0.5         # below this = router trimmed input (FAIL)
+MARKER_GATE_RATIO = 0.85   # below this + missing marker = FAIL
+
+
+@detector
+class D42_ContextWindowHonesty(BaseDetector):
+    detector_id = "D42"
+    detector_name = "ContextWindowHonesty"
+    priority = Priority.P1
+    judge_mode = JudgeMode.ONCE
+    request_count = 1
+    detector_timeout = 60.0
+    description = (
+        "Detect silent input truncation or fabricated prompt_tokens by "
+        "comparing router-reported usage against local tokenizer count."
+    )
+
+    async def send_probes(self) -> list[ProbeResponse]:
+        prompt = (
+            f"{_FILLER}\nThe last marker in this document is: `{_TAIL_MARKER}`.\n"
+            "Reply with ONLY the marker, nothing else."
+        )
+        self._local_count = token_counter.count(
+            prompt, model=self.config.claimed_model,
+        )
+        return [await self.client.send(ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 20,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description="D42 long-context probe",
+        ))]
+
+    def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
+        r = responses[0]
+        if r.is_network_error:
+            return self._inconclusive(r.error or "network error")
+
+        # 4xx with context-length signalling is a legitimate refusal -> PASS.
+        if 400 <= r.status_code < 500:
+            body_str = (r.raw_text or "").lower()
+            if any(kw in body_str for kw in ("context", "length", "too")):
+                return self._pass({
+                    "note": "legitimate 4xx refusal",
+                    "status": r.status_code,
+                })
+            return self._inconclusive(f"status {r.status_code}")
+        if r.status_code != 200:
+            return self._inconclusive(f"status {r.status_code}")
+
+        content = r.content or ""
+        usage = r.usage or {}
+        reported = usage.get("prompt_tokens") or usage.get("input_tokens") or 0
+        local = getattr(self, "_local_count", None) or _TEST_FALLBACK_LOCAL
+        ev = {
+            "reported_prompt_tokens": reported,
+            "local_count": local,
+            "content_excerpt": content[:200],
+        }
+
+        if reported == 0:
+            return self._inconclusive("router omitted prompt_tokens")
+
+        marker_echoed = _TAIL_MARKER in content
+        ratio = reported / max(local, 1)
+
+        if ratio < MIN_OK_RATIO:
+            return self._fail(
+                f"reported prompt_tokens ({reported}) is < 50% of local "
+                f"count ({local}) -- router likely trimmed input",
+                ev,
+            )
+        if not marker_echoed and ratio < MARKER_GATE_RATIO:
+            return self._fail(
+                f"tail marker missing AND reported ({reported}) / local "
+                f"({local}) ratio {ratio:.2f} < 0.85 -- truncation suspected",
+                ev,
+            )
+        return self._pass(ev)
+
+    @classmethod
+    def _test_cases(cls):
+        def mk(content: str, prompt_tokens: int) -> ProbeResponse:
+            return ProbeResponse(
+                status_code=200,
+                body={
+                    "choices": [{
+                        "message": {"content": content},
+                        "finish_reason": "stop",
+                    }],
+                    "usage": {
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": 10,
+                    },
+                },
+            )
+
+        pass_case = mk(f"`{_TAIL_MARKER}`", 14800)
+        truncated = mk("Sorry, I don't see a marker.", 2000)
+        err_4xx = ProbeResponse(
+            status_code=400,
+            raw_text='{"error": {"message": "context_length_exceeded"}}',
+            body={"error": {"message": "context_length_exceeded"}},
+        )
+        net = ProbeResponse(status_code=0, error="TIMEOUT")
+
+        return [
+            ("PASS: marker echoed, count matches", [pass_case], "pass"),
+            ("FAIL: trimmed input (low ratio)", [truncated], "fail"),
+            ("PASS: 4xx context_length_exceeded", [err_4xx], "pass"),
+            ("INCONCLUSIVE: network error", [net], "inconclusive"),
+        ]
+
+
+if __name__ == "__main__":
+    D42_ContextWindowHonesty.self_test()
