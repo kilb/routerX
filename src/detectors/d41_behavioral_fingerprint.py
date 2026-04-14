@@ -17,8 +17,17 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 from ..utils.stats import digit_stats
 
 
-MIN_FRONTIER_ENTROPY = 3.0
-MAX_FRONTIER_SINGLE_DIGIT_COUNT = 22
+# HEURISTIC thresholds — empirical calibration TODO.
+# Conservatively set to avoid false positives on small frontier models
+# (claude-3-haiku, gpt-4o-mini, gemini-flash can legitimately land in
+# the 2.6-3.1 entropy band). Earlier 3.0 threshold risked flagging
+# legitimate Haiku-class models as "bare".
+#
+# TODO: calibrate per model family with a reference distribution (KS
+# against a baseline captured from the real API). Until then this is a
+# PROBABILISTIC heuristic — MAJORITY_2_OF_2 reduces single-sample variance.
+MIN_FRONTIER_ENTROPY = 2.6
+MAX_FRONTIER_SINGLE_DIGIT_COUNT = 25
 
 
 @detector
@@ -26,7 +35,9 @@ class D41_BehavioralFingerprint(BaseDetector):
     detector_id = "D41"
     detector_name = "BehavioralFingerprint"
     priority = Priority.P0
-    judge_mode = JudgeMode.ONCE
+    # MAJORITY_2_OF_2: temperature=1.0 makes this stochastic. One unlucky
+    # sample should not fail the detector — require 2/2 runs to agree.
+    judge_mode = JudgeMode.MAJORITY_2_OF_2
     request_count = 1
     detector_timeout = 45.0
     description = (
@@ -85,12 +96,14 @@ class D41_BehavioralFingerprint(BaseDetector):
                                    "finish_reason": "stop"}]},
             )
 
-        import random
-        random.seed(42)
-        uniform_100 = " ".join(str(random.randint(0, 9)) for _ in range(100))
+        # Local RNG — never touches global random state (avoids flakiness
+        # when earlier tests in the same run consumed random).
+        import random as _random
+        rng = _random.Random(42)
+        uniform_100 = " ".join(str(rng.randint(0, 9)) for _ in range(100))
 
         skewed_100 = " ".join(
-            ["7"] * 40 + [str(random.randint(0, 9)) for _ in range(60)]
+            ["7"] * 40 + [str(rng.randint(0, 9)) for _ in range(60)]
         )
 
         monotonic = " ".join(["3"] * 100)
