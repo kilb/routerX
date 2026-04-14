@@ -100,6 +100,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("low_entropy_digits", "D41", Verdict.FAIL),  # bare model mode collapse
     ("gateway_error", "D30", Verdict.FAIL),       # Cloudflare fingerprint + CF-RAY
     ("collapse_parallel_tools", "D16c", Verdict.FAIL),  # parallel tool calls collapsed
+    ("inject_hidden_system", "D81", Verdict.FAIL),  # router-injected hidden system prompt
     # --- P1 quality ---
     ("trim_context", "D42", Verdict.FAIL),
     ("drop_json_format", "D52", Verdict.FAIL),
