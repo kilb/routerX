@@ -269,6 +269,25 @@ class TestConfig(BaseModel):
                 self.api_format = ApiFormat.OPENAI
         if self.direct_endpoint and self.direct_auth_method is None:
             self.direct_auth_method = self.auth_method
+        # Strip known API path suffixes from endpoint so users can pass
+        # either "https://api.x.ai/v1" or "https://api.x.ai/v1/chat/completions"
+        # without causing double-path concatenation (→ 404).
+        _KNOWN_SUFFIXES = (
+            "/chat/completions", "/v1/messages", "/messages",
+        )
+        for suffix in _KNOWN_SUFFIXES:
+            if self.router_endpoint.rstrip("/").endswith(suffix):
+                self.router_endpoint = self.router_endpoint.rstrip("/")[
+                    :-len(suffix)
+                ]
+                break
+        if self.direct_endpoint:
+            for suffix in _KNOWN_SUFFIXES:
+                if self.direct_endpoint.rstrip("/").endswith(suffix):
+                    self.direct_endpoint = self.direct_endpoint.rstrip("/")[
+                        :-len(suffix)
+                    ]
+                    break
         return self
 
     @property
