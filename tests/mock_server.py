@@ -253,6 +253,10 @@ async def chat(request: Request):
             }],
         }, "finish_reason": "tool_calls"}]})
 
+    # --- D24c: silently trim early history (router pretends to forget) ---
+    if behavior == "trim_history":
+        return JSONResponse(_ok("I don't remember anything about a lucky number."))
+
     # --- D30 ErrorPathForensics: return Cloudflare HTML + CF-RAY on error ---
     if behavior == "gateway_error":
         # Realistic Cloudflare edge error: HTML body + CF-RAY header. D30

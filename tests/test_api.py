@@ -26,14 +26,14 @@ def test_health_endpoint(api_client):
     assert body["active_tasks"] == 0
 
 
-def test_list_detectors_returns_33(api_client):
-    """31 base + D45b (package typosquat) + D45c (installer URL) = 33."""
+def test_list_detectors_returns_38(api_client):
+    """36 previous + D24c (multi-turn history) + D29b (prompt cache) = 38."""
     r = api_client.get("/api/v1/detectors")
     assert r.status_code == 200
     detectors = r.json()
-    assert len(detectors) == 33
+    assert len(detectors) == 38
     ids = {d["detector_id"] for d in detectors}
-    for did in ("D25", "D28", "D45", "D45b", "D45c"):
+    for did in ("D25", "D28", "D45", "D45b", "D45c", "D24c", "D29b"):
         assert did in ids, f"missing {did}"
 
 
