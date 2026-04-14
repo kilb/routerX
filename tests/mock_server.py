@@ -358,5 +358,9 @@ async def chat(request: Request):
             yield "data: [DONE]\n\n"
         return StreamingResponse(chunky_sse(), media_type="text/event-stream")
 
+    # --- D68: router drops frequency_penalty -- identical output both calls ---
+    if behavior == "drop_frequency_penalty":
+        return JSONResponse(_ok(" ".join(["apple"] * 30)))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
