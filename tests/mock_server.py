@@ -288,5 +288,15 @@ async def chat(request: Request):
     if behavior == "drop_json_format":
         return JSONResponse(_ok("Sure! Here is a person: Ada is 30 and likes chess."))
 
+    # --- D56: tool_choice pinned to specific function silently ignored ---
+    if behavior == "ignore_tool_choice":
+        return JSONResponse({"choices": [{"message": {
+            "role": "assistant", "content": None,
+            "tool_calls": [{
+                "id": "c1", "type": "function",
+                "function": {"name": "get_stock_price",
+                             "arguments": json.dumps({"symbol": "AAPL"})},
+            }]}, "finish_reason": "tool_calls"}]})
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))

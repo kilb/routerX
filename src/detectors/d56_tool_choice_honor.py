@@ -1,0 +1,119 @@
+"""D56 ToolChoiceHonor -- verify tool_choice pin is honored.
+
+Provide 5 unrelated tool schemas + force tool_choice to a specific one.
+Router must return a tool_calls entry referencing ONLY that function.
+Fraud mode: router strips tool_choice, model free-chooses (or ignores all).
+"""
+from __future__ import annotations
+
+from ..registry import detector, BaseDetector
+from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult, Capability
+
+
+_TARGET_FN = "record_weather_observation"
+
+_TOOLS = [
+    {"type": "function", "function": {"name": "get_stock_price",
+     "description": "Get stock price.",
+     "parameters": {"type": "object",
+                    "properties": {"symbol": {"type": "string"}},
+                    "required": ["symbol"]}}},
+    {"type": "function", "function": {"name": "translate_text",
+     "description": "Translate text.",
+     "parameters": {"type": "object",
+                    "properties": {"text": {"type": "string"},
+                                   "lang": {"type": "string"}},
+                    "required": ["text", "lang"]}}},
+    {"type": "function", "function": {"name": "create_invoice",
+     "description": "Create invoice.",
+     "parameters": {"type": "object",
+                    "properties": {"customer": {"type": "string"}},
+                    "required": ["customer"]}}},
+    {"type": "function", "function": {"name": "search_flights",
+     "description": "Search flights.",
+     "parameters": {"type": "object",
+                    "properties": {"origin": {"type": "string"},
+                                   "dest": {"type": "string"}},
+                    "required": ["origin", "dest"]}}},
+    {"type": "function", "function": {"name": _TARGET_FN,
+     "description": "Record a weather observation for a station.",
+     "parameters": {"type": "object",
+                    "properties": {"station_id": {"type": "string"},
+                                   "temp_c": {"type": "number"}},
+                    "required": ["station_id", "temp_c"]}}},
+]
+
+
+@detector
+class D56_ToolChoiceHonor(BaseDetector):
+    detector_id = "D56"
+    detector_name = "ToolChoiceHonor"
+    priority = Priority.P1
+    judge_mode = JudgeMode.ONCE
+    request_count = 1
+    required_capabilities = (Capability.TOOL_CALLING,)
+    description = "Detect tool_choice=named-function being silently dropped."
+
+    async def send_probes(self) -> list[ProbeResponse]:
+        return [await self.client.send(ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 200,
+                "temperature": 0,
+                "tools": _TOOLS,
+                "tool_choice": {"type": "function",
+                                "function": {"name": _TARGET_FN}},
+                "messages": [{"role": "user", "content":
+                              "Do whatever you think is best."}],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description="D56 tool_choice pin probe",
+        ))]
+
+    def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
+        r = responses[0]
+        if r.is_network_error:
+            return self._inconclusive(r.error or "network error")
+        if r.status_code != 200:
+            return self._inconclusive(f"status {r.status_code}")
+        calls = r.tool_calls or []
+        ev = {"tool_calls": calls, "content_excerpt": (r.content or "")[:200]}
+        if not calls:
+            return self._fail("no tool_calls emitted despite forced tool_choice", ev)
+        names = [c.get("function", {}).get("name") or c.get("name") for c in calls]
+        if all(n == _TARGET_FN for n in names):
+            return self._pass(ev)
+        return self._fail(
+            f"tool_choice pinned {_TARGET_FN!r} but got {names!r}", ev,
+        )
+
+    @classmethod
+    def _test_cases(cls):
+        def mk(calls):
+            return ProbeResponse(
+                status_code=200,
+                body={"choices": [{"message": {"content": None, "tool_calls": calls},
+                                   "finish_reason": "tool_calls"}]},
+            )
+        good = mk([{"id": "a", "type": "function",
+                    "function": {"name": _TARGET_FN,
+                                 "arguments": '{"station_id":"X","temp_c":20}'}}])
+        wrong = mk([{"id": "a", "type": "function",
+                     "function": {"name": "get_stock_price",
+                                  "arguments": '{"symbol":"AAPL"}'}}])
+        no_call = ProbeResponse(
+            status_code=200,
+            body={"choices": [{"message": {"content": "I'll help you."},
+                               "finish_reason": "stop"}]},
+        )
+        return [
+            ("PASS: target function called", [good], "pass"),
+            ("FAIL: wrong function called", [wrong], "fail"),
+            ("FAIL: no tool call at all", [no_call], "fail"),
+            ("INCONCLUSIVE: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+        ]
+
+
+if __name__ == "__main__":
+    D56_ToolChoiceHonor.self_test()

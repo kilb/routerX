@@ -102,6 +102,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     # --- P1 quality ---
     ("trim_context", "D42", Verdict.FAIL),
     ("drop_json_format", "D52", Verdict.FAIL),
+    ("ignore_tool_choice", "D56", Verdict.FAIL),
     ("truncate_mid", "D24a", Verdict.FAIL),       # middle canary dropped
     ("trim_history", "D24c", Verdict.FAIL),       # multi-turn history trimmed
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger
