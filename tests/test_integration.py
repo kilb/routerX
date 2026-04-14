@@ -106,6 +106,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("fake_usage", "D29", Verdict.FAIL),          # yin-yang ledger
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
     # --- P2 warnings ---
+    ("clamp_max_tokens", "D43", Verdict.FAIL),
     ("inject_stop_seq", "D37", Verdict.FAIL),     # truncated at first \n\n
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):

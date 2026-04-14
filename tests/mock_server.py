@@ -278,5 +278,11 @@ async def chat(request: Request):
         resp["usage"]["prompt_tokens"] = 2000
         return JSONResponse(resp)
 
+    # --- D43: silent max_tokens clamp (truncated well below requested cap) ---
+    if behavior == "clamp_max_tokens":
+        resp = _ok(" ".join(["word"] * 200))
+        resp["choices"][0]["finish_reason"] = "length"
+        return JSONResponse(resp)
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
