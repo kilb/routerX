@@ -304,5 +304,9 @@ async def chat(request: Request):
             "I'm not sure about events after my training cutoff."
         ))
 
+    # --- D44: top_p silently dropped -- same response every call ---
+    if behavior == "drop_top_p":
+        return JSONResponse(_ok("The body was cold."))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
