@@ -370,6 +370,12 @@ async def chat(request: Request):
             "preserving the texts of the classical era."
         ))
 
+    # --- D83: inflate completion_tokens via token splitting ---
+    if behavior == "inflate_completion_tokens":
+        resp = _ok(user_content[:100] if user_content else "The quick brown fox jumps over the lazy dog")
+        resp["usage"]["completion_tokens"] = 50
+        return JSONResponse(resp)
+
     # --- D82: inflate reasoning_tokens in usage to pad billing ---
     if behavior == "inflate_reasoning_tokens":
         resp = _ok("4")
