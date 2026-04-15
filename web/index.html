@@ -449,16 +449,39 @@ function navigateToTask(taskId,push=true){
 async function loadTask(taskId,server){
   try{
     const r=await fetch(server+'/api/v1/tests/'+taskId);
-    if(!r.ok)throw new Error('Not found');
+    if(!r.ok){
+      document.getElementById('results-area').innerHTML=`
+        <div style="text-align:center;padding:5rem 0">
+          <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+          <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Task Not Found</h2>
+          <p style="color:var(--t3);font-size:0.95rem;margin-bottom:0.3rem">Task <code style="background:var(--card);padding:0.15rem 0.5rem;border-radius:4px;font-family:var(--mono);font-size:0.85rem">${esc(taskId)}</code> does not exist or has expired.</p>
+          <p style="color:var(--t4);font-size:0.85rem">Task data is stored in memory and is cleared when the server restarts.</p>
+          <button class="btn btn-primary" style="margin-top:1.5rem" onclick="showPage('scan')">Start New Scan</button>
+        </div>`;
+      return;
+    }
     const t=await r.json();
     if(t.status==='completed'||t.status==='failed'){
       fetchReport(taskId,server);
-    }else{
+    }else if(t.status==='running'||t.status==='pending'){
       runProgress(taskId,server);
+    }else{
+      // cancelled or unknown
+      document.getElementById('results-area').innerHTML=`
+        <div style="text-align:center;padding:5rem 0">
+          <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Task ${esc(t.status)}</h2>
+          <p style="color:var(--t3);font-size:0.95rem">This task was ${esc(t.status)}.</p>
+          <button class="btn btn-primary" style="margin-top:1.5rem" onclick="showPage('scan')">Start New Scan</button>
+        </div>`;
     }
   }catch(e){
-    // Task not found — try treating it as an active WS
-    runProgress(taskId,server);
+    document.getElementById('results-area').innerHTML=`
+      <div style="text-align:center;padding:5rem 0">
+        <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+        <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Connection Error</h2>
+        <p style="color:var(--t3);font-size:0.95rem">${esc(e.message)}</p>
+        <button class="btn btn-ghost" style="margin-top:1rem" onclick="loadTask('${esc(taskId)}','${esc(server)}')">Retry</button>
+      </div>`;
   }
 }
 
