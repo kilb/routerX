@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Router Auditor — API Docs</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060a;--surface:#111119;--surface2:#18181f;--surface3:#1e1e28;
+  --border:#252530;--border2:#303040;
+  --text:#f0f0f5;--text2:#9090a8;--text3:#606078;
+  --accent:#5b7fff;--accent2:#3b5fdf;--accent-dim:#5b7fff15;
+  --green:#22c55e;--green-dim:#22c55e18;
+  --red:#ef4444;--yellow:#f59e0b;--purple:#a855f7;
+  --mono:'JetBrains Mono',monospace;--sans:'Instrument Sans',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px;opacity:0.06;
+}
+
+/* Layout */
+.wrapper{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{
+  width:260px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 0;
+}
+.sidebar-brand{padding:0 1.25rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.sidebar-brand h1{font-size:0.95rem;font-weight:700;display:flex;align-items:center;gap:0.5rem}
+.sidebar-brand h1 svg{width:18px;height:18px;color:var(--accent)}
+.sidebar-brand p{font-size:0.7rem;color:var(--text3);margin-top:0.2rem}
+.sidebar-section{padding:0.4rem 1.25rem;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-top:0.8rem}
+.sidebar a{
+  display:block;padding:0.35rem 1.25rem;font-size:0.82rem;color:var(--text2);
+  text-decoration:none;transition:all 0.15s;border-left:2px solid transparent;
+}
+.sidebar a:hover{color:var(--text);background:var(--surface2)}
+.sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-dim)}
+.sidebar .method-tag{
+  display:inline-block;width:36px;font-family:var(--mono);font-size:0.6rem;
+  font-weight:600;text-align:center;border-radius:3px;margin-right:0.4rem;
+  padding:1px 0;vertical-align:middle;
+}
+.method-tag.get{background:#22c55e20;color:var(--green)}
+.method-tag.post{background:#5b7fff20;color:var(--accent)}
+.method-tag.del{background:#ef444420;color:var(--red)}
+.method-tag.ws{background:#a855f720;color:var(--purple)}
+
+.content{flex:1;max-width:900px;padding:2.5rem 3rem}
+
+/* Typography */
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin:2.5rem 0 0.75rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+h2:first-child{border-top:none;margin-top:0;padding-top:0}
+h3{font-size:1.05rem;font-weight:600;margin:2rem 0 0.5rem;color:var(--text)}
+h4{font-size:0.85rem;font-weight:600;margin:1.2rem 0 0.4rem;color:var(--text2)}
+p{color:var(--text2);margin-bottom:0.75rem;font-size:0.9rem}
+
+/* Endpoint block */
+.endpoint{
+  display:flex;align-items:center;gap:0.6rem;
+  padding:0.8rem 1.2rem;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;margin:1rem 0;font-family:var(--mono);font-size:0.85rem;
+}
+.endpoint .m{
+  font-size:0.7rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:4px;
+  flex-shrink:0;
+}
+.endpoint .m.get{background:#22c55e20;color:var(--green)}
+.endpoint .m.post{background:#5b7fff20;color:var(--accent)}
+.endpoint .m.delete{background:#ef444420;color:var(--red)}
+.endpoint .m.ws{background:#a855f720;color:var(--purple)}
+.endpoint .path{color:var(--text)}
+
+/* Code block */
+pre{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:1rem 1.25rem;overflow-x:auto;margin:0.75rem 0 1rem;
+  font-family:var(--mono);font-size:0.78rem;line-height:1.7;color:var(--text2);
+}
+code{font-family:var(--mono);font-size:0.82em;background:var(--surface2);padding:0.1em 0.4em;border-radius:4px;color:var(--accent)}
+pre code{background:none;padding:0;color:inherit}
+
+/* Table */
+.param-table{width:100%;border-collapse:collapse;margin:0.75rem 0 1.25rem;font-size:0.82rem}
+.param-table th{
+  text-align:left;font-size:0.68rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text3);padding:0.5rem 0.75rem;
+  border-bottom:1px solid var(--border);
+}
+.param-table td{padding:0.5rem 0.75rem;border-bottom:1px solid #ffffff06;vertical-align:top}
+.param-table .pname{font-family:var(--mono);font-weight:500;color:var(--text);white-space:nowrap}
+.param-table .ptype{font-family:var(--mono);font-size:0.75rem;color:var(--text3)}
+.param-table .preq{color:var(--red);font-size:0.7rem;font-weight:600}
+
+/* Status badge */
+.status{display:inline-block;padding:0.1rem 0.5rem;border-radius:10px;font-size:0.7rem;font-weight:600;font-family:var(--mono)}
+.status.s2{background:#22c55e18;color:var(--green)}
+.status.s4{background:#ef444418;color:var(--red)}
+
+/* Auth notice */
+.auth-notice{
+  display:flex;align-items:center;gap:0.6rem;padding:0.7rem 1rem;
+  background:#5b7fff0a;border:1px solid #5b7fff25;border-radius:8px;
+  font-size:0.8rem;color:var(--accent);margin:0.75rem 0;
+}
+.auth-notice svg{flex-shrink:0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Responsive */
+@media(max-width:800px){
+  .sidebar{display:none}
+  .content{padding:1.5rem}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>API Docs</h1>
+      <p>Router Auditor v2.0</p>
+    </div>
+    <div class="sidebar-section">Overview</div>
+    <a href="#introduction" class="active" onclick="activate(this)">Introduction</a>
+    <a href="#authentication" onclick="activate(this)">Authentication</a>
+    <a href="#errors" onclick="activate(this)">Error Handling</a>
+    <div class="sidebar-section">Endpoints</div>
+    <a href="#create-test" onclick="activate(this)"><span class="method-tag post">POST</span>Create Test</a>
+    <a href="#list-tests" onclick="activate(this)"><span class="method-tag get">GET</span>List Tests</a>
+    <a href="#get-test" onclick="activate(this)"><span class="method-tag get">GET</span>Get Test</a>
+    <a href="#get-report" onclick="activate(this)"><span class="method-tag get">GET</span>Get Report</a>
+    <a href="#get-junit" onclick="activate(this)"><span class="method-tag get">GET</span>Get JUnit XML</a>
+    <a href="#cancel-test" onclick="activate(this)"><span class="method-tag post">POST</span>Cancel Test</a>
+    <a href="#delete-test" onclick="activate(this)"><span class="method-tag del">DEL</span>Delete Test</a>
+    <a href="#ws-progress" onclick="activate(this)"><span class="method-tag ws">WS</span>Progress Stream</a>
+    <a href="#list-detectors" onclick="activate(this)"><span class="method-tag get">GET</span>List Detectors</a>
+    <a href="#health" onclick="activate(this)"><span class="method-tag get">GET</span>Health Check</a>
+    <div class="sidebar-section">Guides</div>
+    <a href="#quickstart" onclick="activate(this)">Quick Start</a>
+    <a href="#webhooks" onclick="activate(this)">Webhooks</a>
+    <a href="#ws-guide" onclick="activate(this)">WebSocket Guide</a>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+
+<!-- ============ INTRODUCTION ============ -->
+<h2 id="introduction">Introduction</h2>
+<p>The Router Auditor API runs 60 security detectors against an LLM API router endpoint, probing for model substitution, parameter fraud, billing manipulation, supply-chain attacks, and more.</p>
+<p>Base URL:</p>
+<pre><code>https://safe.bua.sh/api/v1</code></pre>
+<p>All responses are JSON. The API follows REST conventions with standard HTTP status codes.</p>
+
+<!-- ============ AUTH ============ -->
+<h2 id="authentication">Authentication</h2>
+<p>All endpoints except <code>/health</code> and <code>/detectors</code> require a Bearer token.</p>
+<pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+<div class="auth-notice">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+  Set via <code>AUDITOR_API_KEY</code> environment variable on the server.
+</div>
+
+<!-- ============ ERRORS ============ -->
+<h2 id="errors">Error Handling</h2>
+<p>Errors return a JSON body with a <code>detail</code> field:</p>
+<pre><code>{
+  "detail": "Not found"
+}</code></pre>
+<table class="param-table">
+  <tr><th>Status</th><th>Meaning</th></tr>
+  <tr><td><span class="status s4">400</span></td><td>Bad request (invalid parameters, unknown detector IDs)</td></tr>
+  <tr><td><span class="status s4">401</span></td><td>Missing or invalid API key</td></tr>
+  <tr><td><span class="status s4">404</span></td><td>Task not found</td></tr>
+  <tr><td><span class="status s4">409</span></td><td>Conflict (cancel non-running, delete running task)</td></tr>
+  <tr><td><span class="status s4">503</span></td><td>Server at capacity (max 3 concurrent tasks)</td></tr>
+</table>
+
+<!-- ============ CREATE TEST ============ -->
+<h2 id="create-test">Create Test</h2>
+<div class="endpoint"><span class="m post">POST</span><span class="path">/api/v1/tests</span></div>
+<p>Queue a new audit run. Returns immediately with a <code>task_id</code> and WebSocket URL for real-time progress.</p>
+
+<h4>Request Body</h4>
+<table class="param-table">
+  <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td class="pname">router_endpoint</td><td class="ptype">string</td><td class="preq">*</td><td>Base URL of the router under test</td></tr>
+  <tr><td class="pname">api_key</td><td class="ptype">string</td><td class="preq">*</td><td>API key for the router</td></tr>
+  <tr><td class="pname">claimed_model</td><td class="ptype">string</td><td></td><td>Model name claimed by router. Default: <code>"gpt-4o"</code></td></tr>
+  <tr><td class="pname">claimed_provider</td><td class="ptype">string</td><td></td><td><code>openai</code> | <code>anthropic</code> | <code>gemini</code> | <code>any</code>. Default: <code>"any"</code></td></tr>
+  <tr><td class="pname">capabilities</td><td class="ptype">string[]</td><td></td><td><code>text</code> <code>vision</code> <code>pdf</code> <code>audio</code> <code>tool_calling</code> <code>task_model</code>. Default: <code>["text"]</code></td></tr>
+  <tr><td class="pname">auth_method</td><td class="ptype">string</td><td></td><td><code>bearer</code> | <code>x-api-key</code> | <code>query</code>. Default: <code>"bearer"</code></td></tr>
+  <tr><td class="pname">api_format</td><td class="ptype">string</td><td></td><td><code>openai</code> | <code>anthropic</code> | <code>auto</code>. Default: <code>"openai"</code></td></tr>
+  <tr><td class="pname">timeout</td><td class="ptype">number</td><td></td><td>Per-request timeout in seconds (5–120). Default: <code>30</code></td></tr>
+  <tr><td class="pname">only</td><td class="ptype">string[]</td><td></td><td>Run only these detector IDs, e.g. <code>["D4a", "D11"]</code></td></tr>
+  <tr><td class="pname">direct_endpoint</td><td class="ptype">string</td><td></td><td>Direct provider URL for baseline comparison</td></tr>
+  <tr><td class="pname">direct_api_key</td><td class="ptype">string</td><td></td><td>API key for direct provider</td></tr>
+  <tr><td class="pname">callback_url</td><td class="ptype">string</td><td></td><td>Webhook URL called on task completion</td></tr>
+  <tr><td class="pname">extra_headers</td><td class="ptype">object</td><td></td><td>Additional headers to send with each probe</td></tr>
+</table>
+
+<h4>Response <span class="status s2">201</span></h4>
+<pre><code>{
+  "task_id": "a1b2c3d4e5f6",
+  "status": "pending",
+  "message": "Test created and queued",
+  "ws_url": "/api/v1/tests/a1b2c3d4e5f6/ws"
+}</code></pre>
+
+<h4>Example</h4>
+<pre><code>curl -X POST https://safe.bua.sh/api/v1/tests \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "router_endpoint": "https://api.example.com/v1",
+    "api_key": "sk-router-key",
+    "claimed_model": "claude-opus-4-6",
+    "claimed_provider": "anthropic",
+    "capabilities": ["text", "tool_calling"],
+    "timeout": 60
+  }'</code></pre>
+
+<!-- ============ LIST TESTS ============ -->
+<h2 id="list-tests">List Tests</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/tests</span></div>
+<p>List all audit tasks, with optional filtering.</p>
+<h4>Query Parameters</h4>
+<table class="param-table">
+  <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+  <tr><td class="pname">limit</td><td class="ptype">int</td><td>Max results. Default: 20</td></tr>
+  <tr><td class="pname">offset</td><td class="ptype">int</td><td>Skip N results. Default: 0</td></tr>
+  <tr><td class="pname">status</td><td class="ptype">string</td><td>Filter: <code>pending</code> | <code>running</code> | <code>completed</code> | <code>failed</code> | <code>cancelled</code></td></tr>
+  <tr><td class="pname">endpoint</td><td class="ptype">string</td><td>Filter by router endpoint (substring match)</td></tr>
+</table>
+<h4>Response <span class="status s2">200</span></h4>
+<pre><code>[
+  {
+    "task_id": "a1b2c3d4e5f6",
+    "status": "completed",
+    "created_at": "2026-04-15T10:30:00Z",
+    "completed_at": "2026-04-15T10:32:15Z",
+    "router_endpoint": "https://api.example.com/v1",
+    "claimed_model": "claude-opus-4-6",
+    "tier_assignment": "BLACKLIST",
+    "overall_verdict": "fail",
+    "progress": "60/60"
+  }
+]</code></pre>
+
+<!-- ============ GET TEST ============ -->
+<h2 id="get-test">Get Test Detail</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/tests/{task_id}</span></div>
+<p>Get full details of a test including sanitized config and complete report.</p>
+<h4>Response <span class="status s2">200</span></h4>
+<p>Returns <code>TaskDetail</code> — extends TaskSummary with <code>config</code> (API keys masked), <code>report</code> (full JSON), and <code>error</code> (if failed).</p>
+
+<!-- ============ GET REPORT ============ -->
+<h2 id="get-report">Download Report</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/tests/{task_id}/report</span></div>
+<p>Download the full JSON report as a file. Only available for completed tasks.</p>
+<h4>Response <span class="status s2">200</span></h4>
+<p>Returns <code>application/json</code> with <code>Content-Disposition: attachment</code>.</p>
+<pre><code>{
+  "router_endpoint": "...",
+  "overall_verdict": "fail",
+  "tier_assignment": "BLACKLIST",
+  "total_detectors": 60,
+  "passed": 23,
+  "failed": 15,
+  "results": [
+    {
+      "detector_id": "D31",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": { ... },
+      "latency_ms": 8324
+    }
+  ]
+}</code></pre>
+
+<!-- ============ GET JUNIT ============ -->
+<h2 id="get-junit">Download JUnit XML</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/tests/{task_id}/junit</span></div>
+<p>Download the report as JUnit XML for CI/CD integration. Only available for completed tasks.</p>
+
+<!-- ============ CANCEL ============ -->
+<h2 id="cancel-test">Cancel Test</h2>
+<div class="endpoint"><span class="m post">POST</span><span class="path">/api/v1/tests/{task_id}/cancel</span></div>
+<p>Cancel a running test. Returns <span class="status s4">409</span> if the task is not currently running.</p>
+
+<!-- ============ DELETE ============ -->
+<h2 id="delete-test">Delete Test</h2>
+<div class="endpoint"><span class="m delete">DEL</span><span class="path">/api/v1/tests/{task_id}</span></div>
+<p>Delete a test and its results. Returns <span class="status s4">409</span> if still running (cancel first).</p>
+
+<!-- ============ WEBSOCKET ============ -->
+<h2 id="ws-progress">WebSocket Progress Stream</h2>
+<div class="endpoint"><span class="m ws">WS</span><span class="path">/api/v1/tests/{task_id}/ws</span></div>
+<p>Real-time bidirectional stream of audit progress. No authentication required (task_id acts as capability token).</p>
+
+<h4>Event Types</h4>
+<table class="param-table">
+  <tr><th>Type</th><th>When</th><th>Data</th></tr>
+  <tr><td class="pname">status</td><td>On connect</td><td><code>{ status, progress }</code></td></tr>
+  <tr><td class="pname">stage_start</td><td>Stage begins</td><td><code>{ name, count }</code></td></tr>
+  <tr><td class="pname">detector_start</td><td>Detector begins</td><td><code>{ id, name }</code></td></tr>
+  <tr><td class="pname">detector_end</td><td>Detector finishes</td><td><code>{ id, verdict, latency_ms }</code></td></tr>
+  <tr><td class="pname">stage_end</td><td>Stage ends</td><td><code>{ name, results[] }</code></td></tr>
+  <tr><td class="pname">task_end</td><td>Task complete</td><td><code>{ status, tier }</code></td></tr>
+  <tr><td class="pname">ping</td><td>Every 30s</td><td>Keepalive</td></tr>
+</table>
+
+<h4>Example</h4>
+<pre><code>const ws = new WebSocket("wss://safe.bua.sh/api/v1/tests/abc123/ws");
+ws.onmessage = (e) => {
+  const event = JSON.parse(e.data);
+  if (event.type === "detector_end") {
+    console.log(`${event.data.id}: ${event.data.verdict} (${event.data.latency_ms}ms)`);
+  }
+  if (event.type === "task_end") {
+    console.log(`Done: ${event.data.tier}`);
+    ws.close();
+  }
+};</code></pre>
+
+<!-- ============ LIST DETECTORS ============ -->
+<h2 id="list-detectors">List Detectors</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/detectors</span></div>
+<p>List all registered detectors with metadata. <strong>No authentication required.</strong></p>
+<h4>Response <span class="status s2">200</span></h4>
+<pre><code>[
+  {
+    "detector_id": "D4a",
+    "detector_name": "TokenizerFingerprint",
+    "priority": "P0",
+    "judge_mode": "once",
+    "request_count": 1,
+    "required_capabilities": ["text"],
+    "required_provider": "any",
+    "requires_direct": false,
+    "requires_single_route_claim": false,
+    "description": "Detect model substitution via tokenizer..."
+  }
+]</code></pre>
+
+<!-- ============ HEALTH ============ -->
+<h2 id="health">Health Check</h2>
+<div class="endpoint"><span class="m get">GET</span><span class="path">/api/v1/health</span></div>
+<p>Health check endpoint. <strong>No authentication required.</strong></p>
+<h4>Response <span class="status s2">200</span></h4>
+<pre><code>{
+  "status": "ok",
+  "version": "0.1.0",
+  "active_tasks": 1,
+  "total_completed": 42
+}</code></pre>
+
+<!-- ============ QUICKSTART ============ -->
+<h2 id="quickstart">Quick Start</h2>
+<p>Run a full audit in 3 steps:</p>
+
+<h4>1. Create a test</h4>
+<pre><code>TASK=$(curl -s -X POST https://safe.bua.sh/api/v1/tests \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "router_endpoint": "https://api.router.com/v1",
+    "api_key": "sk-router-key",
+    "claimed_model": "gpt-4o",
+    "claimed_provider": "openai"
+  }' | jq -r .task_id)
+
+echo "Task ID: $TASK"</code></pre>
+
+<h4>2. Poll for completion</h4>
+<pre><code>while true; do
+  STATUS=$(curl -s https://safe.bua.sh/api/v1/tests/$TASK \
+    -H "Authorization: Bearer $API_KEY" | jq -r .status)
+  echo "Status: $STATUS"
+  [ "$STATUS" = "completed" ] && break
+  sleep 5
+done</code></pre>
+
+<h4>3. Download the report</h4>
+<pre><code>curl -s https://safe.bua.sh/api/v1/tests/$TASK/report \
+  -H "Authorization: Bearer $API_KEY" | jq .tier_assignment
+# → "BLACKLIST" or "TIER_1"</code></pre>
+
+<!-- ============ WEBHOOKS ============ -->
+<h2 id="webhooks">Webhooks</h2>
+<p>If <code>callback_url</code> is provided when creating a test, the server sends a POST request on completion:</p>
+<pre><code>POST https://your-server.com/webhook
+Content-Type: application/json
+
+{
+  "task_id": "a1b2c3d4e5f6",
+  "status": "completed",
+  "overall_verdict": "fail",
+  "tier_assignment": "BLACKLIST",
+  "passed": 23,
+  "failed": 15,
+  "report_url": "/api/v1/tests/a1b2c3d4e5f6/report"
+}</code></pre>
+<p>Webhook timeout is 10 seconds. Failures are logged but do not affect the task result.</p>
+
+<!-- ============ WS GUIDE ============ -->
+<h2 id="ws-guide">WebSocket Guide</h2>
+<p>For real-time progress tracking, connect to the WebSocket endpoint immediately after creating a test:</p>
+
+<h4>Python Example</h4>
+<pre><code>import asyncio, json, httpx, websockets
+
+async def audit(endpoint, api_key):
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            "https://safe.bua.sh/api/v1/tests",
+            headers={"Authorization": "Bearer YOUR_AUDITOR_KEY"},
+            json={
+                "router_endpoint": endpoint,
+                "api_key": api_key,
+                "claimed_model": "gpt-4o",
+            },
+        )
+        task_id = r.json()["task_id"]
+
+    async with websockets.connect(
+        f"wss://safe.bua.sh/api/v1/tests/{task_id}/ws"
+    ) as ws:
+        async for msg in ws:
+            ev = json.loads(msg)
+            if ev["type"] == "detector_end":
+                d = ev["data"]
+                print(f"  {d['id']}: {d['verdict']}")
+            if ev["type"] == "task_end":
+                print(f"Result: {ev['data']['tier']}")
+                break
+
+asyncio.run(audit("https://api.router.com/v1", "sk-key"))</code></pre>
+
+<h4>Connection Lifecycle</h4>
+<pre><code>Client                          Server
+  │                               │
+  ├── connect ──────────────────► │
+  │                               ├── status {pending}
+  │                               ├── stage_start {pre_screen}
+  │                               ├── detector_start {D31}
+  │                               ├── detector_end {D31, fail}
+  │                               ├── stage_end {pre_screen}
+  │                               ├── stage_start {s0}
+  │                               ├── ...
+  │                               ├── ping (every 30s)
+  │                               ├── ...
+  │                               ├── task_end {completed, BLACKLIST}
+  │ ◄─────────────────── close ──┤
+  │                               │</code></pre>
+
+<div style="margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);text-align:center">
+  <p style="font-size:0.75rem;color:var(--text3)">Router Auditor v2.0 &mdash; 60 detectors &mdash; <a href="/" style="color:var(--accent);text-decoration:none">Back to app</a></p>
+</div>
+
+  </main>
+</div>
+
+<script>
+function activate(el){
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+}
+// Auto-highlight on scroll
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const id=e.target.id;
+      document.querySelectorAll('.sidebar a').forEach(a=>{
+        a.classList.toggle('active',a.getAttribute('href')==='#'+id);
+      });
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('h2[id]').forEach(h=>observer.observe(h));
+</script>
+</body>
+</html>
