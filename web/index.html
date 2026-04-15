@@ -642,7 +642,7 @@ function runProgress(taskId,server){
     }
     if(ev.type==='detector_end'){
       const d=ev.data,v=d.verdict;
-      const icons={pass:'<span style="color:var(--green);font-size:1.1rem">✓</span>',fail:'<span style="color:var(--red);font-size:1.1rem">✗</span>',suspicious:'<span style="color:var(--purple);font-size:1rem">⚠</span>',inconclusive:'<span style="color:var(--yellow);font-size:0.9rem">●</span>',skip:'<span style="color:var(--t4);font-size:0.8rem">—</span>'};
+      const icons={pass:'<span style="color:var(--green);font-size:1.1rem">✓</span>',fail:'<span style="color:var(--red);font-size:1.1rem">✗</span>',suspicious:'<span style="color:var(--purple);font-size:1rem">⚠</span>',inconclusive:'<span style="color:var(--yellow);font-size:1rem">?</span>',skip:'<span style="color:var(--t4);font-size:0.8rem">—</span>'};
       const el=document.getElementById('dv-'+d.id);if(el)el.innerHTML=icons[v]||'?';
       const tel=document.getElementById('dt-'+d.id);if(tel)tel.textContent=(d.latency_ms/1000).toFixed(1)+'s';
       const row=document.getElementById('dg-'+d.id);
