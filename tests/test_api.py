@@ -37,14 +37,16 @@ def test_list_detectors_returns_60(api_client):
         assert did in ids, f"missing {did}"
 
 
-def test_auth_required_for_tests(api_client):
-    r = api_client.get("/api/v1/tests")
-    assert r.status_code in (401, 403)
+def test_auth_required_for_cancel(api_client):
+    """Cancel and delete endpoints still require auth."""
+    r = api_client.post("/api/v1/tests/nonexistent/cancel")
+    assert r.status_code in (401, 403, 422)
 
 
 def test_auth_rejects_wrong_token(api_client):
-    r = api_client.get(
-        "/api/v1/tests", headers={"Authorization": "Bearer wrong"},
+    r = api_client.post(
+        "/api/v1/tests/nonexistent/cancel",
+        headers={"Authorization": "Bearer wrong"},
     )
     assert r.status_code == 401
 

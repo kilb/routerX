@@ -4,8 +4,15 @@ Some routers silently summarize past conversation turns before forwarding
 to the upstream model. Unlike D24c (which detects hard truncation), this
 detector targets LOSSY COMPRESSION where the gist is preserved but exact
 details -- precise numbers, codes, identifiers -- are rounded or lost.
+
+Probe design: uses semantically NEUTRAL technical values (coordinates,
+UUIDs, hex codes) instead of financial/PII data to avoid triggering
+privacy-protection refusals in frontier models like Claude.
 """
 from __future__ import annotations
+
+import random
+import string
 
 from ..models import (
     DetectorResult,
@@ -16,14 +23,23 @@ from ..models import (
 )
 from ..registry import BaseDetector, detector
 
-# Exact values that must survive round-trip through the conversation.
-_BALANCE = "$1,847.23"
-_CUSTOMER_ID = "CX-90271-ZK"
 
-# Approximate indicators: if any of these appear but the exact balance
-# does not, the router is rounding / summarizing.  Avoid bare "1847"
-# which can match unrelated numbers in model output.
-_BALANCE_APPROX_MARKERS = ("$1,847", "$1847", "1847.23", "1,847.23")
+def _random_hex(n: int) -> str:
+    return "".join(random.choices("0123456789abcdef", k=n))
+
+
+def _generate_probe_values() -> tuple[str, str, str]:
+    """Generate 3 semantically neutral exact values per run."""
+    coord = f"{random.uniform(30, 60):.6f}N, {random.uniform(100, 140):.6f}E"
+    ref_code = f"REF-{_random_hex(8).upper()}"
+    version = f"v{random.randint(2,9)}.{random.randint(0,99)}.{random.randint(0,999)}"
+    return coord, ref_code, version
+
+
+# Fallback values used by self_test (send_probes never ran).
+_TEST_COORD = "47.382910N, 118.294037E"
+_TEST_REF = "REF-4A7B3C1E"
+_TEST_VER = "v3.14.159"
 
 
 @detector
@@ -36,24 +52,34 @@ class D86_ContextCompressionDetection(BaseDetector):
     detector_timeout = 60.0
     description = (
         "Detect routers that silently compress or summarize conversation "
-        "history, losing exact details like numbers and identifiers."
+        "history, losing exact technical details like coordinates and codes."
     )
 
     async def send_probes(self) -> list[ProbeResponse]:
+        coord, ref, ver = _generate_probe_values()
+        self._coord = coord
+        self._ref = ref
+        self._ver = ver
+
         messages = [
-            # Turn 1: plant exact values
+            # Turn 1: plant exact values (neutral technical context)
             {
                 "role": "user",
                 "content": (
-                    f"My exact account balance is {_BALANCE} and my customer "
-                    f"ID is {_CUSTOMER_ID}. Please acknowledge."
+                    "I'm configuring a sensor deployment. Here are the specs:\n"
+                    f"- GPS coordinates: {coord}\n"
+                    f"- Reference code: {ref}\n"
+                    f"- Firmware version: {ver}\n"
+                    "Please confirm you've recorded these."
                 ),
             },
             {
                 "role": "assistant",
                 "content": (
-                    f"Acknowledged. Your balance is {_BALANCE} and customer "
-                    f"ID is {_CUSTOMER_ID}."
+                    f"Confirmed. I've noted the sensor deployment specs:\n"
+                    f"- GPS: {coord}\n"
+                    f"- Reference: {ref}\n"
+                    f"- Firmware: {ver}"
                 ),
             },
             # Turns 2-4: filler to push turn 1 further back
@@ -100,12 +126,13 @@ class D86_ContextCompressionDetection(BaseDetector):
                     "Vinson (Antarctica), Puncak Jaya (Oceania)."
                 ),
             },
-            # Turn 5: recall question
+            # Turn 5: recall — neutral phrasing, no PII sensitivity
             {
                 "role": "user",
                 "content": (
-                    "What is my exact account balance and customer ID? "
-                    "Reply with both values exactly."
+                    "I need to verify the sensor deployment details from "
+                    "earlier. What were the exact GPS coordinates, reference "
+                    "code, and firmware version?"
                 ),
             },
         ]
@@ -115,7 +142,7 @@ class D86_ContextCompressionDetection(BaseDetector):
                 ProbeRequest(
                     payload={
                         "model": self.config.claimed_model,
-                        "max_tokens": 80,
+                        "max_tokens": 100,
                         "temperature": 0,
                         "messages": messages,
                     },
@@ -134,36 +161,41 @@ class D86_ContextCompressionDetection(BaseDetector):
         if not content:
             return self._inconclusive("empty response content")
 
-        has_exact_balance = _BALANCE in content
-        has_exact_id = _CUSTOMER_ID in content
-        has_approx_balance = any(m in content for m in _BALANCE_APPROX_MARKERS)
+        coord = getattr(self, "_coord", _TEST_COORD)
+        ref = getattr(self, "_ref", _TEST_REF)
+        ver = getattr(self, "_ver", _TEST_VER)
+
+        has_coord = coord in content
+        has_ref = ref in content
+        has_ver = ver in content
+        hits = sum([has_coord, has_ref, has_ver])
 
         ev = {
-            "expected_balance": _BALANCE,
-            "expected_id": _CUSTOMER_ID,
-            "has_exact_balance": has_exact_balance,
-            "has_exact_id": has_exact_id,
+            "expected": {"coord": coord, "ref": ref, "version": ver},
+            "found": {"coord": has_coord, "ref": has_ref, "version": has_ver},
+            "hits": f"{hits}/3",
             "got": content[:300],
         }
 
-        if has_exact_balance and has_exact_id:
+        if hits == 3:
             return self._pass(ev)
-
-        # Approximate match: number present but not exact format
-        if has_approx_balance and not has_exact_balance:
+        if hits >= 2:
+            # One value lost — mild compression
+            missing = []
+            if not has_coord:
+                missing.append("coordinates")
+            if not has_ref:
+                missing.append("reference code")
+            if not has_ver:
+                missing.append("firmware version")
             return self._fail(
-                "rounded/approximate -- compression detected",
+                f"partial recall ({hits}/3) — {', '.join(missing)} lost",
                 ev,
             )
-
-        # One or both values missing entirely
-        missing = []
-        if not has_exact_balance:
-            missing.append("balance")
-        if not has_exact_id:
-            missing.append("customer_id")
+        # 0-1 hits — heavy compression or truncation
         return self._fail(
-            f"missing exact values: {', '.join(missing)}",
+            f"only {hits}/3 values recalled — context heavily "
+            f"compressed or truncated",
             ev,
         )
 
@@ -184,29 +216,24 @@ class D86_ContextCompressionDetection(BaseDetector):
 
         return [
             (
-                "PASS: both exact values recalled",
-                [mk(f"Your balance is {_BALANCE} and ID is {_CUSTOMER_ID}.")],
+                "PASS: all 3 values recalled",
+                [mk(f"GPS: {_TEST_COORD}\nRef: {_TEST_REF}\nFirmware: {_TEST_VER}")],
                 "pass",
             ),
             (
-                "FAIL: approximate balance (compression detected)",
-                [mk("Your balance is approximately $1,847 and your ID is CX-90271.")],
+                "FAIL: only 2 of 3 recalled (version lost)",
+                [mk(f"GPS: {_TEST_COORD}\nRef: {_TEST_REF}\nFirmware: unknown")],
                 "fail",
             ),
             (
-                "FAIL: both values missing",
-                [mk("I do not have that information available.")],
+                "FAIL: 0 of 3 recalled (heavy compression)",
+                [mk("I don't have those details available.")],
                 "fail",
             ),
             (
                 "INCONCLUSIVE: network error",
                 [ProbeResponse(status_code=0, error="TIMEOUT")],
                 "inconclusive",
-            ),
-            (
-                "FAIL: only balance present, ID missing",
-                [mk(f"Your balance is {_BALANCE}.")],
-                "fail",
             ),
             (
                 "INCONCLUSIVE: empty content",

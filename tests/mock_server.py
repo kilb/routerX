@@ -399,7 +399,8 @@ async def chat(request: Request):
     # --- D86: lossy compression of conversation history ---
     if behavior == "compress_context":
         return JSONResponse(_ok(
-            "Your balance is approximately $1,847 and your ID is CX-90271."
+            "I recall you mentioned some sensor coordinates and a reference "
+            "code, but I don't have the exact values."
         ))
 
     # --- D87: return wrong model field in response ---
