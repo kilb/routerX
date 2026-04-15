@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Router Auditor Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;800&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --surface2:#1a1a26;
+  --border:#2a2a3a;
+  --text:#e8e8f0;
+  --text2:#8888a0;
+  --red:#ff3355;
+  --red-dim:#ff335520;
+  --green:#00dd77;
+  --green-dim:#00dd7720;
+  --yellow:#ffaa22;
+  --yellow-dim:#ffaa2220;
+  --blue:#4488ff;
+  --blue-dim:#4488ff20;
+  --purple:#aa55ff;
+  --gray:#555570;
+  --gray-dim:#555570 20;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:0.4;
+}
+
+.container{max-width:1400px;margin:0 auto;padding:2rem;position:relative;z-index:1}
+
+/* Header */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.5rem 2rem;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  margin-bottom:2rem;
+  position:relative;overflow:hidden;
+}
+.header::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),var(--purple),transparent);
+}
+.logo{
+  font-family:'DM Mono',monospace;font-size:0.85rem;font-weight:400;
+  color:var(--text2);letter-spacing:0.05em;
+}
+.logo span{color:var(--text);font-weight:500}
+
+/* File input */
+.upload-zone{
+  text-align:center;padding:4rem 2rem;
+  border:2px dashed var(--border);border-radius:16px;
+  background:var(--surface);cursor:pointer;
+  transition:all 0.3s;
+}
+.upload-zone:hover{border-color:var(--blue);background:var(--surface2)}
+.upload-zone h2{font-weight:600;margin-bottom:0.5rem;font-size:1.3rem}
+.upload-zone p{color:var(--text2);font-size:0.9rem}
+.upload-zone input{display:none}
+
+/* Verdict banner */
+.verdict-banner{
+  padding:2rem 2.5rem;border-radius:16px;margin-bottom:2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+  animation:slideUp 0.5s ease-out;
+}
+.verdict-banner.blacklist{background:linear-gradient(135deg,#1a0a10,#200a15);border:1px solid #ff335540}
+.verdict-banner.pass{background:linear-gradient(135deg,#0a1a10,#0a2015);border:1px solid #00dd7740}
+.verdict-banner .verdict-label{
+  font-size:2.5rem;font-weight:800;letter-spacing:-0.02em;
+  background:linear-gradient(135deg,var(--red),#ff6644);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.verdict-banner.pass .verdict-label{
+  background:linear-gradient(135deg,var(--green),#44ffaa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.verdict-meta{text-align:right}
+.verdict-meta .endpoint{
+  font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--text2);
+  margin-bottom:0.3rem;word-break:break-all;
+}
+.verdict-meta .stats{font-size:0.9rem;color:var(--text2)}
+.verdict-meta .stats span{color:var(--text);font-weight:600}
+
+/* Summary ring */
+.summary-grid{
+  display:grid;grid-template-columns:280px 1fr;gap:2rem;margin-bottom:2rem;
+  animation:slideUp 0.6s ease-out;
+}
+.ring-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;display:flex;flex-direction:column;align-items:center;
+}
+.ring-wrap{position:relative;width:180px;height:180px;margin-bottom:1.5rem}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-center .big{font-size:2rem;font-weight:800;line-height:1}
+.ring-center .label{font-size:0.75rem;color:var(--text2);margin-top:0.25rem}
+.ring-legend{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
+.ring-legend .item{display:flex;align-items:center;gap:0.4rem;font-size:0.8rem}
+.ring-legend .dot{width:8px;height:8px;border-radius:50%}
+
+/* Stat cards */
+.stat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:1.2rem 1.5rem;
+}
+.stat-card .val{font-size:1.8rem;font-weight:700;line-height:1.2}
+.stat-card .lbl{font-size:0.8rem;color:var(--text2);margin-top:0.2rem}
+
+/* Stage pipeline */
+.pipeline{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;margin-bottom:2rem;
+  animation:slideUp 0.7s ease-out;
+}
+.pipeline h3{font-size:1.1rem;font-weight:600;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem}
+.stage-row{
+  display:flex;align-items:stretch;gap:0;margin-bottom:0.5rem;position:relative;
+}
+.stage-label{
+  width:100px;flex-shrink:0;
+  font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:500;
+  color:var(--text2);padding:0.6rem 0;
+  display:flex;align-items:center;
+}
+.stage-bar-wrap{flex:1;display:flex;gap:3px;align-items:center;flex-wrap:wrap;padding:0.4rem 0}
+.det-chip{
+  height:28px;min-width:48px;padding:0 8px;border-radius:6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:0.7rem;font-weight:500;
+  cursor:pointer;transition:all 0.2s;position:relative;
+}
+.det-chip:hover{transform:translateY(-2px);z-index:2}
+.det-chip.pass{background:var(--green-dim);color:var(--green);border:1px solid #00dd7730}
+.det-chip.fail{background:var(--red-dim);color:var(--red);border:1px solid #ff335530}
+.det-chip.inconclusive{background:var(--yellow-dim);color:var(--yellow);border:1px solid #ffaa2230}
+.det-chip.skip{background:var(--gray-dim);color:var(--gray);border:1px solid #55557030}
+.det-chip.suspicious{background:var(--purple);color:#fff;border:1px solid #aa55ff30;background:rgba(170,85,255,0.15);color:var(--purple)}
+
+/* Detail panel */
+.detail-panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;margin-bottom:2rem;
+  animation:slideUp 0.8s ease-out;
+}
+.detail-panel h3{font-size:1.1rem;font-weight:600;margin-bottom:1rem}
+
+.det-table{width:100%;border-collapse:separate;border-spacing:0}
+.det-table th{
+  text-align:left;font-size:0.7rem;font-weight:500;
+  color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;
+  padding:0.6rem 1rem;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface);z-index:1;
+}
+.det-table td{
+  padding:0.7rem 1rem;font-size:0.85rem;
+  border-bottom:1px solid #ffffff08;vertical-align:top;
+}
+.det-table tr{cursor:pointer;transition:background 0.15s}
+.det-table tr:hover{background:var(--surface2)}
+.det-table tr.expanded{background:var(--surface2)}
+.det-table .id-col{font-family:'DM Mono',monospace;font-weight:500;width:60px}
+.det-table .name-col{font-weight:500}
+.det-table .pri-col{font-family:'DM Mono',monospace;font-size:0.75rem;width:90px}
+.det-table .time-col{font-family:'DM Mono',monospace;font-size:0.8rem;width:80px;text-align:right;color:var(--text2)}
+.det-table .verdict-pill{
+  display:inline-block;padding:2px 10px;border-radius:10px;
+  font-size:0.75rem;font-weight:600;text-transform:uppercase;
+}
+.verdict-pill.pass{background:var(--green-dim);color:var(--green)}
+.verdict-pill.fail{background:var(--red-dim);color:var(--red)}
+.verdict-pill.inconclusive{background:var(--yellow-dim);color:var(--yellow)}
+.verdict-pill.skip{background:#555570 15;color:var(--gray)}
+.verdict-pill.suspicious{background:rgba(170,85,255,0.15);color:var(--purple)}
+
+.evidence-row td{padding:0.5rem 1rem 1rem 1rem;border-bottom:1px solid var(--border)}
+.evidence-box{
+  background:var(--bg);border-radius:8px;padding:1rem;
+  font-family:'DM Mono',monospace;font-size:0.75rem;line-height:1.6;
+  color:var(--text2);max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;
+}
+
+/* Contradictions */
+.contradictions{
+  background:linear-gradient(135deg,#1a1510,#201815);
+  border:1px solid #ffaa2230;border-radius:12px;
+  padding:1.2rem 1.5rem;margin-bottom:2rem;
+}
+.contradictions h4{color:var(--yellow);font-size:0.85rem;margin-bottom:0.5rem}
+.contradictions p{font-size:0.85rem;color:var(--text2);font-family:'DM Mono',monospace}
+
+/* Compare mode */
+.compare-toggle{
+  display:flex;gap:0.5rem;margin-bottom:1.5rem;
+}
+.compare-toggle button{
+  padding:0.5rem 1.2rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text2);font-family:'Outfit',sans-serif;
+  font-size:0.85rem;cursor:pointer;transition:all 0.2s;
+}
+.compare-toggle button.active{background:var(--blue-dim);color:var(--blue);border-color:var(--blue)}
+.compare-toggle button:hover{border-color:var(--text2)}
+
+/* Animations */
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Responsive */
+@media(max-width:900px){
+  .summary-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .verdict-banner{flex-direction:column;text-align:center;gap:1rem}
+  .verdict-meta{text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <div class="header">
+    <div class="logo">ROUTER <span>AUDITOR</span> &mdash; report viewer</div>
+    <div style="font-size:0.8rem;color:var(--text2)">v2.0 &middot; 60 detectors</div>
+  </div>
+
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <h2>Drop report JSON here</h2>
+    <p>Or click to browse &mdash; accepts report.json from admission_test.py</p>
+    <input type="file" id="fileInput" accept=".json" multiple>
+  </div>
+
+  <div id="reportArea" style="display:none"></div>
+</div>
+
+<script>
+const PRIORITY_ORDER = ['pre_screen','S0','P0','P1','P2'];
+const PRIORITY_LABELS = {pre_screen:'PRE',S0:'S0',P0:'P0',P1:'P1',P2:'P2'};
+const VERDICT_ORDER = ['fail','suspicious','inconclusive','pass','skip'];
+
+let reports = [];
+let expandedRows = new Set();
+
+document.getElementById('fileInput').addEventListener('change', async e => {
+  const files = Array.from(e.target.files);
+  for (const f of files) {
+    try {
+      const text = await f.text();
+      const data = JSON.parse(text);
+      if (data.results) reports.push({name: f.name, data});
+    } catch(err) { alert('Invalid JSON: ' + f.name); }
+  }
+  if (reports.length) render();
+});
+
+// Drag and drop
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.style.borderColor = 'var(--blue)'; });
+uz.addEventListener('dragleave', () => { uz.style.borderColor = ''; });
+uz.addEventListener('drop', async e => {
+  e.preventDefault(); uz.style.borderColor = '';
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+  for (const f of files) {
+    try {
+      const text = await f.text();
+      const data = JSON.parse(text);
+      if (data.results) reports.push({name: f.name, data});
+    } catch(err) {}
+  }
+  if (reports.length) render();
+});
+
+function render() {
+  document.getElementById('uploadZone').style.display = 'none';
+  const area = document.getElementById('reportArea');
+  area.style.display = 'block';
+
+  if (reports.length === 1) {
+    area.innerHTML = renderReport(reports[0].data);
+  } else {
+    area.innerHTML = renderCompare(reports);
+  }
+  bindEvents();
+}
+
+function renderReport(r) {
+  const isBlack = r.tier_assignment === 'BLACKLIST';
+  const stages = groupByStage(r.results);
+  const totalSec = (r.total_latency_ms / 1000).toFixed(1);
+  const cost = r.estimated_cost_usd?.toFixed(2) || '0.00';
+
+  let html = `
+    <div class="verdict-banner ${isBlack ? 'blacklist' : 'pass'}">
+      <div>
+        <div class="verdict-label">${r.tier_assignment}</div>
+        <div style="font-size:0.9rem;color:var(--text2);margin-top:0.3rem">${r.overall_verdict.toUpperCase()}</div>
+      </div>
+      <div class="verdict-meta">
+        <div class="endpoint">${r.router_endpoint}</div>
+        <div class="stats">
+          <span>${r.passed}P</span> / <span style="color:var(--red)">${r.failed}F</span> /
+          ${r.suspicious||0}S / ${r.skipped}K &middot;
+          <span>${totalSec}s</span> &middot; $${cost}
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="ring-card">
+        ${renderRing(r)}
+      </div>
+      <div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="val">${r.total_detectors}</div><div class="lbl">Total Detectors</div></div>
+          <div class="stat-card"><div class="val">${r.total_requests}</div><div class="lbl">API Requests</div></div>
+          <div class="stat-card"><div class="val">${totalSec}s</div><div class="lbl">Total Latency</div></div>
+          <div class="stat-card"><div class="val" style="color:var(--red)">${r.failed}</div><div class="lbl">Failed Checks</div></div>
+          <div class="stat-card"><div class="val" style="color:var(--green)">${r.passed}</div><div class="lbl">Passed Checks</div></div>
+          <div class="stat-card"><div class="val">$${cost}</div><div class="lbl">Estimated Cost</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Contradictions
+  if (r.evidence_notes?.length) {
+    html += `<div class="contradictions"><h4>Contradictions Detected</h4>`;
+    r.evidence_notes.forEach(n => { html += `<p>${n}</p>`; });
+    html += `</div>`;
+  }
+
+  // Pipeline
+  html += `<div class="pipeline"><h3>Detection Pipeline</h3>`;
+  PRIORITY_ORDER.forEach(pri => {
+    const dets = stages[pri] || [];
+    if (!dets.length) return;
+    dets.sort((a,b) => VERDICT_ORDER.indexOf(a.verdict) - VERDICT_ORDER.indexOf(b.verdict));
+    html += `<div class="stage-row">
+      <div class="stage-label">${PRIORITY_LABELS[pri]}</div>
+      <div class="stage-bar-wrap">
+        ${dets.map(d => `<div class="det-chip ${d.verdict}" title="${d.detector_name}: ${d.verdict.toUpperCase()}">${d.detector_id}</div>`).join('')}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Detail table
+  html += renderDetailTable(r.results);
+
+  return html;
+}
+
+function renderRing(r) {
+  const total = r.total_detectors || 1;
+  const slices = [
+    {count: r.failed, color: 'var(--red)', label: 'FAIL'},
+    {count: r.suspicious || 0, color: 'var(--purple)', label: 'SUSPICIOUS'},
+    {count: r.passed, color: 'var(--green)', label: 'PASS'},
+    {count: (r.total_detectors - r.passed - r.failed - (r.suspicious||0) - r.skipped), color: 'var(--yellow)', label: 'INCONCLUSIVE'},
+    {count: r.skipped, color: 'var(--gray)', label: 'SKIP'},
+  ].filter(s => s.count > 0);
+
+  const radius = 70, cx = 90, cy = 90, stroke = 14;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+  let paths = '';
+  slices.forEach(s => {
+    const pct = s.count / total;
+    const dash = pct * circumference;
+    const gap = circumference - dash;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" stroke-linecap="round" opacity="0.85"/>`;
+    offset += dash;
+  });
+
+  const passRate = Math.round((r.passed / total) * 100);
+  return `
+    <div class="ring-wrap">
+      <svg width="180" height="180" viewBox="0 0 180 180">${paths}</svg>
+      <div class="ring-center">
+        <div class="big">${passRate}%</div>
+        <div class="label">pass rate</div>
+      </div>
+    </div>
+    <div class="ring-legend">
+      ${slices.map(s => `<div class="item"><div class="dot" style="background:${s.color}"></div>${s.count} ${s.label}</div>`).join('')}
+    </div>
+  `;
+}
+
+function renderDetailTable(results) {
+  let sorted = [...results].sort((a,b) => {
+    const pi = PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority);
+    if (pi !== 0) return pi;
+    return VERDICT_ORDER.indexOf(a.verdict) - VERDICT_ORDER.indexOf(b.verdict);
+  });
+
+  let html = `<div class="detail-panel"><h3>All Detectors</h3>
+    <table class="det-table"><thead><tr>
+      <th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th>
+    </tr></thead><tbody>`;
+
+  sorted.forEach((d, i) => {
+    const lat = d.latency_ms > 0 ? (d.latency_ms/1000).toFixed(1)+'s' : '-';
+    html += `<tr class="det-row" data-idx="${i}">
+      <td class="id-col">${d.detector_id}</td>
+      <td class="name-col">${d.detector_name}</td>
+      <td class="pri-col">${d.priority}</td>
+      <td><span class="verdict-pill ${d.verdict}">${d.verdict}</span></td>
+      <td class="time-col">${lat}</td>
+    </tr>`;
+    // Evidence row (hidden by default)
+    const ev = d.evidence || {};
+    const detail = d.skipped_reason || ev.reason || '';
+    const evJson = Object.keys(ev).length ? JSON.stringify(ev, null, 2) : '';
+    html += `<tr class="evidence-row" data-idx="${i}" style="display:none">
+      <td colspan="5">
+        ${detail ? `<div style="margin-bottom:0.5rem;color:var(--text);font-size:0.85rem">${escHtml(detail)}</div>` : ''}
+        ${evJson ? `<div class="evidence-box">${escHtml(evJson)}</div>` : ''}
+      </td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function renderCompare(reps) {
+  let html = `<div class="compare-toggle">`;
+  reps.forEach((r, i) => {
+    html += `<button class="${i===0?'active':''}" onclick="showTab(${i})">${r.data.router_endpoint.replace(/https?:\/\//,'').split('/')[0]}</button>`;
+  });
+  html += `<button onclick="showDiff()">Compare</button></div>`;
+  html += `<div id="tabContent">${renderReport(reps[0].data)}</div>`;
+  return html;
+}
+
+function showTab(idx) {
+  document.querySelectorAll('.compare-toggle button').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.getElementById('tabContent').innerHTML = renderReport(reports[idx].data);
+  bindEvents();
+}
+
+function showDiff() {
+  document.querySelectorAll('.compare-toggle button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.compare-toggle button:last-child')[0]?.classList.add('active');
+
+  const all_ids = new Set();
+  reports.forEach(r => r.data.results.forEach(d => all_ids.add(d.detector_id)));
+
+  let html = `<div class="detail-panel"><h3>Side-by-Side Comparison</h3>
+    <table class="det-table"><thead><tr><th>ID</th><th>Name</th>`;
+  reports.forEach(r => {
+    const host = r.data.router_endpoint.replace(/https?:\/\//,'').split('/')[0];
+    html += `<th>${host}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  const sortedIds = [...all_ids].sort((a,b) => {
+    const da = reports[0].data.results.find(x=>x.detector_id===a);
+    const db = reports[0].data.results.find(x=>x.detector_id===b);
+    if (!da || !db) return 0;
+    return PRIORITY_ORDER.indexOf(da.priority) - PRIORITY_ORDER.indexOf(db.priority);
+  });
+
+  sortedIds.forEach(id => {
+    const first = reports[0].data.results.find(x=>x.detector_id===id);
+    const name = first?.detector_name || id;
+    html += `<tr><td class="id-col">${id}</td><td class="name-col">${name}</td>`;
+    reports.forEach(r => {
+      const d = r.data.results.find(x=>x.detector_id===id);
+      if (d) {
+        html += `<td><span class="verdict-pill ${d.verdict}">${d.verdict}</span></td>`;
+      } else {
+        html += `<td><span class="verdict-pill skip">N/A</span></td>`;
+      }
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>`;
+  document.getElementById('tabContent').innerHTML = html;
+}
+
+function groupByStage(results) {
+  const g = {};
+  results.forEach(d => {
+    (g[d.priority] = g[d.priority] || []).push(d);
+  });
+  return g;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function bindEvents() {
+  document.querySelectorAll('.det-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const idx = row.dataset.idx;
+      const evRow = document.querySelector(`.evidence-row[data-idx="${idx}"]`);
+      if (evRow) {
+        const show = evRow.style.display === 'none';
+        evRow.style.display = show ? '' : 'none';
+        row.classList.toggle('expanded', show);
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
