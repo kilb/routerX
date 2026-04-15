@@ -345,7 +345,7 @@ table.rtable{width:100%;border-collapse:separate;border-spacing:0}
         <div class="field" style="margin-top:1rem">
           <label>Auditor API</label>
           <div class="field-row">
-            <input type="text" id="f-server" placeholder="http://localhost:8900" value="http://localhost:8900" spellcheck="false">
+            <input type="text" id="f-server" placeholder="https://safe.bua.sh" spellcheck="false">
             <input type="password" id="f-server-key" placeholder="Auditor API Key" spellcheck="false">
           </div>
           <div class="hint">The Router Auditor server address and its API key</div>
@@ -402,7 +402,8 @@ function showPage(id) {
    SCAN
    ================================================================ */
 async function startScan() {
-  const server = document.getElementById('f-server').value.replace(/\/$/,'');
+  const serverRaw = document.getElementById('f-server').value.trim();
+  const server = (serverRaw || window.location.origin).replace(/\/$/,'');
   const serverKey = document.getElementById('f-server-key').value;
   const endpoint = document.getElementById('f-endpoint').value;
   const apiKey = document.getElementById('f-apikey').value;
