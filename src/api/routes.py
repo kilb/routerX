@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from pydantic import BaseModel
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -334,4 +336,75 @@ async def health():
     return HealthResponse(
         active_tasks=tm.active_count,
         total_completed=tm.total_completed,
+    )
+
+
+class ProbeModelsRequest(BaseModel):
+    router_endpoint: str
+    api_key: str
+    auth_method: str = "bearer"
+
+
+class ModelInfo(BaseModel):
+    id: str
+    owned_by: str | None = None
+
+
+@router.post("/probe-models", response_model=list[ModelInfo])
+async def probe_models(req: ProbeModelsRequest):
+    """Fetch available models from a router's /v1/models endpoint."""
+    import httpx
+
+    endpoint = req.router_endpoint.rstrip("/")
+    # Strip known API path suffixes (same logic as TestConfig validator).
+    for suffix in ("/v1/chat/completions", "/chat/completions",
+                   "/v1/messages", "/messages", "/v1"):
+        if endpoint.endswith(suffix):
+            endpoint = endpoint[:-len(suffix)]
+            break
+
+    headers: dict[str, str] = {"Accept": "application/json"}
+    if req.auth_method == "bearer":
+        headers["Authorization"] = f"Bearer {req.api_key}"
+    elif req.auth_method == "x-api-key":
+        headers["x-api-key"] = req.api_key
+
+    params = {"api_key": req.api_key} if req.auth_method == "query" else None
+
+    # Try /v1/models first (OpenAI standard), then /models as fallback.
+    async with httpx.AsyncClient(timeout=15.0, verify=False) as client:
+        for path in ("/v1/models", "/models"):
+            try:
+                url = endpoint + path
+                resp = await client.get(url, headers=headers, params=params)
+                if resp.status_code != 200:
+                    continue
+                body = resp.json()
+                data = body.get("data") or body.get("models") or []
+                if not isinstance(data, list):
+                    continue
+                models = []
+                for m in data:
+                    if isinstance(m, dict) and m.get("id"):
+                        models.append(ModelInfo(
+                            id=m["id"],
+                            owned_by=m.get("owned_by"),
+                        ))
+                    elif isinstance(m, str):
+                        models.append(ModelInfo(id=m))
+                if models:
+                    # Sort: put common frontier models first.
+                    models.sort(key=lambda x: (
+                        0 if any(k in x.id.lower() for k in (
+                            "gpt-4", "claude", "gemini", "o1", "o3",
+                        )) else 1,
+                        x.id,
+                    ))
+                    return models
+            except Exception as exc:
+                logger.debug("probe-models %s failed: %s", path, exc)
+                continue
+    raise HTTPException(
+        status_code=502,
+        detail="Could not fetch models from the router endpoint",
     )
