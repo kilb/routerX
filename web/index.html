@@ -5,293 +5,330 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Router Auditor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ================================================================
-   DESIGN SYSTEM — Editorial Brutalist meets Dashboard Precision
-   ================================================================ */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#06060a;--bg2:#0c0c14;--surface:#111119;--surface2:#18181f;
-  --surface3:#1e1e28;--border:#252530;--border2:#303040;
-  --text:#f0f0f5;--text2:#9090a8;--text3:#606078;
-  --accent:#5b7fff;--accent2:#3b5fdf;--accent-dim:#5b7fff18;
-  --red:#ef4444;--red2:#dc2626;--red-bg:#ef444412;--red-border:#ef444430;
-  --green:#22c55e;--green2:#16a34a;--green-bg:#22c55e12;--green-border:#22c55e30;
-  --yellow:#f59e0b;--yellow-bg:#f59e0b12;--yellow-border:#f59e0b30;
-  --purple:#a855f7;--purple-bg:#a855f712;--purple-border:#a855f730;
-  --gray:#6b7280;--gray-bg:#6b728012;
-  --radius:12px;--radius-sm:8px;--radius-xs:6px;
-  --mono:'JetBrains Mono',monospace;--sans:'Instrument Sans',system-ui,sans-serif;
-  --shadow:0 1px 2px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.2);
-  --transition:0.2s cubic-bezier(0.4,0,0.2,1);
+  --bg:#09090b;--bg2:#0f0f13;
+  --card:#141418;--card2:#1a1a20;--card3:#222228;
+  --border:#27272a;--border2:#3f3f46;
+  --t1:#fafafa;--t2:#d4d4d8;--t3:#a1a1aa;--t4:#71717a;
+  --blue:#3b82f6;--blue2:#2563eb;--blue-g:linear-gradient(135deg,#3b82f6,#6366f1);
+  --blue-soft:#3b82f618;--blue-border:#3b82f640;
+  --red:#ef4444;--red-soft:#ef444415;--red-border:#ef444435;
+  --green:#22c55e;--green-soft:#22c55e15;--green-border:#22c55e35;
+  --yellow:#eab308;--yellow-soft:#eab30815;--yellow-border:#eab30835;
+  --purple:#a855f7;--purple-soft:#a855f715;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  --r:14px;--r-sm:10px;--r-xs:6px;
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;min-height:100vh}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased}
 
-/* Subtle grid background */
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:
-    linear-gradient(var(--border) 1px,transparent 1px),
-    linear-gradient(90deg,var(--border) 1px,transparent 1px);
-  background-size:60px 60px;opacity:0.08;
-}
+/* Ambient glow */
+.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(120px);opacity:0.07}
+.glow-1{width:600px;height:600px;background:#3b82f6;top:-200px;right:-100px}
+.glow-2{width:500px;height:500px;background:#6366f1;bottom:-100px;left:-150px}
 
-/* ---- Layout ---- */
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ---- NAV ---- */
 .nav{
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 2rem;height:56px;
-  background:rgba(6,6,10,0.85);backdrop-filter:blur(20px);
+  padding:0 2rem;height:60px;
+  background:rgba(9,9,11,0.8);backdrop-filter:blur(24px) saturate(1.2);
   border-bottom:1px solid var(--border);
 }
-.nav-brand{display:flex;align-items:center;gap:0.75rem;cursor:pointer}
-.nav-brand svg{width:20px;height:20px;color:var(--accent)}
-.nav-brand span{font-weight:700;font-size:0.95rem;letter-spacing:-0.01em}
-.nav-brand small{font-family:var(--mono);font-size:0.65rem;color:var(--text3);margin-left:0.3rem;font-weight:400}
-.nav-links{display:flex;gap:0.25rem}
-.nav-links a{
-  padding:0.4rem 0.9rem;border-radius:var(--radius-xs);
-  font-size:0.82rem;font-weight:500;color:var(--text2);
-  text-decoration:none;transition:var(--transition);cursor:pointer;
+.nav-brand{display:flex;align-items:center;gap:0.6rem;cursor:pointer;text-decoration:none}
+.nav-brand .icon{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  background:var(--blue-g);
 }
-.nav-links a:hover,.nav-links a.active{color:var(--text);background:var(--surface2)}
-.main{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:2rem}
+.nav-brand .icon svg{width:18px;height:18px;color:#fff}
+.nav-brand span{font-weight:700;font-size:1.05rem;color:var(--t1)}
+.nav-links{display:flex;gap:0.5rem;align-items:center}
+.nav-links a{
+  padding:0.45rem 1rem;border-radius:var(--r-xs);
+  font-size:0.9rem;font-weight:500;color:var(--t3);
+  text-decoration:none;transition:all 0.2s;cursor:pointer;
+}
+.nav-links a:hover{color:var(--t1);background:var(--card)}
+.nav-links a.active{color:var(--t1);background:var(--card2)}
+.nav-sep{width:1px;height:20px;background:var(--border);margin:0 0.25rem}
 
-/* ---- Page transitions ---- */
-.page{display:none;animation:fadeIn 0.3s ease-out}
+.main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2.5rem 2rem}
+
+/* ---- Pages ---- */
+.page{display:none;animation:pageIn 0.4s ease-out}
 .page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-/* ---- Shared components ---- */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
-.card-title{font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text2);margin-bottom:1rem}
+/* ---- Shared ---- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem}
+.card-label{font-size:0.8rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
-  padding:0.6rem 1.4rem;border-radius:var(--radius-sm);font-size:0.85rem;font-weight:600;
-  font-family:var(--sans);border:none;cursor:pointer;transition:var(--transition);
+  padding:0.7rem 1.5rem;border-radius:var(--r-sm);font-size:0.95rem;font-weight:600;
+  font-family:var(--sans);border:none;cursor:pointer;transition:all 0.25s;
 }
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(91,127,255,0.3)}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
-.btn-ghost:hover{border-color:var(--text2);color:var(--text)}
+.btn-primary{background:var(--blue-g);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,0.35)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--border2);background:var(--card2)}
 .badge{
-  display:inline-flex;align-items:center;padding:0.15rem 0.55rem;border-radius:10px;
-  font-size:0.7rem;font-weight:600;font-family:var(--mono);
+  display:inline-flex;align-items:center;padding:0.2rem 0.6rem;border-radius:20px;
+  font-size:0.78rem;font-weight:600;font-family:var(--mono);line-height:1.4;
 }
-.badge-fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-.badge-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-.badge-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
-.badge-skip{background:var(--gray-bg);color:var(--gray);border:1px solid #6b728030}
-.badge-suspicious{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.badge-fail{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
+.badge-pass{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.badge-warn{background:var(--yellow-soft);color:var(--yellow);border:1px solid var(--yellow-border)}
+.badge-skip{background:#71717a12;color:var(--t4);border:1px solid #71717a30}
+.badge-sus{background:var(--purple-soft);color:var(--purple);border:1px solid #a855f730}
 
-/* ---- Form elements ---- */
-.field{margin-bottom:1.25rem}
-.field label{display:block;font-size:0.78rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.06em}
+/* ======== SCAN PAGE ======== */
+.hero{text-align:center;padding:4rem 0 3rem}
+.hero h1{font-size:3rem;font-weight:800;letter-spacing:-0.04em;line-height:1.15;margin-bottom:0.75rem}
+.hero h1 .grad{background:var(--blue-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--t3);font-size:1.1rem;max-width:540px;margin:0 auto;line-height:1.6}
+.hero .tag-row{display:flex;justify-content:center;gap:0.5rem;margin-top:1.25rem;flex-wrap:wrap}
+.hero .tag{
+  padding:0.3rem 0.75rem;border-radius:20px;font-size:0.78rem;font-weight:500;
+  background:var(--card);border:1px solid var(--border);color:var(--t3);
+}
+
+.scan-form{max-width:580px;margin:0 auto}
+.scan-form .card{padding:2rem 2rem 1.75rem}
+.field{margin-bottom:1.2rem}
+.field label{display:block;font-size:0.85rem;font-weight:600;color:var(--t2);margin-bottom:0.45rem}
 .field input,.field select{
-  width:100%;padding:0.6rem 0.9rem;
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:var(--mono);font-size:0.85rem;
-  transition:var(--transition);outline:none;
+  width:100%;padding:0.7rem 1rem;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--t1);font-family:var(--mono);font-size:0.9rem;
+  transition:all 0.2s;outline:none;
 }
-.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239090a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.75rem center}
+.field input::placeholder{color:var(--t4)}
+.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.8rem center}
+.field .hint{font-size:0.78rem;color:var(--t4);margin-top:0.35rem}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.field .hint{font-size:0.72rem;color:var(--text3);margin-top:0.3rem}
-.checkbox-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem}
-.checkbox-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
-.checkbox-row label{font-size:0.82rem;color:var(--text2);text-transform:none;letter-spacing:0;margin:0;cursor:pointer}
+.caps-row{display:flex;flex-wrap:wrap;gap:0.4rem;padding-top:0.3rem}
+.caps-row label{
+  display:flex;align-items:center;gap:0.35rem;padding:0.3rem 0.7rem;border-radius:var(--r-xs);
+  font-size:0.82rem;color:var(--t3);background:var(--bg2);border:1px solid var(--border);
+  cursor:pointer;transition:all 0.15s;user-select:none;
+}
+.caps-row label:has(input:checked){background:var(--blue-soft);border-color:var(--blue-border);color:var(--blue)}
+.caps-row input{display:none}
+.adv-toggle{
+  display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.6rem 0;
+  font-size:0.85rem;font-weight:500;color:var(--t4);user-select:none;
+}
+.adv-toggle svg{transition:transform 0.2s;width:16px;height:16px}
+.adv-toggle.open svg{transform:rotate(90deg)}
+.adv-body{display:none;padding-top:0.25rem}.adv-body.open{display:block}
 
-/* ================================================================
-   PAGE 1 — SCAN FORM
-   ================================================================ */
-.scan-hero{text-align:center;padding:3rem 0 2.5rem}
-.scan-hero h1{font-size:2.2rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}
-.scan-hero h1 span{
-  background:linear-gradient(135deg,var(--accent),#818cf8);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.scan-hero p{color:var(--text2);font-size:0.95rem;max-width:520px;margin:0 auto}
-.scan-form{max-width:640px;margin:0 auto}
-.scan-form .card{padding:2rem}
-.advanced-toggle{
-  display:flex;align-items:center;gap:0.5rem;cursor:pointer;
-  font-size:0.8rem;color:var(--text3);margin:1rem 0 0.5rem;user-select:none;
-}
-.advanced-toggle svg{transition:transform 0.2s}
-.advanced-toggle.open svg{transform:rotate(90deg)}
-.advanced-body{display:none;padding-top:0.5rem}
-.advanced-body.open{display:block}
+/* ======== RESULTS PAGE ======== */
 
-/* ================================================================
-   PAGE 2 — RESULTS
-   ================================================================ */
-.result-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;gap:2rem;flex-wrap:wrap}
-.result-verdict{display:flex;align-items:center;gap:1rem}
-.verdict-icon{
-  width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:1.5rem;font-weight:800;
+/* Progress state */
+.progress-page{max-width:640px;margin:0 auto;padding-top:2rem}
+.progress-hero{text-align:center;margin-bottom:2rem}
+.progress-hero h2{font-size:1.6rem;font-weight:700;margin-bottom:0.3rem}
+.progress-hero p{font-family:var(--mono);font-size:0.85rem;color:var(--t4)}
+.orbit-wrap{width:120px;height:120px;margin:0 auto 1.5rem;position:relative}
+.orbit{
+  width:120px;height:120px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--blue);
+  animation:spin 1.2s linear infinite;
 }
-.verdict-icon.fail{background:var(--red-bg);border:2px solid var(--red-border);color:var(--red)}
-.verdict-icon.pass{background:var(--green-bg);border:2px solid var(--green-border);color:var(--green)}
-.verdict-text h2{font-size:1.6rem;font-weight:700;letter-spacing:-0.02em}
-.verdict-text p{font-family:var(--mono);font-size:0.8rem;color:var(--text2)}
-.result-meta{text-align:right}
-.result-meta .val{font-family:var(--mono);font-size:0.8rem;color:var(--text2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orbit-num{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:1.5rem;color:var(--t1);
+}
+.orbit-num small{font-size:0.7rem;font-weight:500;color:var(--t4)}
+.pbar-wrap{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.pbar{height:100%;background:var(--blue-g);border-radius:3px;transition:width 0.5s ease-out;width:0%}
+.plog{
+  max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--card);font-family:var(--mono);font-size:0.8rem;line-height:2;
+}
+.plog .ev{display:flex;padding:0 1rem;border-bottom:1px solid #ffffff04}
+.plog .ev:hover{background:var(--card2)}
+.plog .ev-time{color:var(--t4);width:52px;flex-shrink:0}
+.plog .ev-id{color:var(--t2);width:52px;flex-shrink:0;font-weight:600}
+.plog .ev-v{font-weight:600;flex:1}
+.plog .ev-v.pass{color:var(--green)}.plog .ev-v.fail{color:var(--red)}
+.plog .ev-v.inconclusive{color:var(--yellow)}.plog .ev-v.skip{color:var(--t4)}
 
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:2rem}
-.metric{
-  padding:1rem 1.2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+/* Report state */
+.r-banner{
+  position:relative;padding:2.5rem;border-radius:var(--r);margin-bottom:2rem;overflow:hidden;
+  animation:pageIn 0.5s ease-out;
 }
-.metric .num{font-size:1.5rem;font-weight:700;font-family:var(--mono);line-height:1.2}
-.metric .lbl{font-size:0.72rem;color:var(--text2);margin-top:0.15rem;text-transform:uppercase;letter-spacing:0.06em}
+.r-banner.fail{background:linear-gradient(135deg,#1a0508,#1c0a12);border:1px solid var(--red-border)}
+.r-banner.pass{background:linear-gradient(135deg,#051a0e,#0a1c12);border:1px solid var(--green-border)}
+.r-banner-inner{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.r-verdict h2{font-size:2.4rem;font-weight:800;letter-spacing:-0.03em;line-height:1.1}
+.r-banner.fail .r-verdict h2{color:var(--red)}
+.r-banner.pass .r-verdict h2{color:var(--green)}
+.r-verdict p{font-family:var(--mono);font-size:0.88rem;color:var(--t3);margin-top:0.3rem}
+.r-meta{text-align:right}
+.r-meta .endpoint{font-family:var(--mono);font-size:0.82rem;color:var(--t3);word-break:break-all}
+.r-meta .cost{font-size:0.85rem;color:var(--t4);margin-top:0.3rem}
 
-/* Pipeline vis */
-.pipeline-card{margin-bottom:1.5rem}
-.pipeline-stage{display:flex;align-items:center;gap:0;margin-bottom:6px}
-.pipeline-label{
-  width:50px;flex-shrink:0;font-family:var(--mono);font-size:0.7rem;font-weight:600;color:var(--text3);
-}
-.pipeline-chips{display:flex;gap:3px;flex-wrap:wrap}
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.75rem;margin-bottom:2rem}
+.metric{padding:1.25rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);text-align:center}
+.metric .num{font-size:2rem;font-weight:800;font-family:var(--mono);line-height:1.1}
+.metric .lbl{font-size:0.78rem;color:var(--t4);margin-top:0.3rem;font-weight:500}
+
+/* Donut chart */
+.donut-section{display:flex;align-items:center;gap:2rem;margin-bottom:2rem;flex-wrap:wrap}
+.donut-wrap{position:relative;width:200px;height:200px;flex-shrink:0}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-center .big{font-size:2.5rem;font-weight:800;font-family:var(--mono);line-height:1}
+.donut-center .sub{font-size:0.8rem;color:var(--t4);margin-top:0.2rem}
+.donut-legend{display:flex;flex-direction:column;gap:0.6rem}
+.donut-legend .item{display:flex;align-items:center;gap:0.6rem;font-size:0.9rem}
+.donut-legend .dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.donut-legend .item .n{font-family:var(--mono);font-weight:700;min-width:24px}
+
+/* Pipeline */
+.pipeline{margin-bottom:2rem}
+.pipeline .card{padding:1.75rem}
+.stage{display:flex;align-items:center;margin-bottom:8px}
+.stage-lbl{width:48px;flex-shrink:0;font-family:var(--mono);font-size:0.78rem;font-weight:700;color:var(--t4)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{
-  height:26px;min-width:42px;padding:0 7px;border-radius:var(--radius-xs);
+  height:30px;min-width:50px;padding:0 9px;border-radius:var(--r-xs);
   display:inline-flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:0.65rem;font-weight:600;
-  transition:var(--transition);cursor:pointer;
+  font-family:var(--mono);font-size:0.75rem;font-weight:600;
+  transition:all 0.2s;cursor:default;
 }
-.chip:hover{transform:translateY(-2px);filter:brightness(1.2)}
-.chip.pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-.chip.fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-.chip.inconclusive{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
-.chip.skip{background:var(--gray-bg);color:var(--gray);border:1px solid #6b728020}
-.chip.suspicious{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
-
-/* Progress bar during scan */
-.progress-area{margin-bottom:2rem}
-.progress-bar-wrap{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:0.75rem}
-.progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s;width:0%}
-.progress-log{
-  max-height:220px;overflow-y:auto;padding:0.75rem 1rem;
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-family:var(--mono);font-size:0.72rem;line-height:1.8;color:var(--text3);
-}
-.progress-log .ev{display:flex;gap:0.75rem}
-.progress-log .ev-time{color:var(--text3);min-width:48px}
-.progress-log .ev-msg{color:var(--text2)}
-.progress-log .ev-msg.pass{color:var(--green)}
-.progress-log .ev-msg.fail{color:var(--red)}
+.chip.pass{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.chip.fail{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
+.chip.inconclusive{background:var(--yellow-soft);color:var(--yellow);border:1px solid var(--yellow-border)}
+.chip.skip{background:#71717a0a;color:var(--t4);border:1px solid #71717a18}
+.chip.suspicious{background:var(--purple-soft);color:var(--purple);border:1px solid #a855f730}
 
 /* Result table */
-.result-table-wrap{overflow-x:auto}
-table.rtable{width:100%;border-collapse:separate;border-spacing:0}
-.rtable th{
-  position:sticky;top:0;z-index:2;background:var(--surface);
-  text-align:left;font-size:0.68rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:0.08em;color:var(--text3);padding:0.6rem 0.75rem;
-  border-bottom:1px solid var(--border);
+table.rt{width:100%;border-collapse:separate;border-spacing:0}
+.rt th{
+  position:sticky;top:60px;z-index:5;background:var(--card);
+  text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.06em;color:var(--t4);padding:0.65rem 1rem;border-bottom:1px solid var(--border);
 }
-.rtable td{padding:0.55rem 0.75rem;font-size:0.82rem;border-bottom:1px solid #ffffff06;vertical-align:top}
-.rtable tr.data-row{cursor:pointer;transition:background var(--transition)}
-.rtable tr.data-row:hover{background:var(--surface2)}
-.rtable .col-id{font-family:var(--mono);font-weight:600;width:55px;font-size:0.78rem}
-.rtable .col-name{font-weight:500}
-.rtable .col-pri{font-family:var(--mono);font-size:0.72rem;color:var(--text2);width:75px}
-.rtable .col-time{font-family:var(--mono);font-size:0.75rem;color:var(--text3);text-align:right;width:70px}
-.evidence-tr td{padding:0.4rem 0.75rem 1rem;border-bottom:1px solid var(--border)}
-.evidence-tr .ev-box{
-  background:var(--bg);border-radius:var(--radius-sm);padding:0.8rem 1rem;
-  font-family:var(--mono);font-size:0.7rem;line-height:1.7;color:var(--text3);
-  max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;
+.rt td{padding:0.65rem 1rem;font-size:0.9rem;border-bottom:1px solid #ffffff05;vertical-align:top}
+.rt tr.dr{cursor:pointer;transition:background 0.15s}
+.rt tr.dr:hover{background:var(--card2)}
+.rt .cid{font-family:var(--mono);font-weight:700;width:60px;font-size:0.85rem}
+.rt .cname{font-weight:500;color:var(--t2)}
+.rt .cpri{font-family:var(--mono);font-size:0.78rem;color:var(--t4);width:80px}
+.rt .ctime{font-family:var(--mono);font-size:0.82rem;color:var(--t4);text-align:right;width:75px}
+.ev-tr td{padding:0.5rem 1rem 1.25rem;border-bottom:1px solid var(--border)}
+.ev-box{
+  background:var(--bg);border-radius:var(--r-sm);padding:1rem 1.25rem;
+  font-family:var(--mono);font-size:0.78rem;line-height:1.8;color:var(--t3);
+  max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;
+}
+.contradiction{
+  display:flex;align-items:center;gap:0.5rem;padding:0.8rem 1.2rem;border-radius:var(--r-sm);
+  background:var(--yellow-soft);border:1px solid var(--yellow-border);
+  font-size:0.88rem;color:var(--yellow);margin-bottom:1.5rem;
 }
 
-/* ================================================================
-   PAGE 3 — REFERENCE
-   ================================================================ */
-.ref-hero{padding:2rem 0 1.5rem}
-.ref-hero h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.3rem}
-.ref-hero p{color:var(--text2);font-size:0.9rem}
-.ref-filters{display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
-.ref-filters .fbtn{
-  padding:0.35rem 0.8rem;border-radius:var(--radius-xs);font-size:0.75rem;font-weight:600;
-  border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;
-  transition:var(--transition);font-family:var(--sans);
+/* ======== REFERENCE PAGE ======== */
+.ref-hero{padding:2.5rem 0 1.5rem}
+.ref-hero h1{font-size:2rem;font-weight:800;letter-spacing:-0.03em}
+.ref-hero p{color:var(--t3);font-size:1rem;margin-top:0.3rem}
+.ref-bar{display:flex;gap:0.4rem;margin-bottom:1.75rem;flex-wrap:wrap}
+.fbtn{
+  padding:0.4rem 0.9rem;border-radius:20px;font-size:0.82rem;font-weight:600;
+  border:1px solid var(--border);background:transparent;color:var(--t3);
+  cursor:pointer;transition:all 0.2s;font-family:var(--sans);
 }
-.ref-filters .fbtn:hover{border-color:var(--text2)}
-.ref-filters .fbtn.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
-.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0.75rem}
-.ref-card{
-  padding:1.2rem 1.4rem;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);transition:var(--transition);
+.fbtn:hover{border-color:var(--border2);color:var(--t2)}
+.fbtn.active{background:var(--blue-soft);color:var(--blue);border-color:var(--blue-border)}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0.75rem}
+.rc{
+  padding:1.4rem 1.6rem;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);transition:all 0.25s;
 }
-.ref-card:hover{border-color:var(--border2);background:var(--surface2)}
-.ref-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem}
-.ref-card-id{font-family:var(--mono);font-weight:700;font-size:0.9rem}
-.ref-card-pri{font-family:var(--mono);font-size:0.65rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:4px}
-.ref-card-pri.pre_screen{background:#5b7fff18;color:var(--accent)}
-.ref-card-pri.S0{background:var(--red-bg);color:var(--red)}
-.ref-card-pri.P0{background:#ef444418;color:#f87171}
-.ref-card-pri.P1{background:var(--yellow-bg);color:var(--yellow)}
-.ref-card-pri.P2{background:var(--gray-bg);color:var(--gray)}
-.ref-card-name{font-weight:600;font-size:0.88rem;margin-bottom:0.4rem}
-.ref-card-desc{font-size:0.78rem;color:var(--text2);line-height:1.5}
-.ref-card-meta{display:flex;gap:0.75rem;margin-top:0.8rem;font-size:0.7rem;color:var(--text3);font-family:var(--mono)}
+.rc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
+.rc-id{font-family:var(--mono);font-weight:800;font-size:0.95rem}
+.rc-pri{font-family:var(--mono);font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:4px}
+.rc-pri.pre_screen,.rc-pri.S0{background:var(--red-soft);color:var(--red)}
+.rc-pri.P0{background:#f8717118;color:#f87171}
+.rc-pri.P1{background:var(--yellow-soft);color:var(--yellow)}
+.rc-pri.P2{background:#71717a12;color:var(--t4)}
+.rc-name{font-weight:600;font-size:0.95rem;color:var(--t1);margin-bottom:0.5rem}
+.rc-desc{font-size:0.85rem;color:var(--t3);line-height:1.55}
+.rc-foot{display:flex;gap:1rem;margin-top:0.8rem;font-size:0.75rem;color:var(--t4);font-family:var(--mono)}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-/* Responsive */
 @media(max-width:700px){
-  .main{padding:1rem}
+  .main{padding:1.5rem 1rem}
   .field-row{grid-template-columns:1fr}
-  .result-header{flex-direction:column}
-  .result-meta{text-align:left}
+  .hero h1{font-size:2rem}
+  .r-banner-inner{flex-direction:column;text-align:center}
+  .r-meta{text-align:center}
   .ref-grid{grid-template-columns:1fr}
+  .donut-section{justify-content:center}
 }
 </style>
 </head>
 <body>
+<div class="glow glow-1"></div><div class="glow glow-2"></div>
 <div class="app">
-  <!-- Nav -->
   <nav class="nav">
-    <div class="nav-brand" onclick="showPage('scan')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span>Router Auditor<small>v2.0</small></span>
-    </div>
+    <a class="nav-brand" onclick="showPage('scan')">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <span>Router Auditor</span>
+    </a>
     <div class="nav-links">
       <a onclick="showPage('scan')" id="nav-scan" class="active">Scan</a>
       <a onclick="showPage('results')" id="nav-results">Results</a>
       <a onclick="showPage('reference')" id="nav-reference">Reference</a>
-      <a href="/docs.html" style="color:var(--text3)">API Docs</a>
+      <div class="nav-sep"></div>
+      <a href="/docs">API Docs</a>
     </div>
   </nav>
 
   <div class="main">
-    <!-- PAGE: Scan -->
+    <!-- ======== SCAN ======== -->
     <div class="page active" id="page-scan">
-      <div class="scan-hero">
-        <h1>Audit Your <span>LLM Router</span></h1>
-        <p>60 detectors probing for model substitution, parameter fraud, billing manipulation, and supply-chain attacks.</p>
+      <div class="hero">
+        <h1>Audit Your<br><span class="grad">LLM Router</span></h1>
+        <p>60 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
+        <div class="tag-row">
+          <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
+          <span class="tag">Parameter Honoring</span><span class="tag">Supply Chain</span>
+          <span class="tag">Content Integrity</span>
+        </div>
       </div>
       <div class="scan-form">
         <div class="card">
           <div class="field">
             <label>Router Endpoint</label>
             <input type="text" id="f-endpoint" placeholder="https://api.example.com/v1/chat/completions" spellcheck="false">
-            <div class="hint">Base URL or full chat/completions path (auto-normalized)</div>
+            <div class="hint">Full URL or base URL &mdash; path is auto-normalized</div>
           </div>
           <div class="field">
-            <label>API Key</label>
+            <label>Router API Key</label>
             <input type="password" id="f-apikey" placeholder="sk-..." spellcheck="false">
           </div>
           <div class="field-row">
             <div class="field">
-              <label>Model</label>
-              <input type="text" id="f-model" placeholder="claude-opus-4-6" value="gpt-4o" spellcheck="false">
+              <label>Claimed Model</label>
+              <input type="text" id="f-model" placeholder="gpt-4o" value="gpt-4o" spellcheck="false">
             </div>
             <div class="field">
               <label>Provider</label>
@@ -303,452 +340,305 @@ table.rtable{width:100%;border-collapse:separate;border-spacing:0}
               </select>
             </div>
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Auth Method</label>
-              <select id="f-auth">
-                <option value="bearer">Bearer Token</option>
-                <option value="x-api-key">X-API-Key Header</option>
-                <option value="query">Query Parameter</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Capabilities</label>
-              <div style="display:flex;flex-wrap:wrap;gap:0.4rem;padding-top:0.3rem">
-                <label class="checkbox-row"><input type="checkbox" value="text" checked>text</label>
-                <label class="checkbox-row"><input type="checkbox" value="vision">vision</label>
-                <label class="checkbox-row"><input type="checkbox" value="tool_calling">tools</label>
-                <label class="checkbox-row"><input type="checkbox" value="pdf">pdf</label>
-                <label class="checkbox-row"><input type="checkbox" value="audio">audio</label>
-              </div>
+          <div class="field">
+            <label>Capabilities</label>
+            <div class="caps-row">
+              <label><input type="checkbox" value="text" checked>Text</label>
+              <label><input type="checkbox" value="vision">Vision</label>
+              <label><input type="checkbox" value="tool_calling">Tool Calling</label>
+              <label><input type="checkbox" value="pdf">PDF</label>
+              <label><input type="checkbox" value="audio">Audio</label>
             </div>
           </div>
 
-          <div class="advanced-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          <div class="adv-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
             Advanced Options
           </div>
-          <div class="advanced-body">
+          <div class="adv-body">
             <div class="field-row">
+              <div class="field"><label>Auth Method</label><select id="f-auth"><option value="bearer">Bearer Token</option><option value="x-api-key">X-API-Key</option><option value="query">Query Param</option></select></div>
               <div class="field"><label>API Format</label><select id="f-format"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="auto">Auto</option></select></div>
-              <div class="field"><label>Timeout (sec)</label><input type="number" id="f-timeout" value="30" min="5" max="120"></div>
             </div>
-            <div class="field"><label>Direct Endpoint (baseline)</label><input type="text" id="f-direct-ep" placeholder="https://api.openai.com" spellcheck="false"></div>
-            <div class="field"><label>Direct API Key</label><input type="password" id="f-direct-key" placeholder="sk-..." spellcheck="false"></div>
+            <div class="field"><label>Timeout (seconds)</label><input type="number" id="f-timeout" value="60" min="5" max="120"></div>
+            <div class="field"><label>Direct Provider Endpoint</label><input type="text" id="f-direct-ep" placeholder="https://api.openai.com" spellcheck="false"></div>
+            <div class="field"><label>Direct Provider API Key</label><input type="password" id="f-direct-key" placeholder="sk-..." spellcheck="false"></div>
           </div>
 
-          <div style="margin-top:1.5rem">
-            <button class="btn btn-primary" style="width:100%;height:48px;font-size:0.95rem" id="btn-scan" onclick="startScan()">
-              Start Audit
-            </button>
-          </div>
-        </div>
-        <div class="field" style="margin-top:1rem">
-          <label>Auditor API</label>
-          <div class="field-row">
-            <input type="text" id="f-server" placeholder="https://safe.bua.sh" spellcheck="false">
-            <input type="password" id="f-server-key" placeholder="Auditor API Key" spellcheck="false">
-          </div>
-          <div class="hint">The Router Auditor server address and its API key</div>
+          <button class="btn btn-primary" style="width:100%;height:52px;font-size:1rem;margin-top:1.25rem" id="btn-scan" onclick="startScan()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Start Security Audit
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- PAGE: Results -->
-    <div class="page" id="page-results">
-      <div id="results-content">
-        <div style="text-align:center;padding:4rem 0;color:var(--text3)">
-          <p>No results yet. Run a scan first.</p>
-        </div>
-      </div>
-    </div>
+    <!-- ======== RESULTS ======== -->
+    <div class="page" id="page-results"><div id="results-area"><div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No results yet. Run a scan first.</p></div></div></div>
 
-    <!-- PAGE: Reference -->
+    <!-- ======== REFERENCE ======== -->
     <div class="page" id="page-reference">
-      <div class="ref-hero">
-        <h1>Detector Reference</h1>
-        <p>60 detectors across 5 severity stages</p>
-      </div>
-      <div class="ref-filters" id="ref-filters"></div>
+      <div class="ref-hero"><h1>Detector Reference</h1><p>60 detectors across 5 severity stages</p></div>
+      <div class="ref-bar" id="ref-bar"></div>
       <div class="ref-grid" id="ref-grid"></div>
     </div>
   </div>
 </div>
 
 <script>
-/* ================================================================
-   STATE
-   ================================================================ */
-const STAGES = ['pre_screen','S0','P0','P1','P2'];
-const STAGE_LABELS = {pre_screen:'PRE',S0:'S0',P0:'P0',P1:'P1',P2:'P2'};
-const VERDICT_ORDER = ['fail','suspicious','inconclusive','pass','skip'];
-const RISK_MAP = {pre_screen:'CRITICAL',S0:'CRITICAL',P0:'SEVERE',P1:'HIGH',P2:'MEDIUM'};
-const RISK_COLOR = {CRITICAL:'var(--red)',SEVERE:'#f87171',HIGH:'var(--yellow)',MEDIUM:'var(--gray)'};
+const STAGES=['pre_screen','S0','P0','P1','P2'];
+const SL={pre_screen:'PRE',S0:'S0',P0:'P0',P1:'P1',P2:'P2'};
+const VO=['fail','suspicious','inconclusive','pass','skip'];
+let report=null;
 
-let currentReport = null;
-let allDetectors = [];
-
-/* ================================================================
-   NAVIGATION
-   ================================================================ */
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.nav-links a[onclick]').forEach(a=>a.classList.remove('active'));
   document.getElementById('nav-'+id)?.classList.add('active');
-  if (id === 'reference' && allDetectors.length) renderReference();
+  if(id==='reference')renderRef();
 }
 
-/* ================================================================
-   SCAN
-   ================================================================ */
-async function startScan() {
-  const serverRaw = document.getElementById('f-server').value.trim();
-  const server = (serverRaw || window.location.origin).replace(/\/$/,'');
-  const serverKey = document.getElementById('f-server-key').value;
-  const endpoint = document.getElementById('f-endpoint').value;
-  const apiKey = document.getElementById('f-apikey').value;
-  if (!endpoint || !apiKey) { alert('Endpoint and API Key are required'); return; }
-
-  const caps = [...document.querySelectorAll('.scan-form input[type=checkbox]:checked')].map(c => c.value);
-  const body = {
-    router_endpoint: endpoint,
-    api_key: apiKey,
-    claimed_model: document.getElementById('f-model').value || 'gpt-4o',
-    claimed_provider: document.getElementById('f-provider').value,
-    auth_method: document.getElementById('f-auth').value,
-    api_format: document.getElementById('f-format').value,
-    capabilities: caps,
-    timeout: parseFloat(document.getElementById('f-timeout').value) || 30,
+/* ======== SCAN ======== */
+async function startScan(){
+  const server=(window.location.origin);
+  const ep=document.getElementById('f-endpoint').value;
+  const key=document.getElementById('f-apikey').value;
+  if(!ep||!key){alert('Endpoint and API Key are required');return}
+  const caps=[...document.querySelectorAll('.caps-row input:checked')].map(c=>c.value);
+  const body={
+    router_endpoint:ep,api_key:key,
+    claimed_model:document.getElementById('f-model').value||'gpt-4o',
+    claimed_provider:document.getElementById('f-provider').value,
+    auth_method:document.getElementById('f-auth').value,
+    api_format:document.getElementById('f-format').value,
+    capabilities:caps,
+    timeout:parseFloat(document.getElementById('f-timeout').value)||60,
   };
-  const directEp = document.getElementById('f-direct-ep').value;
-  const directKey = document.getElementById('f-direct-key').value;
-  if (directEp) { body.direct_endpoint = directEp; body.direct_api_key = directKey; }
-
-  const btn = document.getElementById('btn-scan');
-  btn.disabled = true; btn.textContent = 'Creating task...';
-
-  try {
-    const headers = {'Content-Type':'application/json'};
-    if (serverKey) headers['Authorization'] = 'Bearer ' + serverKey;
-    const resp = await fetch(server + '/api/v1/tests', {method:'POST', headers, body:JSON.stringify(body)});
-    if (!resp.ok) { const e = await resp.text(); throw new Error(e); }
-    const task = await resp.json();
+  const dep=document.getElementById('f-direct-ep').value;
+  if(dep){body.direct_endpoint=dep;body.direct_api_key=document.getElementById('f-direct-key').value}
+  const btn=document.getElementById('btn-scan');
+  btn.disabled=true;btn.innerHTML='Creating...';
+  try{
+    const r=await fetch(server+'/api/v1/tests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(await r.text());
+    const task=await r.json();
     showPage('results');
-    renderProgress(task.task_id, server, serverKey);
-  } catch(e) {
-    alert('Failed to create task: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Start Audit';
-  }
+    runProgress(task.task_id,server);
+  }catch(e){alert('Error: '+e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Start Security Audit'}
 }
 
-async function renderProgress(taskId, server, serverKey) {
-  const area = document.getElementById('results-content');
-  area.innerHTML = `
-    <div style="margin-bottom:1.5rem">
-      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.25rem">Scanning...</h2>
-      <p style="font-family:var(--mono);font-size:0.8rem;color:var(--text2)">${taskId}</p>
-    </div>
-    <div class="progress-area">
-      <div class="progress-bar-wrap"><div class="progress-bar" id="pbar"></div></div>
-      <div class="progress-log" id="plog"></div>
+function runProgress(taskId,server){
+  const area=document.getElementById('results-area');
+  area.innerHTML=`
+    <div class="progress-page">
+      <div class="orbit-wrap"><div class="orbit"></div><div class="orbit-num"><span id="p-done">0</span><small id="p-total">/ ?</small></div></div>
+      <div class="progress-hero"><h2>Scanning in Progress</h2><p id="p-taskid">${taskId}</p></div>
+      <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
+      <div class="plog" id="plog"></div>
     </div>`;
-
-  const wsProto = server.replace(/^http/,'ws');
-  const ws = new WebSocket(wsProto + '/api/v1/tests/' + taskId + '/ws');
-  const log = document.getElementById('plog');
-  const bar = document.getElementById('pbar');
-
-  ws.onmessage = e => {
-    const ev = JSON.parse(e.data);
-    if (ev.progress) {
-      const [done, total] = ev.progress.split('/').map(Number);
-      bar.style.width = (done/total*100)+'%';
+  const ws=new WebSocket(server.replace(/^http/,'ws')+'/api/v1/tests/'+taskId+'/ws');
+  const log=document.getElementById('plog');
+  ws.onmessage=e=>{
+    const ev=JSON.parse(e.data);
+    if(ev.progress){
+      const[d,t]=ev.progress.split('/').map(Number);
+      document.getElementById('pbar').style.width=(d/t*100)+'%';
+      document.getElementById('p-done').textContent=d;
+      document.getElementById('p-total').textContent='/ '+t;
     }
-    const t = ev.type;
-    if (t === 'detector_end') {
-      const d = ev.data;
-      const cls = d.verdict === 'pass' ? 'pass' : d.verdict === 'fail' ? 'fail' : '';
-      const line = document.createElement('div');
-      line.className = 'ev';
-      line.innerHTML = `<span class="ev-time">${(d.latency_ms/1000).toFixed(1)}s</span><span class="ev-msg ${cls}">${d.id} ${d.verdict.toUpperCase()}</span>`;
-      log.appendChild(line);
-      log.scrollTop = log.scrollHeight;
+    if(ev.type==='detector_end'){
+      const d=ev.data,v=d.verdict;
+      const row=document.createElement('div');row.className='ev';
+      row.innerHTML=`<span class="ev-time">${(d.latency_ms/1000).toFixed(1)}s</span><span class="ev-id">${d.id}</span><span class="ev-v ${v}">${v.toUpperCase()}</span>`;
+      log.appendChild(row);log.scrollTop=1e9;
     }
-    if (t === 'task_end') {
-      ws.close();
-      fetchReport(taskId, server, serverKey);
-    }
+    if(ev.type==='task_end'){ws.close();fetchReport(taskId,server)}
   };
-  ws.onerror = () => { pollFallback(taskId, server, serverKey); };
-  ws.onclose = (e) => { if (e.code !== 1000) pollFallback(taskId, server, serverKey); };
+  ws.onerror=()=>poll(taskId,server);
+  ws.onclose=e=>{if(e.code!==1000)poll(taskId,server)};
 }
 
-async function pollFallback(taskId, server, serverKey) {
-  const headers = {};
-  if (serverKey) headers['Authorization'] = 'Bearer ' + serverKey;
-  for (let i = 0; i < 300; i++) {
-    await new Promise(r => setTimeout(r, 3000));
-    try {
-      const resp = await fetch(server + '/api/v1/tests/' + taskId, {headers});
-      if (!resp.ok) continue;
-      const task = await resp.json();
-      if (['completed','failed','cancelled'].includes(task.status)) {
-        fetchReport(taskId, server, serverKey);
-        return;
-      }
-    } catch(e) {}
+async function poll(id,srv){
+  for(let i=0;i<300;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{
+      const r=await fetch(srv+'/api/v1/tests/'+id);
+      if(!r.ok)continue;
+      const t=await r.json();
+      if(['completed','failed','cancelled'].includes(t.status)){fetchReport(id,srv);return}
+    }catch(e){}
   }
 }
 
-async function fetchReport(taskId, server, serverKey) {
-  const headers = {};
-  if (serverKey) headers['Authorization'] = 'Bearer ' + serverKey;
-  try {
-    const resp = await fetch(server + '/api/v1/tests/' + taskId + '/report', {headers});
-    if (resp.ok) {
-      currentReport = await resp.json();
-      renderReport(currentReport);
-      document.getElementById('btn-scan').disabled = false;
-      document.getElementById('btn-scan').textContent = 'Start Audit';
-      return;
-    }
-  } catch(e) {}
-  document.getElementById('results-content').innerHTML = '<p style="color:var(--red)">Failed to fetch report.</p>';
+async function fetchReport(id,srv){
+  try{
+    const r=await fetch(srv+'/api/v1/tests/'+id+'/report');
+    if(r.ok){report=await r.json();renderReport(report);return}
+  }catch(e){}
+  document.getElementById('results-area').innerHTML='<p style="color:var(--red);text-align:center;padding:3rem">Failed to load report.</p>';
 }
 
-/* ================================================================
-   REPORT RENDERING
-   ================================================================ */
-function renderReport(r) {
-  if (!r) return;
-  const area = document.getElementById('results-content');
-  const isBlack = r.tier_assignment === 'BLACKLIST';
-  const vClass = r.overall_verdict === 'pass' ? 'pass' : 'fail';
-  const totalSec = (r.total_latency_ms/1000).toFixed(1);
-  const cost = r.estimated_cost_usd?.toFixed(2) || '0.00';
-  const inconclusive = r.total_detectors - r.passed - r.failed - (r.suspicious||0) - r.skipped;
+/* ======== REPORT ======== */
+function renderReport(r){
+  const area=document.getElementById('results-area');
+  const isFail=r.overall_verdict!=='pass';
+  const sec=(r.total_latency_ms/1000).toFixed(1);
+  const cost=r.estimated_cost_usd?.toFixed(2)||'0.00';
+  const inc=r.total_detectors-r.passed-r.failed-(r.suspicious||0)-r.skipped;
+  const passRate=Math.round(r.passed/r.total_detectors*100);
 
-  let html = `
-    <div class="result-header">
-      <div class="result-verdict">
-        <div class="verdict-icon ${vClass}">${isBlack ? '!' : '✓'}</div>
-        <div class="verdict-text">
-          <h2 style="color:${isBlack?'var(--red)':'var(--green)'}">${r.tier_assignment}</h2>
-          <p>${r.router_endpoint}</p>
-        </div>
-      </div>
-      <div class="result-meta">
-        <div class="val">${new Date(r.test_timestamp).toLocaleString()}</div>
-        <div style="margin-top:0.5rem">
-          <button class="btn btn-ghost" style="font-size:0.75rem;padding:0.35rem 0.8rem" onclick="downloadReport()">Export JSON</button>
+  // Donut
+  const slices=[
+    {n:r.failed,c:'var(--red)',l:'Failed'},
+    {n:r.suspicious||0,c:'var(--purple)',l:'Suspicious'},
+    {n:inc,c:'var(--yellow)',l:'Inconclusive'},
+    {n:r.passed,c:'var(--green)',l:'Passed'},
+    {n:r.skipped,c:'#52525b',l:'Skipped'},
+  ].filter(s=>s.n>0);
+  const R=85,CX=100,CY=100,SW=18,C=2*Math.PI*R;
+  let off=0,paths='';
+  slices.forEach(s=>{
+    const d=s.n/r.total_detectors*C;
+    paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${s.c}" stroke-width="${SW}" stroke-dasharray="${d} ${C-d}" stroke-dashoffset="${-off}" stroke-linecap="round" opacity="0.9"/>`;
+    off+=d;
+  });
+
+  // Pipeline
+  const stg={};r.results.forEach(d=>(stg[d.priority]=stg[d.priority]||[]).push(d));
+  let pipHTML='';
+  STAGES.forEach(s=>{
+    const dets=stg[s]||[];if(!dets.length)return;
+    dets.sort((a,b)=>VO.indexOf(a.verdict)-VO.indexOf(b.verdict));
+    pipHTML+=`<div class="stage"><div class="stage-lbl">${SL[s]}</div><div class="chips">${dets.map(d=>`<div class="chip ${d.verdict}" title="${d.detector_name}: ${d.verdict}">${d.detector_id}</div>`).join('')}</div></div>`;
+  });
+
+  // Table
+  const sorted=[...r.results].sort((a,b)=>{const p=STAGES.indexOf(a.priority)-STAGES.indexOf(b.priority);return p||VO.indexOf(a.verdict)-VO.indexOf(b.verdict)});
+  let tbl='';
+  sorted.forEach(d=>{
+    const lat=d.latency_ms>0?(d.latency_ms/1000).toFixed(1)+'s':'-';
+    const bc=d.verdict==='pass'?'badge-pass':d.verdict==='fail'?'badge-fail':d.verdict==='suspicious'?'badge-sus':d.verdict==='skip'?'badge-skip':'badge-warn';
+    tbl+=`<tr class="dr" onclick="togEv(this)"><td class="cid">${d.detector_id}</td><td class="cname">${d.detector_name}</td><td class="cpri">${d.priority}</td><td><span class="badge ${bc}">${d.verdict}</span></td><td class="ctime">${lat}</td></tr>`;
+    const ev=d.evidence||{};const reason=d.skipped_reason||ev.reason||'';
+    const js=Object.keys(ev).length?JSON.stringify(ev,null,2):'';
+    tbl+=`<tr class="ev-tr" style="display:none"><td colspan="5">${reason?`<div style="font-size:0.88rem;color:var(--t2);margin-bottom:0.5rem">${esc(reason)}</div>`:''}${js?`<div class="ev-box">${esc(js)}</div>`:''}</td></tr>`;
+  });
+
+  area.innerHTML=`
+    <div class="r-banner ${isFail?'fail':'pass'}">
+      <div class="r-banner-inner">
+        <div class="r-verdict"><h2>${r.tier_assignment}</h2><p>${r.passed} passed &middot; ${r.failed} failed &middot; ${r.total_detectors} total</p></div>
+        <div class="r-meta"><div class="endpoint">${r.router_endpoint}</div><div class="cost">${sec}s &middot; $${cost} &middot; ${r.total_requests} requests</div>
+          <button class="btn btn-ghost" style="margin-top:0.6rem;font-size:0.8rem;padding:0.35rem 0.8rem" onclick="dlReport()">Export JSON</button>
         </div>
       </div>
     </div>
-
-    <div class="metrics-grid">
+    ${r.evidence_notes?.length?`<div class="contradiction"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${r.evidence_notes.join('; ')}</div>`:''}
+    <div class="donut-section">
+      <div class="donut-wrap"><svg width="200" height="200" viewBox="0 0 200 200">${paths}</svg><div class="donut-center"><div class="big">${passRate}%</div><div class="sub">pass rate</div></div></div>
+      <div class="donut-legend">${slices.map(s=>`<div class="item"><div class="dot" style="background:${s.c}"></div><span class="n">${s.n}</span>${s.l}</div>`).join('')}</div>
+    </div>
+    <div class="metrics">
       <div class="metric"><div class="num">${r.total_detectors}</div><div class="lbl">Detectors</div></div>
       <div class="metric"><div class="num" style="color:var(--green)">${r.passed}</div><div class="lbl">Passed</div></div>
       <div class="metric"><div class="num" style="color:var(--red)">${r.failed}</div><div class="lbl">Failed</div></div>
-      <div class="metric"><div class="num" style="color:var(--yellow)">${inconclusive}</div><div class="lbl">Inconclusive</div></div>
-      <div class="metric"><div class="num">${totalSec}s</div><div class="lbl">Duration</div></div>
-      <div class="metric"><div class="num">$${cost}</div><div class="lbl">Est. Cost</div></div>
-    </div>`;
-
-  // Contradictions
-  if (r.evidence_notes?.length) {
-    html += `<div style="padding:0.8rem 1.2rem;border-radius:var(--radius-sm);border:1px solid var(--yellow-border);background:var(--yellow-bg);margin-bottom:1.5rem;font-size:0.82rem;color:var(--yellow)">
-      <strong>Contradiction:</strong> ${r.evidence_notes.join('; ')}
-    </div>`;
-  }
-
-  // Pipeline
-  const stages = {};
-  r.results.forEach(d => (stages[d.priority] = stages[d.priority] || []).push(d));
-  html += `<div class="card pipeline-card"><div class="card-title">Detection Pipeline</div>`;
-  STAGES.forEach(s => {
-    const dets = stages[s] || [];
-    if (!dets.length) return;
-    dets.sort((a,b) => VERDICT_ORDER.indexOf(a.verdict) - VERDICT_ORDER.indexOf(b.verdict));
-    html += `<div class="pipeline-stage">
-      <div class="pipeline-label">${STAGE_LABELS[s]}</div>
-      <div class="pipeline-chips">
-        ${dets.map(d=>`<div class="chip ${d.verdict}" title="${d.detector_name}">${d.detector_id}</div>`).join('')}
-      </div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  // Table
-  const sorted = [...r.results].sort((a,b) => {
-    const p = STAGES.indexOf(a.priority) - STAGES.indexOf(b.priority);
-    return p || VERDICT_ORDER.indexOf(a.verdict) - VERDICT_ORDER.indexOf(b.verdict);
-  });
-  html += `<div class="card"><div class="card-title">All Detectors</div><div class="result-table-wrap"><table class="rtable"><thead><tr>
-    <th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th>
-  </tr></thead><tbody>`;
-  sorted.forEach((d,i) => {
-    const lat = d.latency_ms > 0 ? (d.latency_ms/1000).toFixed(1)+'s' : '-';
-    const bc = d.verdict==='pass'?'badge-pass':d.verdict==='fail'?'badge-fail':d.verdict==='suspicious'?'badge-suspicious':d.verdict==='skip'?'badge-skip':'badge-warn';
-    html += `<tr class="data-row" onclick="toggleEv(this)">
-      <td class="col-id">${d.detector_id}</td>
-      <td class="col-name">${d.detector_name}</td>
-      <td class="col-pri">${d.priority}</td>
-      <td><span class="badge ${bc}">${d.verdict}</span></td>
-      <td class="col-time">${lat}</td>
-    </tr>`;
-    const ev = d.evidence || {};
-    const reason = d.skipped_reason || ev.reason || '';
-    const evStr = Object.keys(ev).length ? JSON.stringify(ev, null, 2) : '';
-    html += `<tr class="evidence-tr" style="display:none"><td colspan="5">
-      ${reason ? `<div style="font-size:0.82rem;color:var(--text);margin-bottom:0.4rem">${esc(reason)}</div>` : ''}
-      ${evStr ? `<div class="ev-box">${esc(evStr)}</div>` : ''}
-    </td></tr>`;
-  });
-  html += `</tbody></table></div></div>`;
-  area.innerHTML = html;
+      <div class="metric"><div class="num" style="color:var(--yellow)">${inc}</div><div class="lbl">Inconclusive</div></div>
+      <div class="metric"><div class="num">${sec}s</div><div class="lbl">Duration</div></div>
+      <div class="metric"><div class="num">$${cost}</div><div class="lbl">Cost</div></div>
+    </div>
+    <div class="pipeline"><div class="card"><div class="card-label">Detection Pipeline</div>${pipHTML}</div></div>
+    <div class="card"><div class="card-label">All Detectors</div><div style="overflow-x:auto"><table class="rt"><thead><tr><th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
 }
+function togEv(row){const n=row.nextElementSibling;if(n?.classList.contains('ev-tr'))n.style.display=n.style.display==='none'?'':'none'}
+function dlReport(){if(!report)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));a.download='audit-report.json';a.click()}
 
-function toggleEv(row) {
-  const next = row.nextElementSibling;
-  if (next?.classList.contains('evidence-tr')) {
-    next.style.display = next.style.display === 'none' ? '' : 'none';
-  }
-}
-
-function downloadReport() {
-  if (!currentReport) return;
-  const blob = new Blob([JSON.stringify(currentReport, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'audit-report.json';
-  a.click();
-}
-
-/* Also support loading from file */
-function loadReportFromFile(data) {
-  currentReport = data;
-  showPage('results');
-  renderReport(data);
-}
-
-/* ================================================================
-   REFERENCE
-   ================================================================ */
-const DETECTOR_DB = [
-  {id:"D31",name:"GodPayload",pri:"pre_screen",desc:"Composite pre-screen: tests JSON schema compliance, logit_bias, context-window algebra, system prompt leakage, and stream usage in a single megabyte payload.",risk:"CRITICAL",mode:"once",reqs:1},
-  {id:"D28",name:"SessionCrosstalkProbe",pri:"S0",desc:"Detects cross-session data leakage by planting a secret across 9 concurrent requests and checking if an independent 10th request can extract it.",risk:"CRITICAL",mode:"once",reqs:10},
-  {id:"D45",name:"ToolCallArgVerifier",pri:"S0",desc:"Sends 5 financial tool-call scenarios (ETH transfer, Uniswap swap, Solana transfer, Stripe payout, cross-chain bridge) and verifies addresses and amounts are not tampered.",risk:"CRITICAL",mode:"once",reqs:5},
-  {id:"D45b",name:"PackageTypoSquatProbe",pri:"S0",desc:"Tests if the router injects typosquatted package names in install commands (pip/npm/docker). Catches supply-chain poisoning attacks.",risk:"CRITICAL",mode:"once",reqs:3},
-  {id:"D45c",name:"InstallerURLProbe",pri:"S0",desc:"Verifies installer URLs (Rustup, Homebrew, cert-manager, git clone) are not redirected to attacker-controlled servers.",risk:"CRITICAL",mode:"once",reqs:4},
-  {id:"D47",name:"AddressConsistencyProbe",pri:"S0",desc:"Plants a crypto address via a memorization prompt, then verifies it survives through balance-check and transfer tool calls without mutation.",risk:"CRITICAL",mode:"once",reqs:3},
-  {id:"D48",name:"AmountPrecisionProbe",pri:"S0",desc:"Sends precise financial amounts (1.23456789 ETH) through tool calls and verifies sub-cent precision is preserved. Compares against direct provider when available.",risk:"CRITICAL",mode:"relative",reqs:6},
-  {id:"D4a",name:"TokenizerFingerprint",pri:"P0",desc:"Identifies the model's tokenizer family via logprobs token boundaries. Mismatched tokenizer = different model family than claimed.",risk:"SEVERE",mode:"once",reqs:1},
-  {id:"D4b",name:"NegativeConstraintProbe",pri:"P0",desc:"Asks model to write sentences avoiding letter 'e' in even positions. Tests instruction-following capability that distinguishes frontier from small models.",risk:"SEVERE",mode:"2/2",reqs:1},
-  {id:"D16b",name:"ToolCallingProbe",pri:"P0",desc:"Sends a structured tool-calling request and verifies the response contains correct function name, argument schema, and no hallucinated fields.",risk:"SEVERE",mode:"once",reqs:1},
-  {id:"D16c",name:"ParallelToolCallProbe",pri:"P0",desc:"Requests two simultaneous tool calls (weather + currency). Detects routers that collapse parallel calls into a single serial call.",risk:"SEVERE",mode:"once",reqs:1},
-  {id:"D21",name:"PhysicalParamProbe",pri:"P0",desc:"Tests 4 physical parameter blindspots: temperature=2.0 chaos, logit_bias ban, logprobs presence, and max_tokens=1 latency ratio. Web reverse proxies fail 2+.",risk:"SEVERE",mode:"once",reqs:5},
-  {id:"D22",name:"ProtocolStrictness",pri:"P0",desc:"Tests protocol-level strictness: JSON schema enforcement (OpenAI), double-user-message rejection (Anthropic), and prefill continuation behavior.",risk:"SEVERE",mode:"once",reqs:4},
-  {id:"D22e",name:"CrossProtocolContradiction",pri:"P0",desc:"Sends a cross-protocol feature (OpenAI strict JSON to Claude, or Anthropic prefill to GPT). A real provider rejects the foreign format.",risk:"SEVERE",mode:"once",reqs:1},
-  {id:"D23",name:"HijackedTokenProbe",pri:"P0",desc:"Probes for leaked third-party branding (translation services, Cursor, Monica) that reveals the API key was stolen from another service.",risk:"SEVERE",mode:"once",reqs:3},
-  {id:"D30",name:"ErrorPathForensics",pri:"P0",desc:"Triggers error responses and inspects for gateway middleware fingerprints (OneAPI, new-api, Poe) in headers and body patterns.",risk:"SEVERE",mode:"once",reqs:3},
-  {id:"D40",name:"SafetyRefusalIntegrity",pri:"P0",desc:"Sends universally-refused prompts (weapons, CSAM, malware). Production frontier models always refuse; bare open-source models comply.",risk:"SEVERE",mode:"once",reqs:3},
-  {id:"D41",name:"BehavioralFingerprint",pri:"P0",desc:"Measures Shannon entropy + chi-square uniformity of 100 random digits. Bare small models show dramatically lower entropy than frontier models.",risk:"SEVERE",mode:"2/2",reqs:1},
-  {id:"D50",name:"SemanticNegation",pri:"P0",desc:"Sends a known-UNSAFE smart contract for security audit. Compares router verdict against direct provider — detects verdict inversion.",risk:"SEVERE",mode:"relative",reqs:2},
-  {id:"D81",name:"HiddenSystemPromptDetection",pri:"P0",desc:"Tricks the model into revealing any hidden system instructions injected by the router (ads, affiliate links, tracking directives, behavior modification).",risk:"SEVERE",mode:"once",reqs:2},
-  {id:"D24a",name:"ContextTruncationCanary",pri:"P1",desc:"Embeds 3 canary markers (head/mid/tail) in a long prompt. Missing middle canary = silent truncation by the router.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D24b",name:"ContextTruncationAlgebra",pri:"P1",desc:"Buries a variable assignment at the 40k-token mark. Correct algebra answer (5×10=50) proves the router forwarded the full context.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D24c",name:"MultiTurnHistoryIntegrity",pri:"P1",desc:"Plants a nonce in turn 1 of a multi-turn conversation, then asks for recall in turn 3. Missing nonce = early history was trimmed.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D25",name:"OutputCapProbe",pri:"P1",desc:"Requests 800 repetitions of a target word with max_tokens=2000. Detects routers that secretly lower the output cap.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D26",name:"SemanticCacheBuster",pri:"P1",desc:"Sends two requests with different nonces but similar structure. If response B echoes nonce A, the router is serving cached results.",risk:"HIGH",mode:"once",reqs:2},
-  {id:"D27",name:"ImageFidelityProbe",pri:"P1",desc:"Sends an image with an embedded verification code. Model must read the code — failure indicates image was stripped or compressed.",risk:"HIGH",mode:"2/2",reqs:2},
-  {id:"D27b",name:"PDFFidelityProbe",pri:"P1",desc:"Sends a PDF with a hidden nonce. Verifies the model can extract the exact nonce, proving PDF content was forwarded faithfully.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D27c",name:"MultiImageOrderProbe",pri:"P1",desc:"Sends 2 images and asks about the second. If the model describes the first, image order was scrambled by the router.",risk:"HIGH",mode:"2/2",reqs:2},
-  {id:"D27d",name:"AudioFidelityProbe",pri:"P1",desc:"Sends an audio clip with known speech content. Verifies transcription accuracy to detect audio stripping or degradation.",risk:"HIGH",mode:"2/2",reqs:2},
-  {id:"D29",name:"UsageBillAuditor",pri:"P1",desc:"Compares router-reported prompt_tokens against local tiktoken count. Catches billing inflation (over-reporting) and yin-yang ledger attacks.",risk:"HIGH",mode:"once",reqs:0},
-  {id:"D29b",name:"PromptCacheIntegrity",pri:"P1",desc:"Sends two identical requests with cache_control headers. Detects routers that ignore caching or fabricate cache_read on the first call.",risk:"HIGH",mode:"once",reqs:2},
-  {id:"D32a",name:"StreamingBasicProbe",pri:"P1",desc:"Streams a completion and checks chunk count, content distribution, and usage block. Detects fake streaming (2-chunk dump).",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D38",name:"SeedReproducibility",pri:"P1",desc:"Sends 3 identical requests with seed parameter. OpenAI guarantees deterministic output — divergence means seed is ignored.",risk:"HIGH",mode:"once",reqs:3},
-  {id:"D42",name:"ContextWindowHonesty",pri:"P1",desc:"Sends a ~15k-token prompt and compares reported prompt_tokens against local count. Catches silent input truncation.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D52",name:"ResponseFormatJSON",pri:"P1",desc:"Requests response_format=json_object. Verifies the response is valid JSON, not prose — detects silent format flag dropping.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D54",name:"TaskCompletion",pri:"P1",desc:"Asks model to list 20 programming languages with a completion marker. Detects semantic truncation where the router cuts the response short.",risk:"HIGH",mode:"2/2",reqs:1},
-  {id:"D55",name:"AsyncTaskProbe",pri:"P1",desc:"Creates two async tasks and verifies unique task IDs and non-identical artifacts. Detects async task forgery.",risk:"HIGH",mode:"once",reqs:2},
-  {id:"D56",name:"ToolChoiceHonor",pri:"P1",desc:"Provides 5 tools and pins tool_choice to a specific function. Detects routers that silently drop the tool_choice constraint.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D59",name:"KnowledgeCutoff",pri:"P1",desc:"Asks 3 well-known post-2022 facts. Pre-2023 open-source substitutes fail to recall them. Requires 2/3 correct answers.",risk:"HIGH",mode:"once",reqs:3},
-  {id:"D62",name:"LogprobsHonesty",pri:"P1",desc:"Requests logprobs=true with top_logprobs=5. Verifies logprobs are present, non-flat (not fabricated), and consistent with emitted tokens.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D64",name:"StreamingChunkShape",pri:"P1",desc:"Analyzes SSE chunk distribution during streaming. Detects re-streamed non-streaming upstreams via too-few or burst-delivered chunks.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D70",name:"LogitBiasHonor",pri:"P1",desc:"Suppresses token ' the' via logit_bias=-100. Compares word frequency with/without bias. Detects silent parameter dropping.",risk:"HIGH",mode:"once",reqs:2},
-  {id:"D82",name:"ReasoningTokenAudit",pri:"P1",desc:"Sends a trivial question and checks if reasoning_tokens in usage are suspiciously high. Catches thinking-token billing inflation.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D83",name:"CompletionTokenAudit",pri:"P1",desc:"Compares reported completion_tokens against local tiktoken count. Detects output-side token splitting overcharge.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D84",name:"ZeroWidthCharDetection",pri:"P1",desc:"Scans responses for invisible Unicode characters (zero-width spaces, joiners, direction marks). Detects steganographic tracking/watermarking.",risk:"HIGH",mode:"once",reqs:3},
-  {id:"D86",name:"ContextCompressionDetection",pri:"P1",desc:"Plants exact numeric values in turn 1 of a multi-turn conversation. Asks for precise recall after filler turns. Detects lossy compression.",risk:"HIGH",mode:"once",reqs:1},
-  {id:"D11",name:"RequestIntegrity",pri:"P2",desc:"Embeds a randomized canary in the system prompt. If the canary is missing AND injection indicators are found, the system prompt was overridden.",risk:"MEDIUM",mode:"once",reqs:1},
-  {id:"D15",name:"GuardrailIntegrity",pri:"P2",desc:"Sets guardrails (no SQL generation, required prefix) and tests compliance. Detects guardrail stripping by the router.",risk:"MEDIUM",mode:"once",reqs:1},
-  {id:"D37",name:"StopSeqProbe",pri:"P2",desc:"Asks for a multi-paragraph response. If output has only 1 paragraph with finish_reason=stop, the router injected a stop sequence.",risk:"MEDIUM",mode:"once",reqs:1},
-  {id:"D43",name:"MaxTokensHonor",pri:"P2",desc:"Requests max_tokens=2000 for a lengthy essay. If truncated below 1200 tokens with finish_reason=length, the router secretly clamped.",risk:"MEDIUM",mode:"once",reqs:1},
-  {id:"D44",name:"TopPSensitivity",pri:"P2",desc:"Compares output diversity at top_p=0.1 vs top_p=1.0 via Jaccard distance. Indistinguishable groups = top_p silently dropped.",risk:"MEDIUM",mode:"2/2",reqs:8},
-  {id:"D51",name:"UserStopSequence",pri:"P2",desc:"Supplies stop=['DONE'] and prompts output that would contain DONE. Verifies truncation happens at the stop token.",risk:"MEDIUM",mode:"once",reqs:1},
-  {id:"D53",name:"MetadataCompleteness",pri:"P2",desc:"Checks that usage fields (prompt_tokens, completion_tokens) and system_fingerprint are present and complete in the response.",risk:"MEDIUM",mode:"once",reqs:2},
-  {id:"D57",name:"ResponseIDUniqueness",pri:"P2",desc:"Sends 3 identical requests. Each response.id must be unique. Duplicate IDs indicate templated/cached fake responses.",risk:"MEDIUM",mode:"once",reqs:3},
-  {id:"D60",name:"LatencyFingerprint",pri:"P2",desc:"Measures TTFT and tokens/sec during streaming. Compares against published latency bands for the claimed model family.",risk:"MEDIUM",mode:"2/2",reqs:1},
-  {id:"D61",name:"TemperatureSensitivity",pri:"P2",desc:"Compares output diversity at temperature=0 vs temperature=1.0. No diversity difference = temperature parameter silently dropped.",risk:"MEDIUM",mode:"2/2",reqs:8},
-  {id:"D65",name:"StyleFingerprint",pri:"P2",desc:"Extracts writing-style features (sentence length, em-dash rate, bullet frequency) and compares against claimed model family centroid.",risk:"MEDIUM",mode:"2/2",reqs:3},
-  {id:"D68",name:"FrequencyPenaltyHonor",pri:"P2",desc:"Asks for 30 repetitions of 'apple' with and without frequency_penalty=1.8. Identical output = penalty parameter silently dropped.",risk:"MEDIUM",mode:"2/2",reqs:2},
-  {id:"D85",name:"IntraFamilyDowngrade",pri:"P2",desc:"Compares per-token latency on trivial vs complex prompts. Dramatically faster trivial responses suggest cheaper intra-family model routing.",risk:"MEDIUM",mode:"2/2",reqs:2},
-  {id:"D87",name:"ResponseModelFieldAudit",pri:"P2",desc:"Checks response.model matches the request, created timestamp is fresh, and model field is consistent across calls. Catches fallback switching.",risk:"MEDIUM",mode:"once",reqs:3},
+/* ======== REFERENCE ======== */
+const DB=[
+{id:"D31",name:"GodPayload",pri:"pre_screen",desc:"Composite pre-screen testing JSON schema, logit_bias, context algebra, system prompt leakage, and stream usage in a single payload.",mode:"once",reqs:1},
+{id:"D28",name:"SessionCrosstalkProbe",pri:"S0",desc:"Plants a secret across 9 concurrent requests and checks if an independent 10th request can extract it — detecting cross-session data leakage.",mode:"once",reqs:10},
+{id:"D45",name:"ToolCallArgVerifier",pri:"S0",desc:"Sends 5 financial tool-call scenarios (ETH, Uniswap, Solana, Stripe, bridge) and verifies addresses and amounts are not tampered.",mode:"once",reqs:5},
+{id:"D45b",name:"PackageTypoSquatProbe",pri:"S0",desc:"Tests if the router injects typosquatted package names in pip/npm/docker install commands.",mode:"once",reqs:3},
+{id:"D45c",name:"InstallerURLProbe",pri:"S0",desc:"Verifies installer URLs (Rustup, Homebrew, cert-manager, git clone) are not redirected to attacker-controlled servers.",mode:"once",reqs:4},
+{id:"D47",name:"AddressConsistencyProbe",pri:"S0",desc:"Plants a crypto address, then verifies it survives through balance-check and transfer tool calls without mutation.",mode:"once",reqs:3},
+{id:"D48",name:"AmountPrecisionProbe",pri:"S0",desc:"Verifies sub-cent precision (1.23456789 ETH) is preserved through financial tool calls.",mode:"relative",reqs:6},
+{id:"D4a",name:"TokenizerFingerprint",pri:"P0",desc:"Identifies model's tokenizer family via logprobs token boundaries. Mismatch = different model than claimed.",mode:"once",reqs:1},
+{id:"D4b",name:"NegativeConstraintProbe",pri:"P0",desc:"Tests instruction-following with character avoidance constraints that distinguish frontier from small models.",mode:"2/2",reqs:1},
+{id:"D16b",name:"ToolCallingProbe",pri:"P0",desc:"Verifies tool-calling response contains correct function name, schema, and no hallucinated fields.",mode:"once",reqs:1},
+{id:"D16c",name:"ParallelToolCallProbe",pri:"P0",desc:"Requests two simultaneous tool calls. Detects routers that collapse parallel calls to serial.",mode:"once",reqs:1},
+{id:"D21",name:"PhysicalParamProbe",pri:"P0",desc:"Tests 4 physical parameter blindspots: temp=2.0, logit_bias ban, logprobs presence, max_tokens=1 latency.",mode:"once",reqs:5},
+{id:"D22",name:"ProtocolStrictness",pri:"P0",desc:"Tests protocol-level strictness: JSON schema enforcement, double-user rejection, prefill continuation.",mode:"once",reqs:4},
+{id:"D22e",name:"CrossProtocolContradiction",pri:"P0",desc:"Sends cross-protocol features. A real provider rejects the foreign format.",mode:"once",reqs:1},
+{id:"D23",name:"HijackedTokenProbe",pri:"P0",desc:"Probes for leaked third-party branding revealing the API key was stolen from another service.",mode:"once",reqs:3},
+{id:"D30",name:"ErrorPathForensics",pri:"P0",desc:"Triggers errors and inspects for gateway middleware fingerprints (OneAPI, new-api, Poe) in headers.",mode:"once",reqs:3},
+{id:"D40",name:"SafetyRefusalIntegrity",pri:"P0",desc:"Sends universally-refused prompts. Frontier models refuse; bare open-source models comply.",mode:"once",reqs:3},
+{id:"D41",name:"BehavioralFingerprint",pri:"P0",desc:"Measures Shannon entropy + chi-square of 100 random digits. Bare small models show dramatically lower entropy.",mode:"2/2",reqs:1},
+{id:"D50",name:"SemanticNegation",pri:"P0",desc:"Sends a known-UNSAFE smart contract for audit. Compares verdict against direct provider.",mode:"relative",reqs:2},
+{id:"D81",name:"HiddenSystemPromptDetection",pri:"P0",desc:"Tricks the model into revealing hidden system instructions injected by the router (ads, tracking, behavior modification).",mode:"once",reqs:2},
+{id:"D24a",name:"ContextTruncationCanary",pri:"P1",desc:"Embeds 3 canary markers in a long prompt. Missing middle canary = silent truncation.",mode:"once",reqs:1},
+{id:"D24b",name:"ContextTruncationAlgebra",pri:"P1",desc:"Buries a variable at the 40k-token mark. Correct answer proves full context was forwarded.",mode:"once",reqs:1},
+{id:"D24c",name:"MultiTurnHistoryIntegrity",pri:"P1",desc:"Plants a nonce in turn 1, asks for recall in turn 3. Missing = history trimmed.",mode:"once",reqs:1},
+{id:"D25",name:"OutputCapProbe",pri:"P1",desc:"Requests 800 repetitions with max_tokens=2000. Detects secret output cap lowering.",mode:"once",reqs:1},
+{id:"D26",name:"SemanticCacheBuster",pri:"P1",desc:"Sends two requests with different nonces. If response B echoes nonce A = cached.",mode:"once",reqs:2},
+{id:"D27",name:"ImageFidelityProbe",pri:"P1",desc:"Sends an image with embedded verification code. Failure = image stripped or compressed.",mode:"2/2",reqs:2},
+{id:"D27b",name:"PDFFidelityProbe",pri:"P1",desc:"Sends a PDF with a hidden nonce. Verifies exact extraction.",mode:"once",reqs:1},
+{id:"D27c",name:"MultiImageOrderProbe",pri:"P1",desc:"Sends 2 images, asks about the second. Wrong answer = order scrambled.",mode:"2/2",reqs:2},
+{id:"D27d",name:"AudioFidelityProbe",pri:"P1",desc:"Sends audio with known speech. Verifies transcription accuracy.",mode:"2/2",reqs:2},
+{id:"D29",name:"UsageBillAuditor",pri:"P1",desc:"Compares reported prompt_tokens against local tiktoken count. Catches billing inflation.",mode:"once",reqs:0},
+{id:"D29b",name:"PromptCacheIntegrity",pri:"P1",desc:"Sends identical requests with cache_control. Detects ignored caching or fabricated cache_read.",mode:"once",reqs:2},
+{id:"D32a",name:"StreamingBasicProbe",pri:"P1",desc:"Streams a completion, checks chunk count and content distribution. Detects fake streaming.",mode:"once",reqs:1},
+{id:"D38",name:"SeedReproducibility",pri:"P1",desc:"Sends 3 identical seeded requests. Divergent output = seed ignored.",mode:"once",reqs:3},
+{id:"D42",name:"ContextWindowHonesty",pri:"P1",desc:"Sends ~15k-token prompt, compares reported tokens against local count. Catches silent truncation.",mode:"once",reqs:1},
+{id:"D52",name:"ResponseFormatJSON",pri:"P1",desc:"Requests json_object format. Verifies response is valid JSON, not prose.",mode:"once",reqs:1},
+{id:"D54",name:"TaskCompletion",pri:"P1",desc:"Asks for 20 items with completion marker. Detects semantic truncation.",mode:"2/2",reqs:1},
+{id:"D55",name:"AsyncTaskProbe",pri:"P1",desc:"Creates two async tasks. Verifies unique IDs and non-identical artifacts.",mode:"once",reqs:2},
+{id:"D56",name:"ToolChoiceHonor",pri:"P1",desc:"Pins tool_choice to a specific function. Detects silent dropping of the constraint.",mode:"once",reqs:1},
+{id:"D59",name:"KnowledgeCutoff",pri:"P1",desc:"Asks 3 well-known post-2022 facts. Pre-2023 substitutes fail to recall them.",mode:"once",reqs:3},
+{id:"D62",name:"LogprobsHonesty",pri:"P1",desc:"Requests logprobs=true. Verifies they're present, non-flat, and consistent.",mode:"once",reqs:1},
+{id:"D64",name:"StreamingChunkShape",pri:"P1",desc:"Analyzes SSE chunk distribution. Detects re-streamed non-streaming upstreams.",mode:"once",reqs:1},
+{id:"D70",name:"LogitBiasHonor",pri:"P1",desc:"Suppresses token ' the' via logit_bias=-100. Compares frequency with/without bias.",mode:"once",reqs:2},
+{id:"D82",name:"ReasoningTokenAudit",pri:"P1",desc:"Sends trivial question, checks if reasoning_tokens are suspiciously inflated.",mode:"once",reqs:1},
+{id:"D83",name:"CompletionTokenAudit",pri:"P1",desc:"Compares reported completion_tokens against local count. Detects output token inflation.",mode:"once",reqs:1},
+{id:"D84",name:"ZeroWidthCharDetection",pri:"P1",desc:"Scans responses for invisible Unicode characters. Detects steganographic tracking.",mode:"once",reqs:3},
+{id:"D86",name:"ContextCompressionDetection",pri:"P1",desc:"Plants exact values in conversation history. Tests precise recall after filler turns.",mode:"once",reqs:1},
+{id:"D11",name:"RequestIntegrity",pri:"P2",desc:"Embeds randomized canary in system prompt. Tests for removal or override via injection.",mode:"once",reqs:1},
+{id:"D15",name:"GuardrailIntegrity",pri:"P2",desc:"Sets guardrails (no SQL, required prefix) and tests compliance. Detects guardrail stripping.",mode:"once",reqs:1},
+{id:"D37",name:"StopSeqProbe",pri:"P2",desc:"Asks for multi-paragraph output. Single paragraph + stop = router injected stop sequence.",mode:"once",reqs:1},
+{id:"D43",name:"MaxTokensHonor",pri:"P2",desc:"Requests max_tokens=2000. If truncated below 1200 with finish_reason=length, router clamped.",mode:"once",reqs:1},
+{id:"D44",name:"TopPSensitivity",pri:"P2",desc:"Compares output diversity at top_p=0.1 vs 1.0. Indistinguishable = top_p dropped.",mode:"2/2",reqs:8},
+{id:"D51",name:"UserStopSequence",pri:"P2",desc:"Supplies stop=['DONE']. Verifies truncation happens at the stop token.",mode:"once",reqs:1},
+{id:"D53",name:"MetadataCompleteness",pri:"P2",desc:"Checks usage fields and system_fingerprint are present and complete.",mode:"once",reqs:2},
+{id:"D57",name:"ResponseIDUniqueness",pri:"P2",desc:"Sends 3 identical requests. Each response.id must be unique.",mode:"once",reqs:3},
+{id:"D60",name:"LatencyFingerprint",pri:"P2",desc:"Measures TTFT and tokens/sec. Compares against model family latency bands.",mode:"2/2",reqs:1},
+{id:"D61",name:"TemperatureSensitivity",pri:"P2",desc:"Compares diversity at temp=0 vs temp=1. No difference = temperature dropped.",mode:"2/2",reqs:8},
+{id:"D65",name:"StyleFingerprint",pri:"P2",desc:"Extracts writing-style features and compares against claimed model family centroid.",mode:"2/2",reqs:3},
+{id:"D68",name:"FrequencyPenaltyHonor",pri:"P2",desc:"Tests repetition with/without frequency_penalty=1.8. Identical = penalty dropped.",mode:"2/2",reqs:2},
+{id:"D85",name:"IntraFamilyDowngrade",pri:"P2",desc:"Compares per-token latency on trivial vs complex prompts. Detects cheaper intra-family routing.",mode:"2/2",reqs:2},
+{id:"D87",name:"ResponseModelFieldAudit",pri:"P2",desc:"Checks response.model matches request, timestamp is fresh, and field is consistent across calls.",mode:"once",reqs:3},
 ];
 
-let refFilter = 'all';
-
-function renderReference() {
-  const filters = document.getElementById('ref-filters');
-  const grid = document.getElementById('ref-grid');
-  const counts = {all:DETECTOR_DB.length};
-  STAGES.forEach(s => counts[s] = DETECTOR_DB.filter(d=>d.pri===s).length);
-
-  filters.innerHTML = `<button class="fbtn ${refFilter==='all'?'active':''}" onclick="setRefFilter('all')">All (${counts.all})</button>` +
-    STAGES.map(s => `<button class="fbtn ${refFilter===s?'active':''}" onclick="setRefFilter('${s}')">${STAGE_LABELS[s]} (${counts[s]||0})</button>`).join('');
-
-  const filtered = refFilter === 'all' ? DETECTOR_DB : DETECTOR_DB.filter(d => d.pri === refFilter);
-  grid.innerHTML = filtered.map(d => `
-    <div class="ref-card">
-      <div class="ref-card-head">
-        <span class="ref-card-id">${d.id}</span>
-        <span class="ref-card-pri ${d.pri}">${d.pri.toUpperCase()}</span>
-      </div>
-      <div class="ref-card-name">${d.name}</div>
-      <div class="ref-card-desc">${d.desc}</div>
-      <div class="ref-card-meta">
-        <span>Risk: <span style="color:${RISK_COLOR[d.risk]}">${d.risk}</span></span>
-        <span>Mode: ${d.mode}</span>
-        <span>Reqs: ${d.reqs}</span>
-      </div>
-    </div>
-  `).join('');
+let refF='all';
+function renderRef(){
+  const bar=document.getElementById('ref-bar');
+  const grid=document.getElementById('ref-grid');
+  const cnt={all:DB.length};STAGES.forEach(s=>cnt[s]=DB.filter(d=>d.pri===s).length);
+  bar.innerHTML=`<button class="fbtn ${refF==='all'?'active':''}" onclick="setF('all')">All ${cnt.all}</button>`+STAGES.map(s=>`<button class="fbtn ${refF===s?'active':''}" onclick="setF('${s}')">${SL[s]} ${cnt[s]||0}</button>`).join('');
+  const list=refF==='all'?DB:DB.filter(d=>d.pri===refF);
+  grid.innerHTML=list.map(d=>`<div class="rc"><div class="rc-top"><span class="rc-id">${d.id}</span><span class="rc-pri ${d.pri}">${d.pri.toUpperCase()}</span></div><div class="rc-name">${d.name}</div><div class="rc-desc">${d.desc}</div><div class="rc-foot"><span>Mode: ${d.mode}</span><span>Requests: ${d.reqs}</span></div></div>`).join('');
 }
+function setF(f){refF=f;renderRef()}
 
-function setRefFilter(f) { refFilter = f; renderReference(); }
-
-/* ================================================================
-   INIT
-   ================================================================ */
-renderReference();
-
-/* Support drag-drop of report JSON on any page */
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', async e => {
+/* Drag-drop report */
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',async e=>{
   e.preventDefault();
-  const files = [...e.dataTransfer.files].filter(f => f.name.endsWith('.json'));
-  if (files.length) {
-    try {
-      const text = await files[0].text();
-      const data = JSON.parse(text);
-      if (data.results) loadReportFromFile(data);
-    } catch(err) { console.error(err); }
-  }
+  const f=[...e.dataTransfer.files].find(f=>f.name.endsWith('.json'));
+  if(f){try{const d=JSON.parse(await f.text());if(d.results){report=d;showPage('results');renderReport(d)}}catch(e){}}
 });
 
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+renderRef();
 </script>
 </body>
 </html>

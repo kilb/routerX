@@ -112,7 +112,6 @@ def _detail(info: TaskInfo) -> TaskDetail:
 @router.post(
     "/tests",
     response_model=CreateTestResponse,
-    dependencies=[Depends(verify_token)],
 )
 async def create_test(req: CreateTestRequest):
     # Validate --only IDs up-front so users get an actionable 400 instead of
