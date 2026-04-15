@@ -585,7 +585,7 @@ function runProgress(taskId,server){
   const area=document.getElementById('results-area');
   const startTime=Date.now();
 
-  const pendingIcon='<span class="pulse-icon" style="color:var(--t4)">⏳</span>';
+  const pendingIcon='<span class="pulse-icon" style="color:var(--t4)">●</span>';
   const spinnerSvg='<svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>';
   // Build detector grid from the DB
   const detRows=DB.map(d=>`<tr id="dg-${d.id}" style="opacity:0.5">
