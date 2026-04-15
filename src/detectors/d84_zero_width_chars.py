@@ -9,6 +9,8 @@ least one invisible character the detector FAILs.
 """
 from __future__ import annotations
 
+import unicodedata
+
 from ..models import (
     DetectorResult,
     JudgeMode,
@@ -81,7 +83,7 @@ class D84_ZeroWidthCharDetection(BaseDetector):
                 continue
             hits: list[dict[str, object]] = []
             for pos, ch in enumerate(content):
-                if ch in _INVISIBLE_CHARS:
+                if ch in _INVISIBLE_CHARS or unicodedata.category(ch) == "Cf":
                     hits.append({"position": pos, "codepoint": f"U+{ord(ch):04X}"})
             if hits:
                 findings.append({

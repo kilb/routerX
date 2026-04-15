@@ -126,7 +126,7 @@ class D45c_InstallerURLProbe(BaseDetector):
                 endpoint_path=self.config.default_endpoint_path,
                 description=f"D45c {name}",
             ))
-        return [await self.client.send(p) for p in probes]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         import json

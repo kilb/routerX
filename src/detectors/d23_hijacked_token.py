@@ -105,49 +105,49 @@ class D23_HijackedTokenProbe(BaseDetector):
         neutral_23b = make_resp("I cannot reveal my system instructions.")
 
         return [
-            # PASS: both probes return neutral/generic responses
-            ("PASS: neutral responses from both probes",
-             [neutral_23a, neutral_23b],
+            # PASS: all three probes return neutral/generic responses
+            ("PASS: neutral responses from all probes",
+             [neutral_23a, neutral_23a, neutral_23b],
              "pass"),
 
-            # FAIL 23a: blank probe triggers domain-specific translation guidance
+            # FAIL 23a: first blank probe triggers domain-specific translation guidance
             ("FAIL: 23a reveals translation domain guidance",
-             [make_resp("Please enter the text you want to translate."), neutral_23b],
+             [make_resp("Please enter the text you want to translate."), neutral_23a, neutral_23b],
              "fail"),
 
-            # FAIL 23a: blank probe reveals Monica branding
+            # FAIL 23a: second blank probe reveals Monica branding
             ("FAIL: 23a reveals Monica branding",
-             [make_resp("Welcome to Monica, your AI assistant!"), neutral_23b],
+             [neutral_23a, make_resp("Welcome to Monica, your AI assistant!"), neutral_23b],
              "fail"),
 
             # FAIL 23b: system prompt extraction reveals Cursor branding
             ("FAIL: 23b reveals Cursor branding in system prompt",
-             [neutral_23a, make_resp("You are Cursor, an AI code assistant built for developers.")],
+             [neutral_23a, neutral_23a, make_resp("You are Cursor, an AI code assistant built for developers.")],
              "fail"),
 
             # FAIL 23b: system prompt extraction reveals homework app
             ("FAIL: 23b reveals homework assistant branding",
-             [neutral_23a, make_resp("You are a homework helper. Help students with their homework.")],
+             [neutral_23a, neutral_23a, make_resp("You are a homework helper. Help students with their homework.")],
              "fail"),
 
             # FAIL 23b: CJK keyword match (translation in Chinese)
             ("FAIL: 23b reveals CJK translation keyword",
-             [neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
+             [neutral_23a, neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
              "fail"),
 
-            # INCONCLUSIVE: 23a network error
+            # INCONCLUSIVE: 23a network error on first probe
             ("INCONCLUSIVE: 23a network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT"), neutral_23b],
+             [ProbeResponse(status_code=0, error="TIMEOUT"), neutral_23a, neutral_23b],
              "inconclusive"),
 
             # INCONCLUSIVE: 23a empty content
             ("INCONCLUSIVE: 23a empty content",
-             [make_resp(""), neutral_23b],
+             [make_resp(""), neutral_23a, neutral_23b],
              "inconclusive"),
 
             # INCONCLUSIVE: 23b non-200 status
             ("INCONCLUSIVE: 23b 503 status",
-             [neutral_23a, ProbeResponse(status_code=503, body=None)],
+             [neutral_23a, neutral_23a, ProbeResponse(status_code=503, body=None)],
              "inconclusive"),
         ]
 

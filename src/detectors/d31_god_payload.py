@@ -70,6 +70,7 @@ class D31_GodPayload(BaseDetector):
             ProviderType.ANTHROPIC, ProviderType.GEMINI,
         )
         # Check 1: JSON schema compliance (strict json_schema is OpenAI-only)
+        parsed = None
         if _skip_oai:
             subs.append(("json_schema", None, "skipped: strict json_schema is OpenAI-only"))
         else:
@@ -86,7 +87,11 @@ class D31_GodPayload(BaseDetector):
             found = ban.lower() in content.lower()
             subs.append(("logit_bias", not found, f"banned '{ban}' {'found' if found else 'absent'}"))
         # Check 3: algebra (5 * var_B = 50)
-        has_50 = bool(re.search(r"\b50\b", content))
+        if isinstance(parsed, dict):
+            code_val = parsed.get("code")
+            has_50 = code_val == 50 or code_val == 50.0
+        else:
+            has_50 = bool(re.search(r"(?<!\d)50(?!\d)", content))
         subs.append(("algebra", has_50, "50 found" if has_50 else "50 not found"))
         # Check 4: system prompt leakage
         content_lower = content.lower()

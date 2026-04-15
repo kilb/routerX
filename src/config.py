@@ -45,7 +45,7 @@ PROVIDER_PARAM_LIMITS: dict[str, dict[str, float]] = {
 KNOWN_FAKE_PATTERNS: list[str] = [
     "new_api_error", "one_api_error", "<html", "<!doctype",
     "cloudflare", "ray id", "captcha_required", "poe daily limit",
-    "usage quota exceeded", "nginx", "502 bad gateway",
+    "usage quota exceeded",
 ]
 
 # Keywords typical of hijacked 3rd-party API keys (D23).

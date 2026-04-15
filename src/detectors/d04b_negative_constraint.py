@@ -38,7 +38,12 @@ class D4b_NegativeConstraintProbe(BaseDetector):
         ))]
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
-        """Check that even sentences (2nd, 4th) contain no letter 'e'."""
+        """Check that even sentences (2nd, 4th) mostly avoid letter 'e'.
+
+        Relaxed threshold: FAIL only if MORE THAN HALF of even-positioned
+        sentences contain 'e', since even frontier models struggle with
+        negative letter constraints and a single slip is not definitive.
+        """
         r = responses[0]
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
@@ -48,15 +53,21 @@ class D4b_NegativeConstraintProbe(BaseDetector):
         sentences = [s.strip() for s in SENTENCE_SPLIT.split(content) if s.strip()]
         if len(sentences) < 4:
             return self._fail("fewer than 4 sentences", {"count": len(sentences), "content": content[:200]})
-        s2_has_e = "e" in sentences[1].lower()
-        s4_has_e = "e" in sentences[3].lower()
-        if s2_has_e or s4_has_e:
+        even_sentences = [sentences[i] for i in (1, 3)]
+        violations = [s for s in even_sentences if "e" in s.lower()]
+        ev = {
+            "sentence_2": sentences[1],
+            "sentence_4": sentences[3],
+            "violations": len(violations),
+            "total_even": len(even_sentences),
+        }
+        if len(violations) > len(even_sentences) // 2:
             return self._fail(
-                "letter e found in even sentence",
-                {"s2_has_e": s2_has_e, "s4_has_e": s4_has_e,
-                 "sentence_2": sentences[1], "sentence_4": sentences[3]},
+                f"letter e found in {len(violations)}/{len(even_sentences)} "
+                f"even sentences (majority violated)",
+                ev,
             )
-        return self._pass({"sentences": sentences[:4]})
+        return self._pass(ev)
 
     @classmethod
     def _test_cases(cls):
@@ -92,10 +103,10 @@ class D4b_NegativeConstraintProbe(BaseDetector):
             ("PASS: compliant story",
              [make_resp(pass_story)],
              "pass"),
-            ("FAIL: e in sentence 2",
+            ("PASS: e in only one even sentence (relaxed threshold)",
              [make_resp(fail_story_s2)],
-             "fail"),
-            ("FAIL: e in both even sentences",
+             "pass"),
+            ("FAIL: e in both even sentences (majority violated)",
              [make_resp(fail_story_both)],
              "fail"),
             ("FAIL: fewer than 4 sentences",

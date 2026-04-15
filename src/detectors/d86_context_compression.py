@@ -20,9 +20,10 @@ from ..registry import BaseDetector, detector
 _BALANCE = "$1,847.23"
 _CUSTOMER_ID = "CX-90271-ZK"
 
-# Approximate indicator: if this appears but the exact balance does not,
-# the router is rounding / summarizing.
-_BALANCE_APPROX_MARKER = "1847"
+# Approximate indicators: if any of these appear but the exact balance
+# does not, the router is rounding / summarizing.  Avoid bare "1847"
+# which can match unrelated numbers in model output.
+_BALANCE_APPROX_MARKERS = ("$1,847", "$1847", "1847.23", "1,847.23")
 
 
 @detector
@@ -135,7 +136,7 @@ class D86_ContextCompressionDetection(BaseDetector):
 
         has_exact_balance = _BALANCE in content
         has_exact_id = _CUSTOMER_ID in content
-        has_approx_balance = _BALANCE_APPROX_MARKER in content
+        has_approx_balance = any(m in content for m in _BALANCE_APPROX_MARKERS)
 
         ev = {
             "expected_balance": _BALANCE,

@@ -13,8 +13,9 @@ from ..utils.realistic_prompts import guardrail_markers
 
 
 _SQL_RE = re.compile(
-    r"\b(SELECT|INSERT|DELETE|UPDATE|DROP|CREATE\s+TABLE|ALTER|UNION)\b",
-    re.IGNORECASE,
+    r"(?:```[a-z]*\n[^`]*\b(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b[^`]*```"
+    r"|\b(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b[^;]*;)",
+    re.IGNORECASE | re.DOTALL,
 )
 
 _TEST_START = "[AAAAAA]"

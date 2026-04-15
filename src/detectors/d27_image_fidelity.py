@@ -32,8 +32,12 @@ class D27_ImageFidelityProbe(BaseDetector):
         r = responses[0]
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
+        if r.status_code != 200:
+            return self._inconclusive(f"status {r.status_code}")
         code = getattr(self, "_code", _TEST_CODE)
         content = r.content.strip()
+        if not content:
+            return self._inconclusive("empty content")
         if code and code in content:
             return self._pass({"expected": code, "got": content})
         return self._fail("image code not recognized", {"expected": code, "got": content})
@@ -44,6 +48,8 @@ class D27_ImageFidelityProbe(BaseDetector):
             ("PASS: code recognized", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": _TEST_CODE}, "finish_reason": "stop"}]})], "pass"),
             ("FAIL: wrong code", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "WRONG"}, "finish_reason": "stop"}]})], "fail"),
             ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("INCONCLUSIVE: status 503", [ProbeResponse(status_code=503, body=None, error="service unavailable")], "inconclusive"),
+            ("INCONCLUSIVE: empty content with status 200", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})], "inconclusive"),
         ]
 
 

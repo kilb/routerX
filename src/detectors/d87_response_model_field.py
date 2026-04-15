@@ -155,6 +155,11 @@ class D87_ResponseModelFieldAudit(BaseDetector):
              [r(ok_model, now), r(ok_model, now + 1), r(ok_model, now + 2)], "pass"),
             ("FAIL: response model is gpt-4o-mini when claimed gpt-4o",
              [r("gpt-4o-mini-2024-07-18", now) for _ in range(3)], "fail"),
+            # Different date suffixes (2024-08-06 vs 2024-05-13) each pass the
+            # per-response _model_matches check (same base "gpt-4o"), but the
+            # raw model strings differ across responses, triggering Check 2
+            # (fallback switching). A stable backend always returns the same
+            # snapshot string; variation signals silent model rotation.
             ("FAIL: inconsistent model across responses",
              [r(ok_model, now), r("gpt-4o-2024-05-13", now), r(ok_model, now)], "fail"),
             ("FAIL: created timestamp from 2020",

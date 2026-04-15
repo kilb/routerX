@@ -277,6 +277,12 @@ class D50_SemanticNegation(BaseDetector):
                 [make_resp("UNSAFE"), make_resp("UNSAFE")],
                 "pass",
             ),
+            # PASS with direct: both agree on SAFE -- same verdict means no flip.
+            (
+                "PASS: router and direct both SAFE",
+                [make_resp("SAFE"), make_resp("SAFE")],
+                "pass",
+            ),
             # FAIL: router flips UNSAFE to SAFE.
             (
                 "FAIL: router says SAFE, direct says UNSAFE",

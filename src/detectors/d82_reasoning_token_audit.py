@@ -72,7 +72,7 @@ class D82_ReasoningTokenAudit(BaseDetector):
                 ev,
             )
 
-        if completion_tokens > 0 and completion_tokens < MAX_TOKENS:
+        if completion_tokens > 0:
             if reasoning_tokens > RATIO_THRESHOLD * completion_tokens:
                 return self._fail(
                     f"reasoning_tokens={reasoning_tokens} is >"

@@ -84,6 +84,9 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         content_easy = r_easy.content or ""
         content_hard = r_hard.content or ""
 
+        if not content_easy or not content_hard:
+            return self._inconclusive("empty content in one or both probes")
+
         model = self.config.claimed_model
         tokens_easy = max(token_counter.count(content_easy, model=model), 1)
         tokens_hard = token_counter.count(content_hard, model=model)

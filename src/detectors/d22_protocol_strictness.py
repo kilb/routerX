@@ -74,8 +74,9 @@ class D22_ProtocolStrictness(BaseDetector):
                     subs.append(("22a_json", True, "error response (expected for strict)"))
                 else:
                     subs.append(("22a_json", False, "non-JSON output despite strict:true"))
-        # 22b
-        if r_b is not None and not r_b.is_network_error:
+        # 22b: Only meaningful for Anthropic; OpenAI accepts double-user messages.
+        if (self.config.claimed_provider in (ProviderType.ANTHROPIC,)
+                and r_b is not None and not r_b.is_network_error):
             subs.append(("22b_roles", r_b.status_code == 400, f"status={r_b.status_code}"))
         # 22c: prefill continuation — FAIL if model corrects the wrong answer
         if r_c is not None and not r_c.is_network_error:
@@ -110,11 +111,12 @@ class D22_ProtocolStrictness(BaseDetector):
         return [
             ("PASS: all checks pass", [ok_json, err400, prefill_ok, err400], "pass"),
             ("FAIL: 22a non-JSON output", [ok_text, err400, prefill_ok, err400], "fail"),
-            ("FAIL: 22b accepted double user", [ok_json, ok_200, prefill_ok, err400], "fail"),
+            ("PASS: 22b skipped for non-Anthropic", [ok_json, ok_200, prefill_ok, err400], "pass"),
             ("FAIL: 22c corrected prefill", [ok_json, err400, prefill_bad, err400], "fail"),
             ("FAIL: 22d gateway fingerprint", [ok_json, err400, prefill_ok,
              ProbeResponse(status_code=200, body={}, raw_text="<html>cloudflare</html>")], "fail"),
-            ("INCONCLUSIVE: all network error", [None, None, None, ProbeResponse(status_code=0, error="T")], "inconclusive"),
+            ("INCONCLUSIVE: all network error",
+             [None, None, None, ProbeResponse(status_code=0, error="T")], "inconclusive"),
         ]
 
 

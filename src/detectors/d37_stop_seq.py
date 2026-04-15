@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 
@@ -43,7 +45,10 @@ class D37_StopSeqProbe(BaseDetector):
         if not content:
             return self._inconclusive("empty content")
 
-        paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', content) if p.strip()]
+        # Fallback: if no double-newline found, also try single-newline separated blocks
+        if len(paragraphs) <= 1 and '\n' in content:
+            paragraphs = [p.strip() for p in content.split('\n') if p.strip()]
         paragraph_count = len(paragraphs)
         finish_reason = r.finish_reason
 

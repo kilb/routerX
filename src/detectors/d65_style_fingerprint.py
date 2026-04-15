@@ -37,9 +37,8 @@ class D65_StyleFingerprint(BaseDetector):
     )
 
     async def send_probes(self) -> list[ProbeResponse]:
-        out = []
-        for p in _PROMPTS:
-            out.append(await self.client.send(ProbeRequest(
+        probes = [
+            ProbeRequest(
                 payload={
                     "model": self.config.claimed_model,
                     "max_tokens": 200,
@@ -48,8 +47,10 @@ class D65_StyleFingerprint(BaseDetector):
                 },
                 endpoint_path=self.config.default_endpoint_path,
                 description="D65 style probe",
-            )))
-        return out
+            )
+            for p in _PROMPTS
+        ]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         family = infer_family(self.config.claimed_model)

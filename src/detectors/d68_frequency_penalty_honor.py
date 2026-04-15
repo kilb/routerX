@@ -33,9 +33,8 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
     async def send_probes(self) -> list[ProbeResponse]:
         prompt = ("List the word 'apple' 30 times, separated by spaces. "
                   "Just the words, nothing else.")
-        out = []
-        for penalty in (_NO_PENALTY, _HIGH_PENALTY):
-            out.append(await self.client.send(ProbeRequest(
+        probes = [
+            ProbeRequest(
                 payload={
                     "model": self.config.claimed_model,
                     "max_tokens": 120,
@@ -45,8 +44,10 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
                 },
                 endpoint_path=self.config.default_endpoint_path,
                 description=f"D68 frequency_penalty={penalty}",
-            )))
-        return out
+            )
+            for penalty in (_NO_PENALTY, _HIGH_PENALTY)
+        ]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r_no, r_hi = responses

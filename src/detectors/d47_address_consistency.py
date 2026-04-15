@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 
 from ..registry import detector, BaseDetector
@@ -102,8 +103,10 @@ class D47_AddressConsistencyProbe(BaseDetector):
         )
 
         resp_memorize = await self.client.send(probe_memorize)
-        resp_balance = await self.client.send(probe_balance)
-        resp_transfer = await self.client.send(probe_transfer)
+        resp_balance, resp_transfer = await asyncio.gather(
+            self.client.send(probe_balance),
+            self.client.send(probe_transfer),
+        )
         return [resp_memorize, resp_balance, resp_transfer]
 
     def _extract_address(self, r: ProbeResponse) -> str | None:

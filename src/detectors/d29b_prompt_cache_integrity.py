@@ -18,7 +18,7 @@ from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeRespo
 
 
 _LONG_SYSTEM = "You are a helpful assistant. " + (
-    "Always be clear, concise, and accurate. Never hallucinate. " * 40
+    "Always be clear, concise, and accurate. Never hallucinate. " * 120
 )
 
 

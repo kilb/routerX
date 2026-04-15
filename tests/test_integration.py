@@ -75,7 +75,7 @@ def _run_detector(port: int, detector_id: str, behavior: str) -> Verdict:
     ("honest", "D25", Verdict.FAIL),          # echo lacks 800 BETAs
     ("cap_output", "D25", Verdict.FAIL),      # explicit cap
     # D11 — canary nonce integrity
-    ("honest", "D11", Verdict.FAIL),          # echo lacks nonce
+    ("honest", "D11", Verdict.INCONCLUSIVE),  # echo lacks nonce but no injection → inconclusive
     ("inject_system", "D11", Verdict.FAIL),   # prompt injection succeeds
     # D15 — guardrail
     ("honest", "D15", Verdict.FAIL),          # echo lacks [G1_ACTIVE]
@@ -113,7 +113,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("inflate_completion_tokens", "D83", Verdict.FAIL),  # output token inflation
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
     ("chunky_stream", "D64", Verdict.FAIL),
-    ("drop_logprobs", "D62", Verdict.FAIL),
+    ("drop_logprobs", "D62", Verdict.INCONCLUSIVE),  # default config uses ANY provider → inconclusive
     ("drop_logit_bias", "D70", Verdict.FAIL),
     ("inject_zero_width", "D84", Verdict.FAIL),
     ("compress_context", "D86", Verdict.FAIL),

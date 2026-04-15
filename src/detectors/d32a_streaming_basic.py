@@ -60,13 +60,17 @@ class D32a_StreamingBasicProbe(BaseDetector):
         def stream_body(content: str, chunks: int, usage: dict | None, fr: str = "stop") -> dict:
             return {"full_content": content, "chunk_count": chunks, "finish_reason": fr, "usage": usage}
         small_chunks = [{"choices": [{"delta": {"content": str(i)}}]} for i in range(50)]
-        big_last = [{"choices": [{"delta": {"content": "x"}}]}] + [{"choices": [{"delta": {"content": "y" * 1000}}]}]
+        big_last = [
+            {"choices": [{"delta": {"content": "x"}}]},
+            {"choices": [{"delta": {"content": "x"}}]},
+            {"choices": [{"delta": {"content": "y" * 1000}}]},
+        ]
         return [
             ("PASS: normal stream", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, {"total_tokens": 60}),
                                                     chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "pass"),
             ("FAIL: only 2 chunks", [ProbeResponse(status_code=200, body=stream_body("1\n2", 2, {"total_tokens": 10}),
                                                     chunks=[{}, {}], chunk_timestamps=[0.1, 0.2])], "fail"),
-            ("FAIL: 80% in last chunk", [ProbeResponse(status_code=200, body=stream_body("x" + "y" * 1000, 2, {"total_tokens": 10}),
+            ("FAIL: 80% in last chunk", [ProbeResponse(status_code=200, body=stream_body("xx" + "y" * 1000, 3, {"total_tokens": 10}),
                                                         chunks=big_last, chunk_timestamps=[0.1, 0.2, 0.3])], "fail"),
             ("FAIL: no usage block", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, None),
                                                      chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "fail"),

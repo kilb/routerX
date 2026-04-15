@@ -66,12 +66,11 @@ class D62_LogprobsHonesty(BaseDetector):
             return self._inconclusive("empty body")
         positions = _extract_logprobs(r.body)
         if positions is None:
-            # Anthropic/Gemini APIs don't support logprobs natively;
-            # absence is expected, not fraud.
-            if self.config.claimed_provider in (ProviderType.ANTHROPIC,
-                                                  ProviderType.GEMINI):
+            # Only FAIL for explicit OpenAI provider; many non-OpenAI
+            # providers (including ANY/unknown) don't support logprobs.
+            if self.config.claimed_provider != ProviderType.OPENAI:
                 return self._inconclusive(
-                    "logprobs not supported by claimed provider"
+                    "logprobs not supported or unknown provider"
                 )
             return self._fail("logprobs flag dropped -- no logprobs block in response", {})
         if not positions:
@@ -150,7 +149,7 @@ class D62_LogprobsHonesty(BaseDetector):
         return [
             ("PASS: genuine logprobs", [mk(real)], "pass"),
             ("FAIL: flat constant logprobs", [mk(flat)], "fail"),
-            ("FAIL: logprobs flag dropped", [no_lp], "fail"),
+            ("INCONCLUSIVE: logprobs flag dropped (non-OpenAI)", [no_lp], "inconclusive"),
             ("FAIL: chosen token never in top_logprobs",
              [mk(wrong_top)], "fail"),
             ("INCONCLUSIVE: network error",

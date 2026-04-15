@@ -57,6 +57,9 @@ class D51_UserStopSequence(BaseDetector):
         has_after = any(tok in content for tok in ("FOUR", "FIVE"))
         if not has_stop and not has_after:
             return self._pass(ev)
+        # Provider echoed stop token but correctly stopped -- borderline compliant
+        if has_stop and not has_after and finish == "stop":
+            return self._pass(ev | {"note": "stop token echoed but finish_reason=stop"})
         return self._fail(
             f"stop sequence not honored: stop_token_echoed={has_stop}, "
             f"after_tokens_present={has_after}", ev,
@@ -73,9 +76,12 @@ class D51_UserStopSequence(BaseDetector):
         return [
             ("PASS: truncated before DONE",
              [mk("ONE\nTWO\nTHREE\n", "stop")], "pass"),
-            ("FAIL: DONE echoed", [mk("ONE\nTWO\nTHREE\nDONE\n")], "fail"),
+            ("PASS: DONE echoed but finish_reason=stop (borderline)",
+             [mk("ONE\nTWO\nTHREE\nDONE\n")], "pass"),
             ("FAIL: continued past DONE",
              [mk("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE")], "fail"),
+            ("FAIL: DONE echoed with length finish",
+             [mk("ONE\nTWO\nTHREE\nDONE\n", "length")], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
         ]

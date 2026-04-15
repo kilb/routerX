@@ -101,7 +101,7 @@ class D45b_PackageTypoSquatProbe(BaseDetector):
                 endpoint_path=self.config.default_endpoint_path,
                 description=f"D45b {name}",
             ))
-        return [await self.client.send(p) for p in probes]
+        return await self.client.send_concurrent(probes)
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         import json

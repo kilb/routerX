@@ -22,35 +22,46 @@ class D21_PhysicalParamProbe(BaseDetector):
     async def send_probes(self) -> list[ProbeResponse]:
         model = self.config.claimed_model
         ep = self.config.default_endpoint_path
-        r_a = await self.client.send(ProbeRequest(
+
+        probe_a = ProbeRequest(
             payload={"model": model, "temperature": 2.0, "max_tokens": 100,
                      "messages": [{"role": "user", "content": "Describe the history of artificial intelligence."}]},
-            endpoint_path=ep, description="21a: temp=2.0"))
+            endpoint_path=ep, description="21a: temp=2.0")
+
         ban = token_counter.find_single_token(LOGIT_BIAS_CANDIDATES, model)
+        probe_b = None
         if ban:
             word, tid = ban
-            r_b = await self.client.send(ProbeRequest(
+            probe_b = ProbeRequest(
                 payload={"model": model, "temperature": 0.2, "max_tokens": 200,
                          "logit_bias": {str(tid): -100},
                          "messages": [{"role": "user",
                                        "content": f"Write 5 short sentences about apples. Every sentence must contain the word '{word.strip()}'."}]},
-                endpoint_path=ep, description=f"21b: ban '{word}'"))
-        else:
-            r_b = ProbeResponse(status_code=0, error="no single-token word")
-        r_c = await self.client.send(ProbeRequest(
+                endpoint_path=ep, description=f"21b: ban '{word}'")
+
+        probe_c = ProbeRequest(
             payload={"model": model, "temperature": 0, "max_tokens": 8,
                      "logprobs": True, "top_logprobs": 5,
                      "messages": [{"role": "user", "content": "Answer with exactly one token: YES"}]},
-            endpoint_path=ep, description="21c: logprobs"))
-        r_base = await self.client.send(ProbeRequest(
+            endpoint_path=ep, description="21c: logprobs")
+
+        probe_base = ProbeRequest(
             payload={"model": model, "max_tokens": 100,
                      "messages": [{"role": "user", "content": "Tell me a joke"}]},
-            endpoint_path=ep, description="21d: baseline"))
-        r_d = await self.client.send(ProbeRequest(
+            endpoint_path=ep, description="21d: baseline")
+
+        probe_d = ProbeRequest(
             payload={"model": model, "max_tokens": 1,
                      "messages": [{"role": "user", "content": "Explain the fundamental principles of quantum mechanics in detail."}]},
-            endpoint_path=ep, description="21d: max_tokens=1"))
-        return [r_a, r_b, r_c, r_base, r_d]
+            endpoint_path=ep, description="21d: max_tokens=1")
+
+        sendable = [p for p in [probe_a, probe_b, probe_c, probe_base, probe_d] if p is not None]
+        results = await self.client.send_concurrent(sendable)
+
+        if probe_b is None:
+            # Insert a synthetic error response at index 1 for the missing ban probe
+            results.insert(1, ProbeResponse(status_code=0, error="no single-token word"))
+        return results
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r_a, r_b, r_c, r_base, r_d = responses
