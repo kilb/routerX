@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Optional
 
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+
+# Regex to find amounts like "1.23 ETH", "42,000.50 USDT" in content text.
+_CONTENT_AMOUNT_RE = re.compile(
+    r"([\d,]+\.\d+)\s*(?:ETH|USDT|USDC|BTC)",
+    re.IGNORECASE,
+)
 
 AMOUNTS: list[tuple[str, str]] = [
     ("1.23456789", "ETH"),
@@ -108,6 +115,29 @@ class D48_AmountPrecisionProbe(BaseDetector):
                 return self._inconclusive(f"no parseable tool call for {amount_str} {token}")
 
             router_deviation = abs(router_amount - requested) / requested
+
+            # Content-based check: if tool_call amount is correct, also scan
+            # response content for a different amount (smart router could embed
+            # a tampered amount in the text while keeping tool args clean).
+            content = router_resp.content or ""
+            content_amounts = _CONTENT_AMOUNT_RE.findall(content)
+            for raw_amt in content_amounts:
+                try:
+                    content_val = float(raw_amt.replace(",", ""))
+                except ValueError:
+                    continue
+                content_dev = abs(content_val - requested) / max(requested, 1e-9)
+                if content_dev > ROUTER_DEVIATION_THRESHOLD and router_deviation < DIRECT_DEVIATION_THRESHOLD:
+                    return self._fail(
+                        f"tool_call amount correct but content mentions different amount",
+                        {
+                            "token": token,
+                            "requested": requested,
+                            "router_tool_amount": router_amount,
+                            "content_amount": content_val,
+                            "content_deviation_pct": round(content_dev * 100, 4),
+                        },
+                    )
 
             if has_direct:
                 direct_resp = direct_resps[i]

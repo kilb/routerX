@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+import string
 
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
@@ -11,6 +12,16 @@ FALLBACK_CONFIDENCE = 0.50
 
 # Default probe word used only in self-test when send_probes hasn't run.
 _TEST_PROBE_WORD = "SolidGoldMagikarp"
+
+
+def _make_runtime_probe_pool() -> list[str]:
+    """Return the static pool plus one randomly generated string per invocation."""
+    pool = list(TOKENIZER_PROBE_STRINGS)
+    # Append a random alphanumeric string that changes every run --
+    # impossible to whitelist without blanket-matching all words.
+    rand_str = "".join(random.choices(string.ascii_letters + string.digits, k=12))
+    pool.append(rand_str)
+    return pool
 
 
 def _identify_family(tokens: list[str], probe_word: str) -> str | None:
@@ -54,7 +65,7 @@ class D4a_TokenizerFingerprint(BaseDetector):
         specific word ``SolidGoldMagikarp``. All words in the pool are
         equally useful for tokenizer-family discrimination.
         """
-        self._probe_word = random.choice(TOKENIZER_PROBE_STRINGS)
+        self._probe_word = random.choice(_make_runtime_probe_pool())
         return [await self.client.send(ProbeRequest(
             payload={
                 "model": self.config.claimed_model,

@@ -115,11 +115,25 @@ class D42_ContextWindowHonesty(BaseDetector):
                 f"count ({local}) -- router likely trimmed input",
                 ev,
             )
-        if not marker_echoed and ratio < marker_gate:
-            return self._fail(
-                f"tail marker missing AND reported ({reported}) / local "
-                f"({local}) ratio {ratio:.2f} < 0.85 -- truncation suspected",
-                ev,
+        if not marker_echoed:
+            if ratio < min_ok:
+                # Already handled above; defensive guard.
+                return self._fail(
+                    f"tail marker missing AND ratio {ratio:.2f} < {min_ok:.0%}",
+                    ev,
+                )
+            if ratio < marker_gate:
+                return self._fail(
+                    f"tail marker missing AND reported ({reported}) / local "
+                    f"({local}) ratio {ratio:.2f} < {marker_gate:.0%} -- "
+                    "truncation suspected",
+                    ev,
+                )
+            # Marker missing but prompt_tokens looks full (ratio >= min_ok).
+            # Could be model non-compliance rather than truncation.
+            return self._inconclusive(
+                f"tail marker missing but ratio {ratio:.2f} >= {min_ok:.0%} "
+                "-- may be model non-compliance, not truncation"
             )
         return self._pass(ev)
 
@@ -149,10 +163,15 @@ class D42_ContextWindowHonesty(BaseDetector):
         )
         net = ProbeResponse(status_code=0, error="TIMEOUT")
 
+        # Marker missing but ratio looks full (model non-compliance)
+        marker_missing_high_ratio = mk("Sorry, I don't see a marker.", 14500)
+
         return [
             ("PASS: marker echoed, count matches", [pass_case], "pass"),
             ("FAIL: trimmed input (low ratio)", [truncated], "fail"),
             ("PASS: 4xx context_length_exceeded", [err_4xx], "pass"),
+            ("INCONCLUSIVE: marker missing but ratio looks full",
+             [marker_missing_high_ratio], "inconclusive"),
             ("INCONCLUSIVE: network error", [net], "inconclusive"),
         ]
 

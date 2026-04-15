@@ -13,12 +13,16 @@ from ..models import (
     Priority,
     ProbeRequest,
     ProbeResponse,
+    Verdict,
 )
 from ..registry import BaseDetector, detector
 from ..tokenizer import token_counter
 
 USER_MAX_TOKENS = 2000
-MIN_ACCEPTABLE_COMPLETION = 1200  # if truncated below this, router clamped
+MIN_ACCEPTABLE_COMPLETION = 1600  # if truncated below this, router clamped
+# If model claims "stop" but produced very few tokens despite user requesting
+# max_tokens=2000, the router may have artificially ended the generation.
+SUSPICIOUS_STOP_THRESHOLD = 500
 
 
 @detector
@@ -65,10 +69,27 @@ class D43_MaxTokensHonor(BaseDetector):
             "content_len": len(content),
         }
 
-        # Model finished naturally -> PASS (router honored, model just didn't need room).
+        # Model finished naturally -> check for suspicious early stop.
         if finish in ("stop", "end_turn", "end"):
             if local_tokens >= MIN_ACCEPTABLE_COMPLETION:
                 return self._pass(ev)
+            if local_tokens < SUSPICIOUS_STOP_THRESHOLD:
+                return DetectorResult(
+                    detector_id=self.detector_id,
+                    detector_name=self.detector_name,
+                    priority=self.priority,
+                    verdict=Verdict.SUSPICIOUS,
+                    confidence=0.5,
+                    evidence={
+                        "reason": (
+                            f"finish_reason=stop but only {local_tokens} tokens "
+                            f"(< {SUSPICIOUS_STOP_THRESHOLD}) with "
+                            f"max_tokens={USER_MAX_TOKENS} -- router may have "
+                            f"artificially ended generation"
+                        ),
+                        **ev,
+                    },
+                )
             return self._pass(ev | {"note": "finished naturally below target"})
 
         # Truncated but close to user cap -> honored.
@@ -93,13 +114,17 @@ class D43_MaxTokensHonor(BaseDetector):
                 }]},
             )
 
-        long_stop = mk("word " * 1500, "stop")
-        long_length = mk("word " * 1500, "length")
+        long_stop = mk("word " * 1800, "stop")
+        long_length = mk("word " * 1800, "length")
         short_length = mk("word " * 200, "length")
+        # Very short stop -- suspicious artificial early stop
+        very_short_stop = mk("word " * 50, "stop")
         return [
             ("PASS: natural stop with good length", [long_stop], "pass"),
             ("PASS: truncated near cap", [long_length], "pass"),
-            ("FAIL: clamped below 1200", [short_length], "fail"),
+            ("FAIL: clamped below 1600", [short_length], "fail"),
+            ("SUSPICIOUS: stop with very few tokens",
+             [very_short_stop], "suspicious"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
         ]

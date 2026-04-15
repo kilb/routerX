@@ -14,6 +14,15 @@ GATEWAY_HEADER_INDICATORS: frozenset[str] = frozenset({
     "x-new-api-version",
     "x-forwarded-by-oneapi",
     "x-poe-ray-id",
+    "x-litellm-version",
+    "x-litellm-model",
+    "x-vllm-version",
+    "x-ai-gateway",
+    "x-gateway-provider",
+    "x-relay-id",
+    "x-proxy-by",
+    "x-openrouter-model",
+    "x-openai-proxy",
 })
 
 # Models used in probes: use well-known names that legitimate providers will

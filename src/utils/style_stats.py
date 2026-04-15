@@ -70,7 +70,15 @@ def feature_vector(text: str) -> dict[str, float]:
     }
 
 
-# HEURISTIC centroids — hand-tuned. TODO: calibrate empirically.
+# HEURISTIC centroids — hand-tuned.
+# TODO: calibrate FAMILY_CENTROIDS and FAMILY_STDEV empirically.
+# Procedure:
+# 1. Collect 50+ responses from each family via direct API calls
+# 2. Compute feature_vector() on each response
+# 3. Set centroid = mean, stdev = sample std dev
+# 4. Validate: ensure normalized_distance < 2 for same-family,
+#    > 4 for cross-family
+#
 # Claude: moderate em-dashes, longer sentences, fewer bullets than GPT.
 # GPT: bullet-heavy, frequent "Sure" openers, medium sentences.
 # Gemini: similar to GPT but fewer openers, slightly shorter sentences.
@@ -115,7 +123,8 @@ FAMILY_CENTROIDS: dict[str, dict[str, float]] = {
 
 
 # HEURISTIC per-feature stdev used for z-score normalization.
-# TODO: replace with empirical stdev from a labeled corpus.
+# TODO: calibrate FAMILY_STDEV empirically using the same procedure
+# as FAMILY_CENTROIDS above (step 3: stdev = sample std dev).
 FAMILY_STDEV: dict[str, dict[str, float]] = {
     "claude": {
         "avg_sentence_len": 6.0,

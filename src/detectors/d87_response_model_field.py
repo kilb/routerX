@@ -110,11 +110,16 @@ class D87_ResponseModelFieldAudit(BaseDetector):
                     ev,
                 )
 
-        # Check 2: model inconsistency across responses (fallback switching)
-        if len(set(models)) > 1:
-            ev["unique_models"] = sorted(set(models))
+        # Check 2: model inconsistency across responses (fallback switching).
+        # Use the same base-name stripping as Check 1: date suffixes like
+        # -2024-08-06 vs -2024-05-13 are normal OpenAI snapshot rotation.
+        import re as _re
+        _date_pat = _re.compile(r"(-\d{4}-\d{2}-\d{2}|-\d{8})$")
+        base_names = {_date_pat.sub("", m.lower().strip()) for m in models}
+        if len(base_names) > 1:
+            ev["unique_base_models"] = sorted(base_names)
             return self._fail(
-                f"model field varies across responses: {sorted(set(models))} "
+                f"model base names differ across responses: {sorted(base_names)} "
                 "-- possible silent fallback routing",
                 ev,
             )
@@ -155,13 +160,14 @@ class D87_ResponseModelFieldAudit(BaseDetector):
              [r(ok_model, now), r(ok_model, now + 1), r(ok_model, now + 2)], "pass"),
             ("FAIL: response model is gpt-4o-mini when claimed gpt-4o",
              [r("gpt-4o-mini-2024-07-18", now) for _ in range(3)], "fail"),
-            # Different date suffixes (2024-08-06 vs 2024-05-13) each pass the
-            # per-response _model_matches check (same base "gpt-4o"), but the
-            # raw model strings differ across responses, triggering Check 2
-            # (fallback switching). A stable backend always returns the same
-            # snapshot string; variation signals silent model rotation.
-            ("FAIL: inconsistent model across responses",
-             [r(ok_model, now), r("gpt-4o-2024-05-13", now), r(ok_model, now)], "fail"),
+            # Different date suffixes (2024-08-06 vs 2024-05-13) have the same
+            # base name "gpt-4o" -- OpenAI legitimately rotates snapshot dates,
+            # so this should PASS.
+            ("PASS: same base model with different date suffixes",
+             [r(ok_model, now), r("gpt-4o-2024-05-13", now), r(ok_model, now)], "pass"),
+            # Different base models: "gpt-4o" vs "gpt-4o-mini" -- real switching
+            ("FAIL: different base models across responses",
+             [r(ok_model, now), r("gpt-4o-mini-2024-07-18", now), r(ok_model, now)], "fail"),
             ("FAIL: created timestamp from 2020",
              [r(ok_model, 1580000000 + i) for i in range(3)], "fail"),
             ("INCONCLUSIVE: no model field",

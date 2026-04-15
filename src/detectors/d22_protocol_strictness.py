@@ -29,7 +29,7 @@ class D22_ProtocolStrictness(BaseDetector):
                              "name": "age_probe", "strict": True,
                              "schema": {"type": "object", "properties": {"age": {"type": "integer"}},
                                         "required": ["age"], "additionalProperties": False}}},
-                         "messages": [{"role": "user", "content": "Return JSON only. Put the Chinese word unknown into the age field."}]},
+                         "messages": [{"role": "user", "content": "Give me a person record with name, age (number), and occupation. Respond as structured JSON."}]},
                 endpoint_path=ep, description="22a: strict JSON"))
         else:
             r_a = None
@@ -78,15 +78,32 @@ class D22_ProtocolStrictness(BaseDetector):
         if (self.config.claimed_provider in (ProviderType.ANTHROPIC,)
                 and r_b is not None and not r_b.is_network_error):
             subs.append(("22b_roles", r_b.status_code == 400, f"status={r_b.status_code}"))
-        # 22c: prefill continuation — FAIL if model corrects the wrong answer
+        # 22c: prefill continuation — For Anthropic, correction of obvious
+        # errors in prefill is smart behavior (Claude 4 models do this
+        # legitimately), so only FAIL if the model IGNORES the prefill
+        # entirely (no continuation at all). For other providers, correction
+        # still signals a mismatch.
         if r_c is not None and not r_c.is_network_error:
             content = r_c.content
-            # Tight check: must explicitly reference 1+1=2 or dispute "3"
             corrects = bool(re.search(
                 r"1\s*\+\s*1\s*=?\s*2|not\s+3|incorrect|wrong|actually\s+2",
                 content, re.IGNORECASE,
             ))
-            subs.append(("22c_prefill", not corrects, "corrected=FAIL" if corrects else "continued=PASS"))
+            is_anthropic = self.config.claimed_provider == ProviderType.ANTHROPIC
+            if is_anthropic:
+                # For Anthropic: correction is smart, not fraud. Only fail
+                # if there's NO continuation at all (empty or unrelated).
+                has_continuation = bool(content.strip())
+                subs.append((
+                    "22c_prefill", has_continuation,
+                    "corrected (acceptable for Anthropic)" if corrects
+                    else ("continued=PASS" if has_continuation else "no continuation"),
+                ))
+            else:
+                subs.append((
+                    "22c_prefill", not corrects,
+                    "corrected=FAIL" if corrects else "continued=PASS",
+                ))
         # 22d
         if r_d is not None and not r_d.is_network_error:
             raw = r_d.raw_text.lower()
@@ -108,11 +125,17 @@ class D22_ProtocolStrictness(BaseDetector):
         ok_200 = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "hi"}, "finish_reason": "stop"}]}, raw_text="hi")
         prefill_ok = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "I like cats."}, "finish_reason": "stop"}]})
         prefill_bad = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "Actually 1+1=2 not 3"}, "finish_reason": "stop"}]})
+        # Empty content for prefill: model ignored prefill entirely
+        prefill_empty = ProbeResponse(
+            status_code=200,
+            body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]},
+        )
         return [
             ("PASS: all checks pass", [ok_json, err400, prefill_ok, err400], "pass"),
             ("FAIL: 22a non-JSON output", [ok_text, err400, prefill_ok, err400], "fail"),
             ("PASS: 22b skipped for non-Anthropic", [ok_json, ok_200, prefill_ok, err400], "pass"),
-            ("FAIL: 22c corrected prefill", [ok_json, err400, prefill_bad, err400], "fail"),
+            ("FAIL: 22c corrected prefill (non-Anthropic provider)",
+             [ok_json, err400, prefill_bad, err400], "fail"),
             ("FAIL: 22d gateway fingerprint", [ok_json, err400, prefill_ok,
              ProbeResponse(status_code=200, body={}, raw_text="<html>cloudflare</html>")], "fail"),
             ("INCONCLUSIVE: all network error",

@@ -9,7 +9,7 @@ from __future__ import annotations
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 
-_N = 3
+_N = 5
 
 
 @detector
@@ -62,18 +62,18 @@ class D57_ResponseIDUniqueness(BaseDetector):
             )
         return [
             ("PASS: unique ids",
-             [mk("chatcmpl-a1"), mk("chatcmpl-a2"), mk("chatcmpl-a3")],
+             [mk(f"chatcmpl-a{i}") for i in range(_N)],
              "pass"),
             ("FAIL: all ids identical",
-             [mk("chatcmpl-x"), mk("chatcmpl-x"), mk("chatcmpl-x")],
+             [mk("chatcmpl-x") for _ in range(_N)],
              "fail"),
             ("INCONCLUSIVE: no ids at all",
              [ProbeResponse(status_code=200,
                             body={"choices": [{"message": {"content": "ok"}}]})
-              for _ in range(3)],
+              for _ in range(_N)],
              "inconclusive"),
             ("INCONCLUSIVE: all network errors",
-             [ProbeResponse(status_code=0, error="T") for _ in range(3)],
+             [ProbeResponse(status_code=0, error="T") for _ in range(_N)],
              "inconclusive"),
         ]
 

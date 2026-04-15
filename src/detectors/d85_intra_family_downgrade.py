@@ -27,7 +27,12 @@ _TPT_RATIO_THRESHOLD = 0.3
 # meaningful; otherwise the per-token estimate is too noisy.
 _MIN_HARD_TOKENS = 30
 
-_EASY_PROMPT = "Reply with just the word 'hello'."
+# Easy prompt must produce enough output (~30 tokens) so that per-token
+# latency is meaningful and not dominated by network RTT.
+_EASY_PROMPT = (
+    "Write exactly one short paragraph (2-3 sentences) about the color blue."
+)
+_MIN_EASY_TOKENS = 15  # below this, per-token rate is too noisy
 _HARD_PROMPT = (
     "A farmer has 17 sheep. All but 9 die. He buys 5 more, then sells "
     "half of what he has. How many sheep remain? Show your reasoning "
@@ -52,7 +57,7 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         easy = ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
-                "max_tokens": 10,
+                "max_tokens": 100,
                 "temperature": 0,
                 "messages": [{"role": "user", "content": _EASY_PROMPT}],
             },
@@ -91,6 +96,12 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         tokens_easy = max(token_counter.count(content_easy, model=model), 1)
         tokens_hard = token_counter.count(content_hard, model=model)
 
+        if tokens_easy < _MIN_EASY_TOKENS:
+            return self._inconclusive(
+                f"easy probe too short ({tokens_easy} tokens, "
+                f"need >= {_MIN_EASY_TOKENS}) -- per-token latency unreliable"
+            )
+
         if tokens_hard < _MIN_HARD_TOKENS:
             return self._inconclusive(
                 f"hard probe too short ({tokens_hard} tokens, "
@@ -126,7 +137,11 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         def _ok(content: str) -> dict:
             return {"choices": [{"message": {"content": content}}]}
 
-        short_answer = "hello"
+        # ~30 tokens -- enough to compute per-token latency reliably
+        short_answer = (
+            "Blue is a calming color often associated with the sky and ocean. "
+            "It evokes feelings of serenity and tranquility."
+        )
         # ~60 tokens of reasoning
         long_answer = (
             "Step 1: The farmer starts with 17 sheep. "
@@ -145,8 +160,10 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         net_err = lambda e: ProbeResponse(status_code=0, error=e)  # noqa: E731
 
         return [
+            # With ~21 easy tokens and ~70 hard tokens, tpt_easy = 800/21 ~ 38,
+            # tpt_hard = 2500/70 ~ 35.7. Ratio ~ 1.07 > 0.3 => PASS.
             ("PASS: uniform per-token latency",
-             [easy(100.0), hard(2500.0)], "pass"),
+             [easy(800.0), hard(2500.0)], "pass"),
             ("FAIL: easy probe served by cheaper model",
              [easy(5.0), hard(3000.0)], "fail"),
             ("INCONCLUSIVE: hard probe too few tokens",

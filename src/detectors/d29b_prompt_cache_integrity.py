@@ -18,7 +18,7 @@ from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeRespo
 
 
 _LONG_SYSTEM = "You are a helpful assistant. " + (
-    "Always be clear, concise, and accurate. Never hallucinate. " * 120
+    "Always be clear, concise, and accurate. Never hallucinate. " * 200
 )
 
 
@@ -128,6 +128,18 @@ class D29b_PromptCacheIntegrity(BaseDetector):
                 "cache_read_input_tokens == 0 on second call -- cache not honored",
                 ev,
             )
+        # For OpenAI, auto-caching is not guaranteed even above the 1024-token
+        # threshold -- return INCONCLUSIVE rather than FAIL.
+        model = self.config.claimed_model.lower()
+        is_openai_path = (
+            self.config.claimed_provider == ProviderType.OPENAI
+            or model.startswith(("gpt", "o1", "o3"))
+        )
+        if is_openai_path:
+            return self._inconclusive(
+                "no cache indicators in either response -- OpenAI auto-caching "
+                "is not guaranteed"
+            )
         return self._fail(
             "no cache indicators in either response -- router ignored cache_control",
             ev,
@@ -165,7 +177,9 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         return [
             ("PASS: Anthropic cache hit", [a1, a2], "pass"),
             ("PASS: OpenAI cache hit", [o1, o2], "pass"),
-            ("FAIL: no caching", [noop, noop], "fail"),
+            # Default self-test model is "gpt-4o" -- OpenAI path returns
+            # INCONCLUSIVE when no cache indicators found (not guaranteed)
+            ("INCONCLUSIVE: no caching (OpenAI path)", [noop, noop], "inconclusive"),
             ("FAIL: creation but no hit", [a1, noop], "fail"),
             ("FAIL: fabricated cache_read on first call (Anthropic)",
              [fab_anth, a2], "fail"),

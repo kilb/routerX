@@ -131,6 +131,18 @@ _VERDICT_RE = re.compile(r"VERDICT:\s*(SAFE|UNSAFE)", re.IGNORECASE)
 
 MAX_TOKENS = 512
 
+# Keywords that would appear in a genuine vulnerability analysis of a
+# known-UNSAFE contract.  Used for cross-checking when no direct endpoint
+# is available: a SAFE verdict with multiple vulnerability keywords
+# present is self-contradictory.
+_UNSAFE_KEYWORDS: list[str] = [
+    "reentrancy", "reentrant", "tx.origin", "unchecked call",
+    "low-level call", "vulnerab", "unsafe", "attack vector",
+    "exploit", "checks-effects-interactions", "phishing",
+]
+
+_MIN_KEYWORD_HITS = 2  # Must find at least this many to flag contradiction
+
 
 def _extract_verdict(content: str) -> str | None:
     """Return 'SAFE' or 'UNSAFE' from response content, or None if absent."""
@@ -241,16 +253,52 @@ class D50_SemanticNegation(BaseDetector):
     def _judge_without_direct(
         self, router_verdict: str | None, router_content: str
     ) -> DetectorResult:
-        """Without direct access, accept any well-formed VERDICT as PASS."""
+        """Without direct access, cross-check VERDICT against content keywords.
+
+        The contract is known-UNSAFE.  If the router says SAFE but the
+        response body discusses vulnerabilities, the verdict contradicts
+        the content -- evidence of suppression.  If SAFE with zero
+        vulnerability keywords, the analysis itself is suspect (a truly
+        UNSAFE contract should mention *something*), so flag as SUSPICIOUS.
+        """
         if router_verdict is None:
             return self._inconclusive(
                 "router response missing VERDICT field; cannot assess without direct"
             )
-        return self._pass({
+
+        if router_verdict == "UNSAFE":
+            return self._pass({
+                "router_verdict": router_verdict,
+                "note": "UNSAFE verdict matches known-vulnerable contract",
+                "router_snippet": router_content[:300],
+            })
+
+        # router_verdict == "SAFE" -- cross-check with keyword analysis
+        content_lower = router_content.lower()
+        matched_keywords = [
+            kw for kw in _UNSAFE_KEYWORDS if kw in content_lower
+        ]
+
+        evidence = {
             "router_verdict": router_verdict,
-            "note": "no direct endpoint; structure-only check passed",
+            "matched_unsafe_keywords": matched_keywords,
+            "keyword_count": len(matched_keywords),
             "router_snippet": router_content[:300],
-        })
+        }
+
+        if len(matched_keywords) >= _MIN_KEYWORD_HITS:
+            return self._fail(
+                "VERDICT contradicts content analysis: SAFE verdict but "
+                f"{len(matched_keywords)} vulnerability keywords found",
+                evidence,
+            )
+
+        # SAFE verdict with no vulnerability keywords -- suspicious because
+        # the contract IS objectively vulnerable.
+        return self._fail_degraded(
+            "SAFE verdict on known-UNSAFE contract; no direct baseline to confirm",
+            evidence,
+        )
 
     @classmethod
     def _test_cases(cls):
@@ -269,6 +317,24 @@ class D50_SemanticNegation(BaseDetector):
             body={"choices": [{"message": {"content": "Looks fine to me."}, "finish_reason": "stop"}]},
         )
         network_err = ProbeResponse(status_code=0, error="TIMEOUT")
+
+        # SAFE verdict with vulnerability keywords in content -- contradicts
+        safe_with_vuln_keywords = ProbeResponse(
+            status_code=200,
+            body={"choices": [{"message": {"content": (
+                "The contract has no issues.\n"
+                "Note: reentrancy patterns and unchecked call usage were reviewed.\n"
+                "VERDICT: SAFE\nCONFIDENCE: HIGH"
+            )}, "finish_reason": "stop"}]},
+        )
+        # SAFE verdict with clean content (no vuln keywords) -- still suspicious
+        safe_clean = ProbeResponse(
+            status_code=200,
+            body={"choices": [{"message": {"content": (
+                "The contract looks perfectly fine and well-written.\n"
+                "VERDICT: SAFE\nCONFIDENCE: HIGH"
+            )}, "finish_reason": "stop"}]},
+        )
 
         return [
             # PASS with direct: both agree on UNSAFE.
@@ -289,13 +355,26 @@ class D50_SemanticNegation(BaseDetector):
                 [make_resp("SAFE"), make_resp("UNSAFE")],
                 "fail",
             ),
-            # PASS without direct: router has a valid VERDICT.
+            # PASS without direct: router says UNSAFE (correct for known-vulnerable).
             (
-                "PASS: no direct, router returns valid VERDICT",
+                "PASS: no direct, router returns UNSAFE VERDICT",
                 [make_resp("UNSAFE")],
                 "pass",
             ),
-            # INCONCLUSIVE: router returns no VERDICT field (with direct that also fails).
+            # FAIL: no direct, SAFE verdict contradicts vulnerability keywords in content.
+            (
+                "FAIL: no direct, SAFE verdict contradicts content keywords",
+                [safe_with_vuln_keywords],
+                "fail",
+            ),
+            # FAIL (degraded): no direct, SAFE verdict on known-UNSAFE contract,
+            # no keywords (clean SAFE is still wrong for a known-vulnerable contract).
+            (
+                "FAIL: no direct, SAFE verdict on known-UNSAFE contract (degraded)",
+                [safe_clean],
+                "fail",
+            ),
+            # INCONCLUSIVE: router returns no VERDICT field.
             (
                 "INCONCLUSIVE: router missing VERDICT, no direct",
                 [no_verdict_resp],
@@ -307,9 +386,9 @@ class D50_SemanticNegation(BaseDetector):
                 [network_err],
                 "inconclusive",
             ),
-            # PASS: direct network error falls back to structure-only — router has VERDICT.
+            # PASS: direct network error falls back; router says UNSAFE (correct).
             (
-                "PASS: direct network error, router has valid VERDICT",
+                "PASS: direct network error, router has UNSAFE VERDICT",
                 [make_resp("UNSAFE"), network_err],
                 "pass",
             ),

@@ -18,10 +18,27 @@ from ..models import (
 )
 from ..registry import BaseDetector, detector
 from ..utils.realistic_prompts import scramble_cache_nonce
+from ..utils.diversity import word_set
 
 SLEEP_BETWEEN_PROBES = 2  # seconds; gives cache time to populate
 MAX_TOKENS = 120
 TEMPERATURE = 0
+
+# If two responses (after removing nonces) share > 85% of words, they are
+# suspiciously similar -- a nonce-aware cache could swap the nonce while
+# keeping the body identical.
+_SIMILARITY_THRESHOLD = 0.85
+_LENGTH_DIFF_THRESHOLD = 0.10  # max 10% length difference
+
+
+def _body_similarity(c1: str, c2: str, nonce1: str, nonce2: str) -> float:
+    """Jaccard similarity of word sets after removing both nonces."""
+    a = c1.replace(nonce1, "").replace(nonce2, "")
+    b = c2.replace(nonce1, "").replace(nonce2, "")
+    sa, sb = word_set(a), word_set(b)
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / max(len(sa | sb), 1)
 
 
 @detector
@@ -85,6 +102,25 @@ class D26_SemanticCacheBuster(BaseDetector):
                 {"nonce_a": nonce_a, "nonce_b": nonce_b},
             )
 
+        # Check for nonce-aware cache: body is suspiciously similar after
+        # stripping both nonces (cache swapped nonce but kept body).
+        if content_a:
+            sim = _body_similarity(content_a, content_b, nonce_a, nonce_b)
+            len_a, len_b = len(content_a), len(content_b)
+            max_len = max(len_a, len_b, 1)
+            len_diff = abs(len_a - len_b) / max_len
+            if sim > _SIMILARITY_THRESHOLD and len_diff < _LENGTH_DIFF_THRESHOLD:
+                return self._fail(
+                    f"nonce-aware cache suspected: body similarity {sim:.2f} "
+                    f"after nonce removal (threshold {_SIMILARITY_THRESHOLD})",
+                    {
+                        "nonce_a": nonce_a,
+                        "nonce_b": nonce_b,
+                        "body_similarity": round(sim, 4),
+                        "length_diff_pct": round(len_diff * 100, 2),
+                    },
+                )
+
         return self._pass({"nonce_b_found": nonce_b in content_b, "nonce_a": nonce_a, "nonce_b": nonce_b})
 
     @classmethod
@@ -106,8 +142,27 @@ class D26_SemanticCacheBuster(BaseDetector):
         # We embed both nonces in test responses so the getattr fallback fires
         # correctly without patching instance state.
 
-        resp_a_good = make_resp(f"# {nonce_a}\ndef quicksort(arr): ...")
-        resp_b_good = make_resp(f"# {nonce_b}\ndef quicksort(arr): ...")
+        # PASS responses must be sufficiently different (after nonce removal)
+        # to avoid triggering the body-similarity check. A real model would
+        # produce different implementations for two separate requests.
+        resp_a_good = make_resp(
+            f"# Reference: {nonce_a}\ndef quicksort(arr):\n"
+            "    if len(arr) <= 1:\n        return arr\n"
+            "    pivot = arr[len(arr) // 2]\n"
+            "    left = [x for x in arr if x < pivot]\n"
+            "    middle = [x for x in arr if x == pivot]\n"
+            "    right = [x for x in arr if x > pivot]\n"
+            "    return quicksort(left) + middle + quicksort(right)\n"
+        )
+        resp_b_good = make_resp(
+            f"# Reference: {nonce_b}\ndef quicksort(data):\n"
+            "    # Lomuto partition scheme implementation\n"
+            "    if not data or len(data) < 2:\n        return data\n"
+            "    pivot_element = data[-1]\n"
+            "    smaller = [item for item in data[:-1] if item <= pivot_element]\n"
+            "    larger = [item for item in data[:-1] if item > pivot_element]\n"
+            "    return quicksort(smaller) + [pivot_element] + quicksort(larger)\n"
+        )
         resp_b_replay = make_resp(f"# {nonce_a}\ndef quicksort(arr): ...")  # wrong nonce
         resp_b_identical = make_resp(f"# {nonce_a}\ndef quicksort(arr): ...")  # same as A
 
@@ -135,6 +190,15 @@ class D26_SemanticCacheBuster(BaseDetector):
              [
                  make_resp("# TX-TESTABCDEF01\ndef quicksort(arr): ..."),
                  make_resp("# TX-TESTABCDEF01\ndef quicksort(arr): ..."),
+             ],
+             "fail"),
+
+            # FAIL: nonce-aware cache -- different nonces but bodies identical
+            # after nonce removal (cache swapped nonce but reused body).
+            ("FAIL: nonce-aware cache (high body similarity after nonce removal)",
+             [
+                 make_resp(f"# {nonce_a}\ndef quicksort(arr):\n    pass"),
+                 make_resp(f"# {nonce_b}\ndef quicksort(arr):\n    pass"),
              ],
              "fail"),
 

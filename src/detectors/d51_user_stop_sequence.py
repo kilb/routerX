@@ -60,6 +60,13 @@ class D51_UserStopSequence(BaseDetector):
         # Provider echoed stop token but correctly stopped -- borderline compliant
         if has_stop and not has_after and finish == "stop":
             return self._pass(ev | {"note": "stop token echoed but finish_reason=stop"})
+        # DONE echoed but finish_reason=length: ambiguous -- max_tokens may
+        # have been hit before the stop sequence was reached.
+        if has_stop and not has_after and finish == "length":
+            return self._inconclusive(
+                "stop token echoed with finish_reason=length -- ambiguous "
+                "(max_tokens may have preceded stop)"
+            )
         return self._fail(
             f"stop sequence not honored: stop_token_echoed={has_stop}, "
             f"after_tokens_present={has_after}", ev,
@@ -80,8 +87,8 @@ class D51_UserStopSequence(BaseDetector):
              [mk("ONE\nTWO\nTHREE\nDONE\n")], "pass"),
             ("FAIL: continued past DONE",
              [mk("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE")], "fail"),
-            ("FAIL: DONE echoed with length finish",
-             [mk("ONE\nTWO\nTHREE\nDONE\n", "length")], "fail"),
+            ("INCONCLUSIVE: DONE echoed with length finish (ambiguous)",
+             [mk("ONE\nTWO\nTHREE\nDONE\n", "length")], "inconclusive"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
         ]

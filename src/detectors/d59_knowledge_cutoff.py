@@ -33,8 +33,16 @@ _PROBES = [
 ]
 
 _X_REBRAND_RE = re.compile(
-    r"(?:rebrand|renamed?|now called|known as|changed to|became)\s+(?:to\s+)?[\"']?x[\"']?\b"
+    r"(?:rebrand|renamed?|now called|known as|changed to|became|just|"
+    r"renamed as|the letter|twitter as|new name)\s+(?:to\s+)?[\"']?x[\"']?\b"
     r"|\bx\b(?:\s*[,.]?\s*(?:formerly|previously)\s+twitter)",
+    re.IGNORECASE,
+)
+
+# Proximity fallback: if "twitter" and "x" both appear within 30 chars
+# of each other, treat as a hit (catches free-form paraphrases).
+_X_PROXIMITY_RE = re.compile(
+    r"twitter.{0,30}\bx\b|\bx\b.{0,30}twitter",
     re.IGNORECASE,
 )
 
@@ -73,7 +81,10 @@ class D59_KnowledgeCutoff(BaseDetector):
             # Fallback regex for the Twitter/X probe — catches "X." at
             # sentence boundaries where substring needles miss.
             if not ok and "rebranded" in q.lower():
-                ok = bool(_X_REBRAND_RE.search(content))
+                ok = bool(
+                    _X_REBRAND_RE.search(content)
+                    or _X_PROXIMITY_RE.search(content)
+                )
             if ok:
                 hits += 1
             per_probe.append({"q": q[:60], "ok": ok, "excerpt": content[:150]})

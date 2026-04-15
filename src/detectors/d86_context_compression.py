@@ -152,6 +152,25 @@ class D86_ContextCompressionDetection(BaseDetector):
             )
         ]
 
+    @staticmethod
+    def _coord_matches(expected: str, content: str) -> bool:
+        """Match GPS coordinates to 4 decimal places (prefix match).
+
+        Models rarely recall 6-decimal GPS precision exactly, so we loosen
+        the check: extract the first 4 decimals from each coordinate and
+        match those in the response.
+        """
+        import re
+        # Parse expected format: "47.382910N, 118.294037E"
+        nums = re.findall(r"(\d+\.\d+)", expected)
+        for num in nums:
+            # Truncate to 4 decimal places for matching
+            parts = num.split(".")
+            prefix = parts[0] + "." + parts[1][:4]
+            if prefix not in content:
+                return False
+        return len(nums) > 0
+
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
@@ -165,7 +184,8 @@ class D86_ContextCompressionDetection(BaseDetector):
         ref = getattr(self, "_ref", _TEST_REF)
         ver = getattr(self, "_ver", _TEST_VER)
 
-        has_coord = coord in content
+        # GPS: match to 4 decimal places instead of exact 6-decimal match
+        has_coord = self._coord_matches(coord, content)
         has_ref = ref in content
         has_ver = ver in content
         hits = sum([has_coord, has_ref, has_ver])
@@ -179,24 +199,24 @@ class D86_ContextCompressionDetection(BaseDetector):
 
         if hits == 3:
             return self._pass(ev)
-        if hits >= 2:
-            # One value lost — mild compression
-            missing = []
-            if not has_coord:
-                missing.append("coordinates")
-            if not has_ref:
-                missing.append("reference code")
-            if not has_ver:
-                missing.append("firmware version")
+        if hits == 0:
+            # Zero values recalled -- strong signal of compression/truncation
             return self._fail(
-                f"partial recall ({hits}/3) — {', '.join(missing)} lost",
+                "0/3 values recalled -- context heavily "
+                "compressed or truncated",
                 ev,
             )
-        # 0-1 hits — heavy compression or truncation
-        return self._fail(
-            f"only {hits}/3 values recalled — context heavily "
-            f"compressed or truncated",
-            ev,
+        # 1-2 hits: partial recall could be model imprecision, not compression
+        missing = []
+        if not has_coord:
+            missing.append("coordinates")
+        if not has_ref:
+            missing.append("reference code")
+        if not has_ver:
+            missing.append("firmware version")
+        return self._inconclusive(
+            f"partial recall ({hits}/3) -- {', '.join(missing)} lost; "
+            "could be model imprecision rather than compression"
         )
 
     @classmethod
@@ -221,9 +241,14 @@ class D86_ContextCompressionDetection(BaseDetector):
                 "pass",
             ),
             (
-                "FAIL: only 2 of 3 recalled (version lost)",
+                "PASS: GPS with 4 decimal precision still matches",
+                [mk(f"GPS: 47.3829N, 118.2940E\nRef: {_TEST_REF}\nFirmware: {_TEST_VER}")],
+                "pass",
+            ),
+            (
+                "INCONCLUSIVE: only 2 of 3 recalled (version lost)",
                 [mk(f"GPS: {_TEST_COORD}\nRef: {_TEST_REF}\nFirmware: unknown")],
-                "fail",
+                "inconclusive",
             ),
             (
                 "FAIL: 0 of 3 recalled (heavy compression)",

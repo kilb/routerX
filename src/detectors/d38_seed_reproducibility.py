@@ -58,7 +58,7 @@ class D38_SeedReproducibility(BaseDetector):
         return [await self.client.send(probe) for _ in range(PROBE_COUNT)]
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
-        """Pass if at least one pair of responses matches; fail if all three differ."""
+        """Pass if all 3 responses match; suspicious if only 2/3; fail if 0-1/3."""
         valid = [r for r in responses if not r.is_network_error and r.content]
         if len(valid) < 2:
             reason = (
@@ -69,30 +69,37 @@ class D38_SeedReproducibility(BaseDetector):
             return self._inconclusive(reason)
 
         contents = [r.content for r in valid]
-        matched_pair = next(
-            (
-                (i, j)
-                for i, j in combinations(range(len(contents)), 2)
-                if contents[i] == contents[j]
-            ),
-            None,
+        seed = getattr(self, "_seed", 42)
+
+        # Count matching pairs
+        match_count = sum(
+            1 for i, j in combinations(range(len(contents)), 2)
+            if contents[i] == contents[j]
         )
 
-        if matched_pair is not None:
-            i, j = matched_pair
-            return self._pass({
-                "matched_pair": [i, j],
-                "valid_response_count": len(valid),
-                "seed": getattr(self, "_seed", 42),
-            })
+        ev_base = {
+            "valid_response_count": len(valid),
+            "seed": seed,
+        }
+
+        # 3/3 identical => 3 matching pairs => PASS
+        if len(valid) == 3 and match_count == 3:
+            return self._pass(ev_base)
+
+        # 2/3 identical => exactly 1 matching pair => SUSPICIOUS (degraded)
+        if len(valid) >= 2 and match_count >= 1:
+            if len(valid) == 3 and match_count < 3:
+                return self._fail_degraded(
+                    "only 2/3 responses identical -- seed honoured but not "
+                    "fully deterministic (suspicious)",
+                    ev_base | {"match_count": match_count},
+                )
+            # With only 2 valid, 1 match = all match => PASS
+            return self._pass(ev_base)
 
         return self._fail(
             "seed parameter ignored: all responses differ",
-            {
-                "valid_response_count": len(valid),
-                "seed": getattr(self, "_seed", 42),
-                "response_previews": [c[:80] for c in contents],
-            },
+            ev_base | {"response_previews": [c[:80] for c in contents]},
         )
 
     @classmethod
@@ -108,14 +115,14 @@ class D38_SeedReproducibility(BaseDetector):
         alt2 = "def fib10(): return 55"
 
         return [
-            # PASS: all three identical (seed honoured)
+            # PASS: all three identical (seed honoured, 3/3)
             ("PASS: all three responses identical",
              [make_resp(identical), make_resp(identical), make_resp(identical)],
              "pass"),
-            # PASS: only first pair matches — still passes
-            ("PASS: first two match, third differs",
+            # FAIL (degraded): only 2/3 match — suspicious, not a clean PASS
+            ("FAIL: first two match, third differs (2/3 suspicious)",
              [make_resp(identical), make_resp(identical), make_resp(alt1)],
-             "pass"),
+             "fail"),
             # FAIL: all three differ — seed ignored
             ("FAIL: all three responses differ",
              [make_resp(identical), make_resp(alt1), make_resp(alt2)],
@@ -129,9 +136,14 @@ class D38_SeedReproducibility(BaseDetector):
             ("INCONCLUSIVE: all network errors",
              [ProbeResponse(status_code=0, error="CONNECTION_REFUSED")] * 3,
              "inconclusive"),
-            # PASS: last pair matches, first differs
-            ("PASS: last two match, first differs",
+            # FAIL (degraded): last two match, first differs (2/3)
+            ("FAIL: last two match, first differs (2/3 suspicious)",
              [make_resp(alt1), make_resp(identical), make_resp(identical)],
+             "fail"),
+            # PASS: only 2 valid and they match => PASS
+            ("PASS: two valid both identical",
+             [make_resp(identical), make_resp(identical),
+              ProbeResponse(status_code=0, error="TIMEOUT")],
              "pass"),
         ]
 

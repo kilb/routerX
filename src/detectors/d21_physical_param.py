@@ -6,7 +6,7 @@ from ..tokenizer import token_counter
 from ..config import LOGIT_BIAS_CANDIDATES
 from ..utils.text_analysis import readable_bigram_ratio
 
-BIGRAM_THRESHOLD = 0.6
+BIGRAM_THRESHOLD = 0.75
 MIN_FAIL_COUNT = 2
 
 

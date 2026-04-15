@@ -78,7 +78,10 @@ class D16c_ParallelToolCallProbe(BaseDetector):
             return self._inconclusive(r.error or "network error")
         tc = r.tool_calls
         if not tc:
-            return self._inconclusive("no tool calls in response")
+            return self._inconclusive(
+                "model didn't call any tools -- tool calling may not be "
+                "supported or model chose to respond with text instead"
+            )
         names = [c["function"]["name"] for c in tc]
         ev = {"tool_call_count": len(tc), "function_names": names}
         if len(tc) < 2:

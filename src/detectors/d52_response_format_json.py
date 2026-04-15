@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 
 
 @detector
@@ -52,7 +52,9 @@ class D52_ResponseFormatJSON(BaseDetector):
         # json_object -- debatable but we allow it since the core obligation is
         # well-formed JSON, not text/plain wire format).
         stripped = content
+        had_fences = False
         if stripped.startswith("```"):
+            had_fences = True
             lines = stripped.split("\n")
             lines = lines[1:]  # drop opening fence line ("```json" etc.)
             if lines and lines[-1].strip() == "```":
@@ -68,7 +70,17 @@ class D52_ResponseFormatJSON(BaseDetector):
             )
         if not isinstance(parsed, dict):
             return self._fail("JSON parsed but not an object", ev | {"parsed": parsed})
-        return self._pass(ev | {"parsed_keys": list(parsed.keys())})
+        result_ev = ev | {"parsed_keys": list(parsed.keys())}
+        # OpenAI json_object mode never wraps output in markdown fences;
+        # their presence suggests the router dropped response_format and the
+        # model fell back to markdown formatting.
+        if had_fences and self.config.claimed_provider == ProviderType.OPENAI:
+            return self._fail_degraded(
+                "valid JSON but wrapped in markdown fences -- OpenAI "
+                "json_object mode should not produce fences",
+                result_ev | {"markdown_fenced": True},
+            )
+        return self._pass(result_ev)
 
     @classmethod
     def _test_cases(cls):

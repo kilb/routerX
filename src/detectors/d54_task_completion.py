@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from ..registry import detector, BaseDetector
 from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
 
@@ -13,14 +15,29 @@ PROMPT = (
     f"After completing all 20, output '{COMPLETION_MARKER}' on the final line."
 )
 
+_NUMBERED_RE = re.compile(r"\b\d+[.\)]\s+")
+
 
 def _count_language_entries(content: str) -> int:
-    """Count non-empty lines that are not the completion marker."""
-    return sum(
+    """Count list items using multiple strategies for robustness.
+
+    Some models write compact single-line lists like
+    "1. Python, 2. JavaScript, 3. Go" or comma-separated items.
+    We take the maximum of line count, numbered-pattern count,
+    and comma-separated count (halved) to handle all formats.
+    """
+    # Strategy 1: non-empty lines (excluding the marker)
+    line_count = sum(
         1
         for line in content.splitlines()
         if line.strip() and line.strip() != COMPLETION_MARKER
     )
+    # Strategy 2: numbered patterns like "1. " or "2) "
+    numbered_count = len(_NUMBERED_RE.findall(content))
+    # Strategy 3: comma-separated items (divided by 2 as a conservative
+    # estimate -- each "Language: use case" pair contributes one comma)
+    comma_count = content.count(",") // 2
+    return max(line_count, numbered_count, comma_count)
 
 
 @detector
@@ -97,6 +114,10 @@ class D54_TaskCompletion(BaseDetector):
             [f"{i}. Language{i}: use case" for i in range(1, 21)]
             + [COMPLETION_MARKER]
         )
+        # Compact single-line numbered list (no newlines between items)
+        compact_list = ", ".join(
+            [f"{i}. Language{i}: use case" for i in range(1, 21)]
+        ) + f"\n{COMPLETION_MARKER}"
         short_list_no_marker = "\n".join(
             [f"{i}. Language{i}: use case" for i in range(1, 11)]
         )
@@ -108,6 +129,10 @@ class D54_TaskCompletion(BaseDetector):
             # PASS: complete list with marker and stop
             ("PASS: 20 languages + marker + stop",
              [make_resp(full_list, "stop")],
+             "pass"),
+            # PASS: compact single-line numbered list still counts 20
+            ("PASS: compact numbered list on single line",
+             [make_resp(compact_list, "stop")],
              "pass"),
             # FAIL: semantic truncation — few languages, no marker, finish=stop
             ("FAIL: semantic truncation (<15 langs, no marker, stop)",

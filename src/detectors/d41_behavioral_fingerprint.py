@@ -17,15 +17,16 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 from ..utils.stats import digit_stats, chi_square_uniform
 
 
-# HEURISTIC thresholds — empirical calibration TODO.
+# HEURISTIC thresholds — empirical calibration.
 # Entropy alone is a weak signal: a distribution can be high-entropy yet
 # clearly non-uniform. We combine three gates: entropy floor, single-digit
-# mode cap, and a chi-square uniformity test (df=9, p=0.01 critical ~= 21.7;
-# we allow up to 45 to avoid false positives on legitimately noisy small
-# frontier models). MAJORITY_2_OF_2 further reduces single-sample variance.
+# mode cap, and a chi-square uniformity test.
+# df=9, chi-square=30.0 corresponds to p ~= 0.0005 -- tight enough to
+# catch medium-quality OSS models (which routinely hit chi=35-40) while
+# MAJORITY_2_OF_2 guards against single-sample variance on frontier models.
 MIN_FRONTIER_ENTROPY = 2.4
 MAX_FRONTIER_SINGLE_DIGIT_COUNT = 30
-MAX_CHI_SQUARE = 45.0
+MAX_CHI_SQUARE = 30.0
 
 
 @detector

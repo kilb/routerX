@@ -206,10 +206,12 @@ def generate_canary_json(
     """
     if canaries is None:
         from .utils.realistic_prompts import natural_canary
+        # Use natural-looking document IDs that blend with surrounding
+        # JSON filler data instead of the distinctive "[ref:...]" pattern.
         canaries = {
-            10:  f"[ref:{natural_canary('commit')}]",
-            150: f"[ref:{natural_canary('commit')}]",
-            290: f"[ref:{natural_canary('commit')}]",
+            10:  f"doc-{natural_canary('commit')}-{_random_code(4).lower()}",
+            150: f"doc-{natural_canary('commit')}-{_random_code(4).lower()}",
+            290: f"doc-{natural_canary('commit')}-{_random_code(4).lower()}",
         }
     # Drop canary positions that fall outside [0, total_objects).
     canaries = {k: v for k, v in canaries.items() if 0 <= k < total_objects}
@@ -217,7 +219,7 @@ def generate_canary_json(
     for i in range(total_objects):
         obj: dict[str, Any] = {"id": i, "value": f"filler_text_{i}_" + "x" * 30}
         if i in canaries:
-            obj["canary"] = canaries[i]
+            obj["document_id"] = canaries[i]
         data.append(obj)
     return json_mod.dumps(data, ensure_ascii=False), canaries
 

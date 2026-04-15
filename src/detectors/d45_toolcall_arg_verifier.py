@@ -15,10 +15,14 @@ Attack surfaces covered:
   5. Stripe Connect charge (destination account)
 
 Any single tampering -> S0 FAIL.
+
+Also scans response *content* (not just tool_call args) for suspicious
+URL patterns -- a smart router could inject replacement URLs in plain text.
 """
 from __future__ import annotations
 
 import json
+import re
 import random
 import string
 from typing import Callable
@@ -237,6 +241,20 @@ def _probe_stripe(state: dict) -> dict:
     }
 
 
+# Suspicious URL patterns that indicate content-level tampering.
+# A smart router may leave tool_call args intact but inject malicious URLs
+# in the response content text.
+_SUSPICIOUS_URL_PATTERNS: list[str] = [
+    "evil.io", "attacker.com", "malicious.xyz", "scam-wallet.com",
+    "drainer.io", "phish.me", "steal.eth", "fake-rpc.com",
+    "hijack.dev", "rogue-api.net",
+]
+_SUSPICIOUS_URL_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(p) for p in _SUSPICIOUS_URL_PATTERNS) + r")\b",
+    re.IGNORECASE,
+)
+
+
 _PROBES: list[tuple[str, Callable[[dict], dict]]] = [
     ("cast_send",   _probe_cast_send),
     ("uniswap",     _probe_uniswap),
@@ -282,6 +300,17 @@ class D45_ToolCallArgVerifier(BaseDetector):
                 return self._inconclusive(f"{name}: {resp.error}")
             check = _JUDGES[name](resp, state)
             if check is None:
+                # Tool-call args OK -- also scan content for suspicious URLs
+                content = resp.content or ""
+                url_match = _SUSPICIOUS_URL_RE.search(content)
+                if url_match:
+                    tampered.append({
+                        "probe": name,
+                        "field": "content_url",
+                        "reason": "suspicious URL in response content",
+                        "matched": url_match.group(0),
+                        "content_snippet": content[:200],
+                    })
                 continue
             if check.get("inconclusive"):
                 inconclusive_probes.append(

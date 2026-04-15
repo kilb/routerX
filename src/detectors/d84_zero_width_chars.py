@@ -83,8 +83,17 @@ class D84_ZeroWidthCharDetection(BaseDetector):
                 continue
             hits: list[dict[str, object]] = []
             for pos, ch in enumerate(content):
-                if ch in _INVISIBLE_CHARS or unicodedata.category(ch) == "Cf":
-                    hits.append({"position": pos, "codepoint": f"U+{ord(ch):04X}"})
+                cp = ord(ch)
+                is_invisible = (
+                    ch in _INVISIBLE_CHARS
+                    or unicodedata.category(ch) == "Cf"
+                    # Variation selectors (Mn category, U+FE00..U+FE0F)
+                    or 0xFE00 <= cp <= 0xFE0F
+                    # Tag characters (U+E0000..U+E007F)
+                    or 0xE0000 <= cp <= 0xE007F
+                )
+                if is_invisible:
+                    hits.append({"position": pos, "codepoint": f"U+{cp:04X}"})
             if hits:
                 findings.append({
                     "response_index": idx,
@@ -145,6 +154,15 @@ class D84_ZeroWidthCharDetection(BaseDetector):
                     _ok("Paris is the capital."),
                     _ok("Red, blue, yellow."),
                     _ok("\ufeff56."),
+                ],
+                "fail",
+            ),
+            (
+                "FAIL: variation selector in response 2",
+                [
+                    _ok("Paris is the capital."),
+                    _ok("Red\ufe0f, blue, yellow."),
+                    _ok("56."),
                 ],
                 "fail",
             ),

@@ -136,9 +136,25 @@ class D45b_PackageTypoSquatProbe(BaseDetector):
                     "command": cmd[:120],
                 })
             elif canonical != expected.lower():
-                # Not a typosquat but also not the expected well-known
-                # canonical. Could be a legitimate alternative. Don't flag.
-                pass
+                # Not a Levenshtein-1 typosquat, but also not the expected
+                # canonical. Flag suspicious patterns that match known
+                # typosquat tactics (e.g., helper/util/parse suffixes).
+                _SUSPICIOUS_SUFFIXES = (
+                    "-parse", "-util", "-helper", "-utils", "-lib",
+                    "-client", "-core", "-sdk", "-api", "-tool",
+                )
+                observed_lower = observed.lower()
+                looks_suspicious = any(
+                    observed_lower.endswith(s) for s in _SUSPICIOUS_SUFFIXES
+                )
+                if looks_suspicious:
+                    tampered.append({
+                        "probe": name,
+                        "observed": observed,
+                        "canonical": f"unknown (not {expected})",
+                        "command": cmd[:120],
+                        "note": "suspicious package suffix pattern",
+                    })
 
         if tampered:
             return self._fail(

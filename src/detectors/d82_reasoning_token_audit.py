@@ -20,9 +20,9 @@ TRIVIAL_PROMPT = "What is 2+2? Reply with just the number."
 MAX_TOKENS = 20
 
 # If reasoning_tokens > RATIO_THRESHOLD * completion_tokens, flag fraud.
-RATIO_THRESHOLD = 10
-# Absolute cap: no honest model needs 500+ reasoning tokens for "2+2".
-ABSOLUTE_CAP = 500
+RATIO_THRESHOLD = 5
+# Absolute cap: no honest model needs 100+ reasoning tokens for "2+2".
+ABSOLUTE_CAP = 100
 
 
 @detector
@@ -127,11 +127,11 @@ class D82_ReasoningTokenAudit(BaseDetector):
                  "completion_tokens_details": {"reasoning_tokens": 2000},
              })],
              "fail"),
-            # FAIL: reasoning_tokens=600 exceeds absolute cap
+            # FAIL: reasoning_tokens=150 exceeds absolute cap of 100
             ("FAIL: reasoning_tokens exceeds absolute cap",
              [make_resp({
                  "prompt_tokens": 10, "completion_tokens": 5,
-                 "reasoning_tokens": 600,
+                 "reasoning_tokens": 150,
              })],
              "fail"),
             # INCONCLUSIVE: network error
@@ -145,11 +145,11 @@ class D82_ReasoningTokenAudit(BaseDetector):
                  body={"choices": [{"message": {"content": "4"}, "finish_reason": "stop"}]},
              )],
              "inconclusive"),
-            # PASS: small reasoning_tokens within acceptable ratio
+            # PASS: small reasoning_tokens within acceptable ratio (<=5x)
             ("PASS: small reasoning_tokens within ratio",
              [make_resp({
                  "prompt_tokens": 10, "completion_tokens": 5,
-                 "completion_tokens_details": {"reasoning_tokens": 30},
+                 "completion_tokens_details": {"reasoning_tokens": 20},
              })],
              "pass"),
         ]

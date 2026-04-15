@@ -2,7 +2,7 @@
 
 Frontier-model endpoints have characteristic latency signatures. A router
 serving a bare OSS model on shared hardware will fall outside the band.
-Uses a widened 3x tolerance band to avoid false positives from transient
+Uses a widened 2x tolerance band to avoid false positives from transient
 network conditions. MAJORITY_2_OF_2 further guards against one-off jitter.
 
 Limitations:
@@ -27,7 +27,7 @@ from ..registry import BaseDetector, detector
 from ..tokenizer import token_counter
 from ..utils.latency_bands import lookup_band
 
-_TOLERANCE = 3.0  # allow 3x the published band before flagging
+_TOLERANCE = 2.0  # allow 2x the published band before flagging
 _MIN_EDGE_DELTA = 0.5  # require 50% exceedance to avoid edge jitter FAIL
 
 
@@ -142,7 +142,7 @@ class D60_LatencyFingerprint(BaseDetector):
             )
 
         good = mk(
-            [0.3, 0.4, 0.5, 0.6, 0.7, 1.0],
+            [0.3, 0.5, 0.8, 1.2, 1.8, 3.0],
             "The history of distributed systems " * 40,
         )
         slow = mk([15.0, 15.1, 15.2], "short")

@@ -61,8 +61,16 @@ class D37_StopSeqProbe(BaseDetector):
             # Token limit hit naturally — not a stop sequence injection
             return self._pass({**evidence, "note": "truncated by max_tokens, not stop sequence"})
 
+        MIN_CONTENT_LEN_FOR_FAIL = 300
         if paragraph_count < MIN_PARAGRAPHS and finish_reason == "stop":
-            return self._fail("router injected stop sequence truncating output", evidence)
+            if len(content) < MIN_CONTENT_LEN_FOR_FAIL:
+                return self._fail("router injected stop sequence truncating output", evidence)
+            # Long content in fewer paragraphs: model chose not to split,
+            # not evidence of stop sequence injection
+            return self._inconclusive(
+                "few paragraphs but content is long -- model may have "
+                "chosen not to break into paragraphs"
+            )
 
         # Ambiguous: multiple paragraphs but finished with length, or other finish reasons
         return self._pass(evidence)
@@ -96,6 +104,17 @@ class D37_StopSeqProbe(BaseDetector):
             ("PASS: 1 paragraph, finish_reason=length",
              [make_resp(one_para, "length")],
              "pass"),
+            # INCONCLUSIVE: long single paragraph (model chose not to break)
+            ("INCONCLUSIVE: long single paragraph, finish_reason=stop",
+             [make_resp(
+                 "Artificial intelligence is transforming every sector of society "
+                 "in ways we could not have imagined just a decade ago. From healthcare "
+                 "diagnostics to autonomous vehicles, from creative arts to financial "
+                 "modeling, AI systems are becoming deeply integrated into the fabric "
+                 "of modern life, raising important questions about ethics, employment, "
+                 "and the very nature of human intelligence itself.",
+                 "stop")],
+             "inconclusive"),
             # INCONCLUSIVE: empty content
             ("INCONCLUSIVE: empty content",
              [make_resp("", "stop")],

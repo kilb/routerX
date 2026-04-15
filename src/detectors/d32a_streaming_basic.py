@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
 from ..utils.timing import analyze_chunks
 
 MIN_CHUNKS = 3
@@ -42,7 +42,9 @@ class D32a_StreamingBasicProbe(BaseDetector):
             last_len = len(self._chunk_content(r.chunks[-1]))
             if total_len > 0 and last_len / total_len > MAX_LAST_CHUNK_RATIO:
                 return self._fail("80%+ content in last chunk", {**ev, "last_ratio": last_len / total_len})
-        if usage is None:
+        # Anthropic streaming does not always include usage; skip this check
+        # for Anthropic providers to avoid false positives.
+        if usage is None and self.config.claimed_provider != ProviderType.ANTHROPIC:
             return self._fail("no usage block in stream", ev)
         return self._pass(ev)
 

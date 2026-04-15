@@ -12,9 +12,9 @@ from ..registry import BaseDetector, detector
 
 # Fallback canary map used only in self-test when send_probes is not called.
 _TEST_CANARY_POSITIONS = {
-    10: "[ref:aabbcc1]",
-    150: "[ref:ddeeff2]",
-    290: "[ref:112233a]",
+    10: "doc-aabbcc1-x4k2",
+    150: "doc-ddeeff2-m7p3",
+    290: "doc-112233a-q9w1",
 }
 
 
@@ -32,9 +32,10 @@ class D24a_ContextTruncationCanary(BaseDetector):
         json_str, canaries = generate_canary_json()
         prompt_text = (
             f"{json_str}\n\n"
-            "Three of the objects in the JSON have a special field called 'canary' "
-            "whose value looks like '[ref:XXXXXXX]'. Extract all three values and "
-            "output them on separate lines."
+            "Three of the objects in the JSON have a special field called "
+            "'document_id' whose value looks like 'doc-XXXXXXX-XXXX'. "
+            "Extract all three document_id values and output them on "
+            "separate lines."
         )
         # Cache for judge() + D29 consumption; avoids regenerating ~MB of
         # JSON string twice per run.

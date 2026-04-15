@@ -27,11 +27,31 @@ TOKENIZER_FINGERPRINTS: dict[str, dict[str, list[str]]] = {
     },
 }
 
-# D4a test strings (do not modify -- carefully chosen for fingerprinting).
+# D4a test strings -- curated for high inter-tokenizer variance.
+# Pool is intentionally large so a router cannot whitelist individual words.
 TOKENIZER_PROBE_STRINGS: list[str] = [
-    "SolidGoldMagikarp",  # GPT-family glitch token
-    "sjkldfjsldkfj",      # nonsense -- high inter-tokenizer variance
-    " petertodd",         # leading space + name -- sensitive to boundaries
+    # GPT-family glitch tokens
+    "SolidGoldMagikarp",
+    " petertodd",
+    "davidjl",
+    "rawdownload",
+    # Nonsense / high variance
+    "sjkldfjsldkfj",
+    "xQmZvR7bL3nW",
+    "Kf9pYtN2sA4e",
+    # Uncommon long words
+    "antidisestablishmentarianism",
+    "supercalifragilisticexpialidocious",
+    "floccinaucinihilipilification",
+    "pneumonoultramicroscopicsilicovolcanoconiosis",
+    # Mixed-case with unicode -- boundary-sensitive
+    "H\u00e9llo_w\u00f6rld",
+    "Test\u03a9string",
+    # CamelCase compound words
+    "OpenSourceLargeLanguageModel",
+    "BlockchainDecentralizedFinance",
+    # Numeric / symbol mixes
+    "abc123def456ghi",
 ]
 
 # Provider parameter limits (D22d / D30a).
@@ -52,10 +72,22 @@ KNOWN_FAKE_PATTERNS: list[str] = [
 # CJK entries use \u escapes so the source stays ASCII-only while still
 # matching responses that render literal Chinese characters.
 HIJACKED_KEYWORDS: list[str] = [
-    "cursor", "monica", "translate", "translation",
-    "homework", "code assistant", "copilot",
+    # Code assistants
+    "cursor", "copilot", "codeium", "tabnine", "continue.dev",
+    # Translation apps
+    "monica", "translate", "translation", "deepl", "google translate",
+    # Productivity
+    "notion", "obsidian",
+    # Search / research
+    "perplexity", "phind",
+    # Chat apps
+    "poe", "you.com",
+    # Generic
+    "homework", "code assistant", "assistant of",
+    # CJK
     "\u7ffb\u8bd1",   # fan-yi (translate)
     "\u4f5c\u4e1a",   # zuo-ye (homework)
+    "\u52a9\u624b",   # zhu-shou (assistant)
 ]
 
 # Standard provider response headers (D30).
