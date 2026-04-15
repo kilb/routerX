@@ -234,10 +234,12 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.
 /* Result table */
 table.rt{width:100%;border-collapse:separate;border-spacing:0}
 .rt th{
-  position:sticky;top:60px;z-index:5;background:var(--card);
   text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:0.06em;color:var(--t4);padding:0.65rem 1rem;border-bottom:1px solid var(--border);
+  letter-spacing:0.06em;color:var(--t4);padding:0.65rem 1rem;
+  border-bottom:1px solid var(--border);background:var(--card);
 }
+/* Only sticky in report view, not progress (where card has overflow) */
+.report-table .rt th{position:sticky;top:60px;z-index:5}
 .rt td{padding:0.65rem 1rem;font-size:0.9rem;border-bottom:1px solid #ffffff05;vertical-align:top}
 .rt tr.dr{cursor:pointer;transition:background 0.15s}
 .rt tr.dr:hover{background:var(--card2)}
@@ -285,6 +287,12 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 .rc-name{font-weight:600;font-size:0.95rem;color:var(--t1);margin-bottom:0.5rem}
 .rc-desc{font-size:0.85rem;color:var(--t3);line-height:1.55}
 .rc-foot{display:flex;gap:1rem;margin-top:0.8rem;font-size:0.75rem;color:var(--t4);font-family:var(--mono)}
+
+/* Animated spinner for running detectors */
+.spin-icon{display:inline-block;width:18px;height:18px;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pulse-icon{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -577,11 +585,13 @@ function runProgress(taskId,server){
   const area=document.getElementById('results-area');
   const startTime=Date.now();
 
+  const pendingIcon='<span class="pulse-icon" style="color:var(--t4)">●</span>';
+  const spinnerSvg='<svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>';
   // Build detector grid from the DB
-  const detRows=DB.map(d=>`<tr id="dg-${d.id}">
+  const detRows=DB.map(d=>`<tr id="dg-${d.id}" style="opacity:0.5">
     <td class="cid">${d.id}</td><td class="cname" style="color:var(--t3)">${d.name}</td>
     <td class="cpri">${d.pri}</td>
-    <td id="dv-${d.id}" style="text-align:center;font-size:1.1rem">⏳</td>
+    <td id="dv-${d.id}" style="text-align:center">${pendingIcon}</td>
     <td id="dt-${d.id}" class="ctime">—</td>
   </tr>`).join('');
 
@@ -626,14 +636,14 @@ function runProgress(taskId,server){
     }
     if(ev.type==='detector_start'){
       const el=document.getElementById('dv-'+ev.data.id);
-      if(el){el.textContent='🔄';el.style.animation='none';el.offsetHeight;el.style.animation=''}
+      if(el)el.innerHTML=spinnerSvg;
       const row=document.getElementById('dg-'+ev.data.id);
-      if(row)row.style.background='var(--card2)';
+      if(row){row.style.background='var(--card2)';row.style.opacity='1'}
     }
     if(ev.type==='detector_end'){
       const d=ev.data,v=d.verdict;
-      const emoji={pass:'✅',fail:'❌',suspicious:'⚠️',inconclusive:'🔶',skip:'⏭️'}[v]||'❓';
-      const el=document.getElementById('dv-'+d.id);if(el)el.textContent=emoji;
+      const icons={pass:'<span style="color:var(--green);font-size:1.1rem">✓</span>',fail:'<span style="color:var(--red);font-size:1.1rem">✗</span>',suspicious:'<span style="color:var(--purple);font-size:1rem">⚠</span>',inconclusive:'<span style="color:var(--yellow);font-size:0.9rem">●</span>',skip:'<span style="color:var(--t4);font-size:0.8rem">—</span>'};
+      const el=document.getElementById('dv-'+d.id);if(el)el.innerHTML=icons[v]||'?';
       const tel=document.getElementById('dt-'+d.id);if(tel)tel.textContent=(d.latency_ms/1000).toFixed(1)+'s';
       const row=document.getElementById('dg-'+d.id);
       if(row){row.style.background='';row.style.opacity='1'}
@@ -838,7 +848,7 @@ function renderReport(r,taskId){
       <div class="metric"><div class="num">$${cost}</div><div class="lbl">Cost</div></div>
     </div>
     <div class="pipeline"><div class="card"><div class="card-label">Detection Pipeline</div>${pipHTML}</div></div>
-    <div class="card"><div class="card-label">All Detectors</div><div style="overflow-x:auto"><table class="rt"><thead><tr><th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
+    <div class="card report-table"><div class="card-label">All Detectors</div><div style="overflow-x:auto"><table class="rt"><thead><tr><th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
 }
 function togEv(row){const n=row.nextElementSibling;if(n?.classList.contains('ev-tr'))n.style.display=n.style.display==='none'?'':'none'}
 function dlReport(){if(!report)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));a.download='audit-report.json';a.click()}

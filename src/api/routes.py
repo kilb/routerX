@@ -162,7 +162,6 @@ async def create_test(req: CreateTestRequest):
 @router.get(
     "/tests",
     response_model=list[TaskSummary],
-    dependencies=[Depends(verify_token)],
 )
 async def list_tests(
     limit: int = 20,
@@ -176,7 +175,6 @@ async def list_tests(
 @router.get(
     "/tests/{task_id}",
     response_model=TaskDetail,
-    dependencies=[Depends(verify_token)],
 )
 async def get_test(task_id: str):
     info = get_tm().get_task(task_id)
@@ -185,7 +183,7 @@ async def get_test(task_id: str):
     return _detail(info)
 
 
-@router.get("/tests/{task_id}/report", dependencies=[Depends(verify_token)])
+@router.get("/tests/{task_id}/report")
 async def get_report(task_id: str):
     info = get_tm().get_task(task_id)
     if not info:
@@ -201,7 +199,7 @@ async def get_report(task_id: str):
     )
 
 
-@router.get("/tests/{task_id}/junit", dependencies=[Depends(verify_token)])
+@router.get("/tests/{task_id}/junit")
 async def get_junit(task_id: str):
     info = get_tm().get_task(task_id)
     if not info:
