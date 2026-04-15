@@ -344,7 +344,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
           <div class="field">
             <label>Models</label>
             <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
-              <input type="text" id="f-model-input" placeholder="Enter model name or fetch from router..." spellcheck="false" style="flex:1">
+              <input type="text" id="f-model-input" placeholder="Type to filter or enter model name..." spellcheck="false" style="flex:1" oninput="onModelFilter()">
               <button class="btn btn-ghost" style="white-space:nowrap;flex-shrink:0;font-size:0.85rem" id="btn-fetch" onclick="fetchModels()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.22-8.56"/><path d="M21 3v5h-5"/></svg>
                 Fetch Models
@@ -491,28 +491,38 @@ async function fetchModels(){
   finally{btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.22-8.56"/><path d="M21 3v5h-5"/></svg>Fetch Models'}
 }
 
+function getFilteredModels(){
+  const q=(document.getElementById('f-model-input')?.value||'').toLowerCase().trim();
+  if(!q)return fetchedModels;
+  return fetchedModels.filter(m=>m.id.toLowerCase().includes(q)||(m.owned_by||'').toLowerCase().includes(q));
+}
+
+function onModelFilter(){if(fetchedModels.length)renderModelList()}
+
 function renderModelList(){
   const el=document.getElementById('model-list');
   if(!fetchedModels.length){el.style.display='none';return}
   el.style.display='block';
-  el.innerHTML=`<div class="model-grid">${fetchedModels.map(m=>{
+  const filtered=getFilteredModels();
+  const q=(document.getElementById('f-model-input')?.value||'').trim();
+  el.innerHTML=`<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectFiltered()">Select${q?' Filtered':' All'}</button>
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectedModels.clear();renderModelList()">Clear</button>
+      <span style="font-size:0.8rem;color:var(--t4)">${selectedModels.size} selected${q?` · ${filtered.length} / ${fetchedModels.length} shown`:` · ${fetchedModels.length} total`}</span>
+    </div>
+    <div class="model-grid" style="max-height:240px;overflow-y:auto;padding:2px">${filtered.map(m=>{
     const sel=selectedModels.has(m.id);
-    return `<div class="model-chip ${sel?'selected':''}" onclick="toggleModel('${m.id.replace(/'/g,"\\'")}',this)">
+    return `<div class="model-chip ${sel?'selected':''}" onclick="toggleModel('${m.id.replace(/'/g,"\\'")}')">
       <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
       ${esc(m.id)}${m.owned_by?`<span class="model-owner">${esc(m.owned_by)}</span>`:''}
-    </div>`}).join('')}</div>
-    <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
-      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectAllModels()">Select All</button>
-      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectedModels.clear();renderModelList()">Clear</button>
-      <span style="font-size:0.8rem;color:var(--t4);padding:0.3rem 0">${selectedModels.size} of ${fetchedModels.length} selected</span>
-    </div>`;
+    </div>`}).join('')}${!filtered.length?`<div style="padding:0.5rem;color:var(--t4);font-size:0.85rem">No models matching "${esc(q)}"</div>`:''}</div>`;
 }
 
-function toggleModel(id,el){
+function toggleModel(id){
   if(selectedModels.has(id))selectedModels.delete(id);else selectedModels.add(id);
   renderModelList();
 }
-function selectAllModels(){fetchedModels.forEach(m=>selectedModels.add(m.id));renderModelList()}
+function selectFiltered(){getFilteredModels().forEach(m=>selectedModels.add(m.id));renderModelList()}
 
 function getSelectedModels(){
   // Priority: selected chips > typed input > default
