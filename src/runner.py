@@ -32,16 +32,22 @@ logger = logging.getLogger("router-auditor.runner")
 
 STAGES: list[dict[str, Any]] = [
     {"name": "pre_screen", "priorities": [Priority.PRE_SCREEN],
-     "abort_on_fail": False, "parallel": False},
+     "abort_on_fail": False, "parallel": True},
     {"name": "s0", "priorities": [Priority.S0],
      "abort_on_fail": False, "parallel": True},
     {"name": "p0", "priorities": [Priority.P0],
-     "abort_on_fail": False, "parallel": False},
+     "abort_on_fail": False, "parallel": True},
     {"name": "p1", "priorities": [Priority.P1],
-     "abort_on_fail": False, "parallel": False},
+     "abort_on_fail": False, "parallel": True},
     {"name": "p2", "priorities": [Priority.P2],
      "abort_on_fail": False, "parallel": True},
 ]
+
+# Maximum number of detectors to run concurrently within a stage.
+# Each detector may itself issue multiple concurrent requests (bounded by
+# RouterClient._semaphore), so this limits detector-level parallelism
+# while the client limits request-level parallelism.
+DETECTOR_CONCURRENCY = 4
 
 # Per-model pricing in USD per 1M tokens (prompt_rate, completion_rate).
 # Rough 2025 list prices; ``_fuzzy_rate`` picks the longest-prefix match so
@@ -267,13 +273,20 @@ class TestRunner:
         indep = [d for d in dets if not d.depends_on]
         dep = [d for d in dets if d.depends_on]
         out: list[DetectorResult] = []
-        # Report each parallel detector as soon as it resolves, not only
-        # after the whole batch finishes (needed for API progress streaming).
+        # Windowed parallel: run up to DETECTOR_CONCURRENCY detectors at once.
+        # Each detector itself uses the RouterClient semaphore for request-level
+        # concurrency, so this provides two levels of throttling.
         if indep:
+            sem = asyncio.Semaphore(DETECTOR_CONCURRENCY)
+
+            async def _run_one(d: BaseDetector) -> DetectorResult:
+                async with sem:
+                    return await d.run()
+
             task_to_det: dict[asyncio.Task, BaseDetector] = {}
             pending: set[asyncio.Task] = set()
             for d in indep:
-                t = asyncio.create_task(d.run())
+                t = asyncio.create_task(_run_one(d))
                 task_to_det[t] = d
                 pending.add(t)
             while pending:
