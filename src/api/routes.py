@@ -30,6 +30,11 @@ from src.reporter import write_junit_xml
 
 from .auth import verify_token
 from .schemas import (
+    BenchmarkInfo,
+    BenchmarkTaskDetail,
+    BenchmarkTaskSummary,
+    CreateBenchmarkRequest,
+    CreateBenchmarkResponse,
     CreateTestRequest,
     CreateTestResponse,
     DetectorInfo,
@@ -326,6 +331,169 @@ async def list_detectors():
             get_all_detectors().values(), key=lambda c: c.detector_id
         )
     ]
+
+
+# ---------------------------------------------------------------------------
+# Benchmark endpoints
+# ---------------------------------------------------------------------------
+
+
+def _bench_summary(info: TaskInfo) -> BenchmarkTaskSummary:
+    return BenchmarkTaskSummary(
+        task_id=info.task_id,
+        task_type=info.task_type,
+        status=info.status,
+        created_at=info.created_at,
+        completed_at=info.completed_at,
+        router_endpoint=info.config.router_endpoint,
+        claimed_model=info.config.claimed_model,
+        overall_grade=(
+            info.benchmark_report.get("overall_grade")
+            if info.benchmark_report else None
+        ),
+        progress=info.progress,
+    )
+
+
+def _bench_detail(info: TaskInfo) -> BenchmarkTaskDetail:
+    return BenchmarkTaskDetail(
+        task_id=info.task_id,
+        task_type=info.task_type,
+        status=info.status,
+        created_at=info.created_at,
+        completed_at=info.completed_at,
+        router_endpoint=info.config.router_endpoint,
+        claimed_model=info.config.claimed_model,
+        overall_grade=(
+            info.benchmark_report.get("overall_grade")
+            if info.benchmark_report else None
+        ),
+        progress=info.progress,
+        benchmark_report=info.benchmark_report,
+        error=info.error,
+    )
+
+
+@router.post(
+    "/benchmarks",
+    response_model=CreateBenchmarkResponse,
+)
+async def create_benchmark(req: CreateBenchmarkRequest):
+    info = get_tm().create_benchmark_task(
+        router_endpoint=req.router_endpoint,
+        api_key=req.api_key,
+        claimed_model=req.claimed_model,
+        auth_method=req.auth_method,
+        timeout=req.timeout,
+    )
+    return CreateBenchmarkResponse(
+        task_id=info.task_id,
+        status=info.status,
+        message="Benchmark created and queued",
+        ws_url=f"/api/v1/benchmarks/{info.task_id}/ws",
+    )
+
+
+@router.get(
+    "/benchmarks/{task_id}",
+    response_model=BenchmarkTaskDetail,
+)
+async def get_benchmark(task_id: str):
+    info = get_tm().get_task(task_id)
+    if not info or info.task_type != "benchmark":
+        raise HTTPException(404, "Benchmark task not found")
+    return _bench_detail(info)
+
+
+@router.get("/benchmarks/{task_id}/report")
+async def get_benchmark_report(task_id: str):
+    info = get_tm().get_task(task_id)
+    if not info or info.task_type != "benchmark":
+        raise HTTPException(404, "Benchmark task not found")
+    if info.status != TaskStatus.COMPLETED or not info.benchmark_report:
+        raise HTTPException(400, f"Not completed: {info.status.value}")
+    import json
+
+    return Response(
+        content=json.dumps(info.benchmark_report, indent=2),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=benchmark_{task_id}.json"
+        },
+    )
+
+
+@router.get("/benchmark-list", response_model=list[BenchmarkInfo])
+async def list_benchmarks():
+    import src.benchmarks  # noqa: F401
+
+    from src.benchmarks.base import get_all_benchmarks
+
+    return [
+        BenchmarkInfo(
+            bench_id=cls.bench_id,
+            bench_name=cls.bench_name,
+            category=cls.category,
+            description=cls.description,
+        )
+        for cls in sorted(
+            get_all_benchmarks().values(), key=lambda c: c.bench_id
+        )
+    ]
+
+
+@router.websocket("/benchmarks/{task_id}/ws")
+async def ws_benchmark_progress(websocket: WebSocket, task_id: str):
+    info = get_tm().get_task(task_id)
+    if not info or info.task_type != "benchmark":
+        await websocket.close(code=4004, reason="Benchmark task not found")
+        return
+
+    await websocket.accept()
+    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    info.ws_subscribers.append(queue)
+
+    try:
+        await websocket.send_json({
+            "type": "status",
+            "data": {
+                "status": info.status.value, "progress": info.progress,
+            },
+        })
+
+        if info.status in (
+            TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED,
+        ):
+            await websocket.send_json({
+                "type": "task_end",
+                "data": {
+                    "status": info.status.value,
+                    "overall_grade": (
+                        info.benchmark_report.get("overall_grade")
+                        if info.benchmark_report else None
+                    ),
+                },
+            })
+            await websocket.close()
+            return
+
+        while True:
+            try:
+                msg = await asyncio.wait_for(queue.get(), timeout=30.0)
+                await websocket.send_json(msg)
+                if msg.get("type") == "task_end":
+                    break
+            except asyncio.TimeoutError:
+                await websocket.send_json({"type": "ping"})
+    except WebSocketDisconnect:
+        pass
+    finally:
+        if queue in info.ws_subscribers:
+            info.ws_subscribers.remove(queue)
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 
 @router.get("/health", response_model=HealthResponse)

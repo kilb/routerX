@@ -86,3 +86,44 @@ class HealthResponse(BaseModel):
     version: str = "0.1.0"
     active_tasks: int = 0
     total_completed: int = 0
+
+
+class CreateBenchmarkRequest(BaseModel):
+    router_endpoint: str = Field(..., description="Base URL of the router under test")
+    api_key: str = Field(..., description="API key for the router")
+    claimed_model: str = Field(default="gpt-4o")
+    auth_method: str = Field(
+        default="bearer", pattern="^(bearer|x-api-key|query)$",
+    )
+    timeout: float = Field(default=30.0, ge=5.0, le=120.0)
+
+
+class CreateBenchmarkResponse(BaseModel):
+    task_id: str
+    status: TaskStatus
+    message: str
+    ws_url: str
+
+
+class BenchmarkInfo(BaseModel):
+    bench_id: str
+    bench_name: str
+    category: str
+    description: str
+
+
+class BenchmarkTaskSummary(BaseModel):
+    task_id: str
+    task_type: str
+    status: TaskStatus
+    created_at: datetime
+    completed_at: datetime | None = None
+    router_endpoint: str
+    claimed_model: str
+    overall_grade: str | None = None
+    progress: str | None = None
+
+
+class BenchmarkTaskDetail(BenchmarkTaskSummary):
+    benchmark_report: dict[str, Any] | None = None
+    error: str | None = None

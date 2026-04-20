@@ -16,8 +16,9 @@ import httpx
 
 import src.detectors  # noqa: F401  — trigger auto-scan
 
+from src.benchmarks.runner import BenchmarkReport, BenchmarkRunner
 from src.events import Event, EventBus, EventType
-from src.models import TestConfig, TestReport
+from src.models import AuthMethod, TestConfig, TestReport
 from src.runner import TestRunner
 
 from .schemas import TaskStatus
@@ -32,15 +33,18 @@ class TaskInfo:
         config: TestConfig,
         only: list[str] | None = None,
         callback_url: str | None = None,
+        task_type: str = "audit",
     ):
         self.task_id = task_id
         self.config = config
         self.only = only
         self.callback_url = callback_url
+        self.task_type = task_type
         self.status: TaskStatus = TaskStatus.PENDING
         self.created_at = datetime.now(timezone.utc)
         self.completed_at: datetime | None = None
         self.report: TestReport | None = None
+        self.benchmark_report: dict | None = None
         self.error: str | None = None
         # Remains None until the runner enumerates applicable detectors —
         # consumers seeing ``None`` know "not started yet"; a value means
@@ -91,6 +95,67 @@ class TaskManager:
         self._tasks[task_id] = info
         info._task = asyncio.create_task(self._run(info))
         return info
+
+    def create_benchmark_task(
+        self,
+        router_endpoint: str,
+        api_key: str,
+        claimed_model: str = "gpt-4o",
+        auth_method: str = "bearer",
+        timeout: float = 30.0,
+    ) -> TaskInfo:
+        config = TestConfig(
+            router_endpoint=router_endpoint,
+            api_key=api_key,
+            claimed_model=claimed_model,
+            auth_method=AuthMethod(auth_method),
+            timeout=timeout,
+        )
+        task_id = str(uuid.uuid4())[:12]
+        info = TaskInfo(task_id, config, task_type="benchmark")
+        self._tasks[task_id] = info
+        info._task = asyncio.create_task(self._run_benchmark(info))
+        return info
+
+    async def _run_benchmark(self, info: TaskInfo) -> None:
+        async with self._semaphore:
+            info.status = TaskStatus.RUNNING
+            try:
+                runner = BenchmarkRunner(info.config)
+
+                def on_progress(completed: int, total: int, bench_id: str) -> None:
+                    info.progress = f"{completed}/{total}"
+
+                def on_result(result) -> None:
+                    info._broadcast({
+                        "type": "benchmark_end",
+                        "data": result.to_dict(),
+                        "progress": info.progress,
+                    })
+
+                report: BenchmarkReport = await runner.run_all(
+                    on_progress=on_progress, on_result=on_result,
+                )
+                info.benchmark_report = report.to_dict()
+                info.status = TaskStatus.COMPLETED
+                info.completed_at = datetime.now(timezone.utc)
+
+            except asyncio.CancelledError:
+                info.status = TaskStatus.CANCELLED
+            except Exception:
+                info.status = TaskStatus.FAILED
+                info.error = traceback.format_exc()
+            finally:
+                info._broadcast({
+                    "type": "task_end",
+                    "data": {
+                        "status": info.status.value,
+                        "overall_grade": (
+                            info.benchmark_report.get("overall_grade")
+                            if info.benchmark_report else None
+                        ),
+                    },
+                })
 
     async def _run(self, info: TaskInfo) -> None:
         async with self._semaphore:
