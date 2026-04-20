@@ -27,15 +27,16 @@ body{
   background:var(--bg);color:var(--t1);font-family:var(--sans);
   line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:0.01em;
   background-image:
-    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,80,180,0.08),transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 100%,rgba(0,40,120,0.06),transparent 60%);
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,100,200,0.18),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 100%,rgba(0,50,150,0.12),transparent 50%),
+    radial-gradient(ellipse 40% 30% at 10% 60%,rgba(30,0,80,0.08),transparent 50%);
   background-attachment:fixed;
 }
 
 /* Dot grid texture */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:radial-gradient(circle,rgba(100,160,255,0.04) 1px,transparent 1px);
-  background-size:24px 24px;
+  background-image:radial-gradient(circle,rgba(100,160,255,0.07) 1px,transparent 1px);
+  background-size:28px 28px;
 }
 
 /* Noise grain overlay */
@@ -45,9 +46,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 
 /* Ambient glow */
-.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(180px);opacity:0.07}
-.glow-1{width:800px;height:800px;background:#0088dd;top:-300px;right:-200px}
-.glow-2{width:600px;height:600px;background:#0040aa;bottom:-200px;left:-200px}
+.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(200px);opacity:0.12}
+.glow-1{width:900px;height:900px;background:#0088ee;top:-350px;right:-200px}
+.glow-2{width:700px;height:700px;background:#0044cc;bottom:-250px;left:-200px}
 
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
 
