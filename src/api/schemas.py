@@ -37,6 +37,7 @@ class CreateTestRequest(BaseModel):
     direct_auth_method: str | None = Field(
         default=None, pattern="^(bearer|x-api-key|query)$",
     )
+    second_api_key: str | None = None
     task_model_config: dict[str, Any] | None = None
     timeout: float = Field(default=30.0, ge=5.0, le=120.0)
     only: list[str] | None = None

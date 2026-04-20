@@ -417,8 +417,13 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
             </div>
             <div class="field"><label>Timeout (seconds)</label><input type="number" id="f-timeout" value="60" min="5" max="120"></div>
             <div style="margin-top:0.5rem;padding:0.8rem 1rem;border-radius:var(--r-sm);background:var(--blue-soft);border:1px solid var(--blue-border);margin-bottom:1rem">
-              <div style="font-size:0.82rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem">Direct Provider Baseline (Optional)</div>
-              <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">Provide a second API key for the real provider (e.g. OpenAI / Anthropic direct). Enables 3 additional high-value detectors: <strong style="color:var(--t2)">D100</strong> cross-key isolation, <strong style="color:var(--t2)">D48</strong> amount precision baseline, <strong style="color:var(--t2)">D50</strong> semantic negation comparison.</div>
+              <div style="font-size:0.82rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem">Second Router API Key (Optional)</div>
+              <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">A different API key for the <strong style="color:var(--t2)">same router</strong>. Enables <strong style="color:var(--t2)">D100</strong> cross-key isolation test (checks if data leaks between different keys).</div>
+              <div class="field" style="margin-bottom:0"><label>Second API Key</label><input type="password" id="f-second-key" placeholder="sk-... (different key, same router)" spellcheck="false"></div>
+            </div>
+            <div style="padding:0.8rem 1rem;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);margin-bottom:1rem">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--t2);margin-bottom:0.3rem">Direct Provider Baseline (Optional)</div>
+              <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">The real provider endpoint (e.g. OpenAI / Anthropic direct). Enables <strong style="color:var(--t2)">D48</strong> amount precision baseline and <strong style="color:var(--t2)">D50</strong> semantic negation comparison.</div>
               <div class="field" style="margin-bottom:0.75rem"><label>Direct Provider Endpoint</label><input type="text" id="f-direct-ep" placeholder="https://api.openai.com" spellcheck="false"></div>
               <div class="field" style="margin-bottom:0"><label>Direct Provider API Key</label><input type="password" id="f-direct-key" placeholder="sk-..." spellcheck="false"></div>
             </div>
@@ -647,6 +652,8 @@ async function startScan(){
   };
   const dep=document.getElementById('f-direct-ep').value;
   if(dep){body.direct_endpoint=dep;body.direct_api_key=document.getElementById('f-direct-key').value}
+  const sk2=document.getElementById('f-second-key').value;
+  if(sk2){body.second_api_key=sk2}
   const btn=document.getElementById('btn-scan');
   btn.disabled=true;btn.innerHTML='Creating...';
   try{

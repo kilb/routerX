@@ -237,6 +237,9 @@ class TestConfig(BaseModel):
     direct_api_key: str | None = None
     direct_auth_method: AuthMethod | None = None
 
+    # Second API key for the SAME router (cross-key isolation test, D100)
+    second_api_key: str | None = None
+
     # Async task model (D55)
     task_model_config: TaskModelConfig | None = None
 

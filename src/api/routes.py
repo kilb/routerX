@@ -152,6 +152,7 @@ async def create_test(req: CreateTestRequest):
         direct_auth_method=(
             AuthMethod(req.direct_auth_method) if req.direct_auth_method else None
         ),
+        second_api_key=req.second_api_key,
         task_model_config=task_cfg,
         timeout=req.timeout,
     )
