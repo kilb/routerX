@@ -45,6 +45,7 @@ class R01_ErrorRate(BaseBenchmark):
 
     async def run(self) -> BenchmarkResult:
         error_count = 0
+        rate_limited = 0
         total_sent = 0
 
         for batch_idx in range(TOTAL_REQUESTS // BATCH_SIZE):
@@ -70,11 +71,11 @@ class R01_ErrorRate(BaseBenchmark):
             ]
             responses = await self.client.send_concurrent(probes)
             total_sent += len(responses)
-            error_count += sum(
-                1
-                for r in responses
-                if r.is_network_error or r.status_code != 200
-            )
+            for r in responses:
+                if r.status_code == 429:
+                    rate_limited += 1
+                elif r.is_network_error or r.status_code != 200:
+                    error_count += 1
 
         error_rate_pct = (error_count / total_sent * 100) if total_sent else 100.0
         grade = grade_value(
@@ -89,6 +90,7 @@ class R01_ErrorRate(BaseBenchmark):
             grade=grade,
             metrics={
                 "error_count": error_count,
+                "rate_limited_429": rate_limited,
                 "total": total_sent,
                 "error_rate_pct": round(error_rate_pct, 1),
             },

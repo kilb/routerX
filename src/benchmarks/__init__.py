@@ -12,5 +12,5 @@ import pkgutil
 
 _pkg = pathlib.Path(__file__).parent
 for _m in pkgutil.iter_modules([str(_pkg)]):
-    if _m.name.startswith(("p", "r")):
+    if _m.name.startswith(("p", "r")) and _m.name != "runner":
         importlib.import_module(f".{_m.name}", __package__)

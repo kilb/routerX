@@ -10,7 +10,7 @@ import statistics
 from typing import ClassVar
 
 from ..models import ProbeRequest
-from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value
+from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value, percentile
 
 logger = logging.getLogger("router-auditor.benchmark")
 
@@ -55,13 +55,6 @@ _TTFT_THRESHOLDS: dict[str, float] = {
     "C": 2000.0,
     "D": 4000.0,
 }
-
-
-def _percentile(sorted_vals: list[float], pct: float) -> float:
-    """Return the value at the given percentile from a pre-sorted list."""
-    idx = int(len(sorted_vals) * pct)
-    idx = min(idx, len(sorted_vals) - 1)
-    return sorted_vals[idx]
 
 
 @benchmark
@@ -117,7 +110,6 @@ class P01_TTFT(BaseBenchmark):
 
         ttft_values.sort()
         median_ms = statistics.median(ttft_values)
-        p95_ms = _percentile(ttft_values, 0.95)
         min_ms = ttft_values[0]
         max_ms = ttft_values[-1]
         grade = grade_value(median_ms, _TTFT_THRESHOLDS, lower_is_better=True)
@@ -130,7 +122,6 @@ class P01_TTFT(BaseBenchmark):
             grade=grade,
             metrics={
                 "median_ms": round(median_ms, 1),
-                "p95_ms": round(p95_ms, 1),
                 "min_ms": round(min_ms, 1),
                 "max_ms": round(max_ms, 1),
                 "sample_count": len(ttft_values),

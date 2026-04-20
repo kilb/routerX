@@ -11,7 +11,7 @@ from typing import ClassVar
 
 from ..models import ProbeRequest
 from ..tokenizer import token_counter
-from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value
+from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value, percentile
 
 logger = logging.getLogger("router-auditor.benchmark")
 
@@ -29,13 +29,6 @@ _TPS_THRESHOLDS: dict[str, float] = {
     "C": 30.0,
     "D": 15.0,
 }
-
-
-def _percentile(sorted_vals: list[float], pct: float) -> float:
-    """Return the value at the given percentile from a pre-sorted list."""
-    idx = int(len(sorted_vals) * pct)
-    idx = min(idx, len(sorted_vals) - 1)
-    return sorted_vals[idx]
 
 
 @benchmark
@@ -78,7 +71,7 @@ class P02_TPS(BaseBenchmark):
                 errors.append("empty content")
                 continue
 
-            token_count = token_counter.count(content)
+            token_count = token_counter.count(content, model=self.config.claimed_model)
             first_ts = resp.chunk_timestamps[0]
             last_ts = resp.chunk_timestamps[-1]
             duration_s = last_ts - first_ts
@@ -102,7 +95,7 @@ class P02_TPS(BaseBenchmark):
 
         tps_values.sort()
         median_tps = statistics.median(tps_values)
-        p95_tps = _percentile(tps_values, 0.95)
+        p95_tps = percentile(tps_values, 0.95)
         min_tps = tps_values[0]
         max_tps = tps_values[-1]
         grade = grade_value(

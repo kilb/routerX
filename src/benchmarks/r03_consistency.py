@@ -10,11 +10,12 @@ import statistics
 from typing import ClassVar
 
 from ..models import ProbeRequest
-from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value
+from .base import BaseBenchmark, BenchmarkResult, benchmark, grade_value, percentile
 
 logger = logging.getLogger("router-auditor.benchmark")
 
 SAMPLE_COUNT = 10
+_WARMUP = 1  # first request discarded (TCP/TLS setup bias)
 
 _CV_THRESHOLDS: dict[str, float] = {
     "A": 0.15,
@@ -22,13 +23,6 @@ _CV_THRESHOLDS: dict[str, float] = {
     "C": 0.5,
     "D": 0.8,
 }
-
-
-def _percentile(sorted_vals: list[float], pct: float) -> float:
-    """Return the value at the given percentile from a pre-sorted list."""
-    idx = int(len(sorted_vals) * pct)
-    idx = min(idx, len(sorted_vals) - 1)
-    return sorted_vals[idx]
 
 
 @benchmark
@@ -57,8 +51,10 @@ class R03_Consistency(BaseBenchmark):
             description="latency-consistency probe",
         )
 
-        for i in range(SAMPLE_COUNT):
+        for i in range(SAMPLE_COUNT + _WARMUP):
             resp = await self.client.send(probe)
+            if i < _WARMUP:
+                continue  # discard warm-up (TCP/TLS setup)
             if resp.is_network_error:
                 errors.append(f"request {i + 1}: {resp.error}")
                 continue
@@ -88,7 +84,7 @@ class R03_Consistency(BaseBenchmark):
         latencies.sort()
         min_ms = latencies[0]
         max_ms = latencies[-1]
-        p95_ms = _percentile(latencies, 0.95)
+        p95_ms = percentile(latencies, 0.95)
 
         grade = grade_value(cv, _CV_THRESHOLDS, lower_is_better=True)
 

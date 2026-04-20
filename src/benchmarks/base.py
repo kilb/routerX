@@ -95,6 +95,14 @@ def grade_value(
     return "F"
 
 
+def percentile(sorted_vals: list[float], pct: float) -> float:
+    """Return the value at the given percentile from a pre-sorted list."""
+    if not sorted_vals:
+        return 0.0
+    idx = min(int(len(sorted_vals) * pct), len(sorted_vals) - 1)
+    return sorted_vals[idx]
+
+
 class BaseBenchmark(ABC):
     """Abstract base for all benchmarks."""
 
