@@ -5,50 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Router Auditor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Source+Code+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0e1a;--bg2:#0e1220;
-  --card:#121828;--card2:#182030;--card3:#1e2838;
-  --border:#243040;--border2:#304050;
-  --t1:#edf0f7;--t2:#b0b8d0;--t3:#8890b0;--t4:#606890;
-  --blue:#00d4ff;--blue2:#00a0cc;--blue-g:linear-gradient(135deg,#00d4ff,#0060ff);
-  --blue-soft:#00d4ff10;--blue-border:#00d4ff28;
-  --red:#ff3050;--red-soft:#ff305010;--red-border:#ff305028;
-  --green:#00e878;--green-soft:#00e87810;--green-border:#00e87828;
-  --yellow:#ffa020;--yellow-soft:#ffa02010;--yellow-border:#ffa02028;
-  --purple:#a060ff;--purple-soft:#a060ff10;
-  --mono:'Source Code Pro',monospace;--sans:'DM Sans',system-ui,sans-serif;--display:'Syne',system-ui,sans-serif;
-  --r:12px;--r-sm:8px;--r-xs:5px;
+  --bg:#08090d;--bg2:#0c0d14;
+  --card:#10121a;--card2:#161824;--card3:#1c1e2c;
+  --border:#22243a;--border2:#32345a;
+  --t1:#f2f2f8;--t2:#b4b4cc;--t3:#8080a0;--t4:#585878;
+  --blue:#4c8dff;--blue2:#3070e0;--blue-g:linear-gradient(135deg,#4c8dff,#7c5cff);
+  --blue-soft:#4c8dff0c;--blue-border:#4c8dff22;
+  --red:#ff4466;--red-soft:#ff44660c;--red-border:#ff446622;
+  --green:#34d880;--green-soft:#34d8800c;--green-border:#34d88022;
+  --yellow:#ffb840;--yellow-soft:#ffb8400c;--yellow-border:#ffb84022;
+  --purple:#9c6cff;--purple-soft:#9c6cff0c;
+  --mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--display:'Geist',system-ui,sans-serif;
+  --r:10px;--r-sm:7px;--r-xs:4px;
 }
 html{scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--t1);font-family:var(--sans);
-  line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:0.01em;
+  line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%,#0c1830,transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 100%,#0a1428,transparent 50%),
-    radial-gradient(ellipse 40% 30% at 10% 60%,#100820,transparent 50%);
+    radial-gradient(ellipse 70% 40% at 30% 0%,#0e1028,transparent 60%),
+    radial-gradient(ellipse 50% 35% at 90% 80%,#0c0a20,transparent 50%);
   background-attachment:fixed;
 }
 
-/* Dot grid texture */
+/* Fine cross-hatch grid */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:radial-gradient(circle,rgba(100,160,255,0.07) 1px,transparent 1px);
-  background-size:28px 28px;
+  background-image:
+    linear-gradient(90deg,rgba(120,130,180,0.03) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(120,130,180,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
 }
 
-/* Noise grain overlay */
+/* Subtle film grain */
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-  opacity:0.5;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  opacity:0.6;
 }
 
-/* Ambient glow */
-.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(200px);opacity:0.12}
-.glow-1{width:900px;height:900px;background:#0088ee;top:-350px;right:-200px}
-.glow-2{width:700px;height:700px;background:#0044cc;bottom:-250px;left:-200px}
+/* Ambient glow — softer, more diffused */
+.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(200px);opacity:0.06}
+.glow-1{width:800px;height:800px;background:#4060cc;top:-300px;right:-200px}
+.glow-2{width:600px;height:600px;background:#3020aa;bottom:-200px;left:-200px}
 
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
 
@@ -66,7 +67,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:var(--blue-g);
 }
 .nav-brand .icon svg{width:18px;height:18px;color:#fff}
-.nav-brand span{font-family:var(--display);font-weight:700;font-size:1.05rem;color:var(--t1);letter-spacing:-0.01em}
+.nav-brand span{font-family:var(--display);font-weight:700;font-size:1rem;color:var(--t1);letter-spacing:-0.02em}
 .nav-links{display:flex;gap:0.5rem;align-items:center}
 .nav-links a{
   padding:0.45rem 1rem;border-radius:var(--r-xs);
@@ -93,7 +94,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-family:var(--sans);border:none;cursor:pointer;transition:all 0.25s;
 }
 .btn-primary{background:var(--blue-g);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.3)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,212,255,0.25)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(76,141,255,0.2)}
 .btn-primary:active{transform:translateY(0)}
 .btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--t2)}
@@ -110,8 +111,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ======== SCAN PAGE ======== */
 .hero{text-align:center;padding:4rem 0 3rem}
-.hero h1{font-family:var(--sans);font-size:3rem;font-weight:700;letter-spacing:-0.03em;line-height:1.15;margin-bottom:0.75rem}
+.hero h1{font-family:var(--display);font-size:3.2rem;font-weight:800;letter-spacing:-0.04em;line-height:1.1;margin-bottom:0.75rem}
 .hero h1 .grad{background:var(--blue-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero h1 em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;letter-spacing:0}
 .hero p{color:var(--t3);font-size:1.1rem;max-width:540px;margin:0 auto;line-height:1.6}
 .hero .tag-row{display:flex;justify-content:center;gap:0.5rem;margin-top:1.25rem;flex-wrap:wrap}
 .hero .tag{
@@ -207,7 +209,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .r-banner.fail{background:linear-gradient(135deg,#1a0508,#1c0a12);border:1px solid var(--red-border)}
 .r-banner.pass{background:linear-gradient(135deg,#051a0e,#0a1c12);border:1px solid var(--green-border)}
 .r-banner-inner{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
-.r-verdict h2{font-family:var(--display);font-size:2.4rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+.r-verdict h2{font-family:var(--display);font-size:2.5rem;font-weight:800;letter-spacing:-0.04em;line-height:1.05}
 .r-banner.fail .r-verdict h2{color:var(--red)}
 .r-banner.pass .r-verdict h2{color:var(--green)}
 .r-verdict p{font-family:var(--mono);font-size:0.88rem;color:var(--t3);margin-top:0.3rem}
@@ -279,7 +281,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 
 /* ======== REFERENCE PAGE ======== */
 .ref-hero{padding:2.5rem 0 1.5rem}
-.ref-hero h1{font-family:var(--display);font-size:2rem;font-weight:800;letter-spacing:-0.02em}
+.ref-hero h1{font-family:var(--display);font-size:2.2rem;font-weight:800;letter-spacing:-0.04em}
 .ref-hero p{color:var(--t3);font-size:1rem;margin-top:0.3rem}
 .ref-bar{display:flex;gap:0.4rem;margin-bottom:1.75rem;flex-wrap:wrap}
 .fbtn{
@@ -294,7 +296,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
   padding:1.4rem 1.6rem;background:var(--card);border:1px solid var(--border);
   border-radius:var(--r);transition:all 0.25s;
 }
-.rc:hover{border-color:var(--blue-border);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,100,200,0.12)}
+.rc:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 12px 40px rgba(30,30,80,0.25)}
 .rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
 .rc-id{font-family:var(--mono);font-weight:800;font-size:0.95rem}
 .rc-pri{font-family:var(--mono);font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:4px}
@@ -319,8 +321,8 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 }
 .grade-card:hover{border-color:var(--border2);transform:translateY(-2px)}
 .grade-letter{
-  font-size:3.5rem;font-weight:800;font-family:var(--display);line-height:1;
-  margin-bottom:0.3rem;
+  font-size:3.2rem;font-weight:800;font-family:var(--display);line-height:1;
+  margin-bottom:0.3rem;letter-spacing:-0.04em;
 }
 .grade-letter.A{color:var(--green)}.grade-letter.B{color:#4ade80}
 .grade-letter.C{color:var(--yellow)}.grade-letter.D{color:#f97316}
@@ -334,7 +336,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
   text-align:center;padding:2rem;margin-bottom:2rem;
   background:var(--card);border:1px solid var(--border);border-radius:var(--r);
 }
-.bench-overall .big{font-size:5rem;font-weight:900;font-family:var(--display);line-height:1}
+.bench-overall .big{font-size:5rem;font-weight:800;font-family:var(--display);line-height:1;letter-spacing:-0.05em}
 .bench-overall .sub{font-size:1rem;color:var(--t3);margin-top:0.3rem}
 .bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;margin-bottom:2rem}
 
@@ -375,7 +377,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
     <!-- ======== SCAN ======== -->
     <div class="page active" id="page-scan">
       <div class="hero">
-        <h1>Audit Your<br><span class="grad">LLM Router</span></h1>
+        <h1>Audit <em>Your</em><br><span class="grad">LLM Router</span></h1>
         <p>85 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
         <div class="tag-row">
           <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
