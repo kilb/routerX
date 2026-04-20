@@ -376,7 +376,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
     <div class="page active" id="page-scan">
       <div class="hero">
         <h1>Audit Your<br><span class="grad">LLM Router</span></h1>
-        <p>72 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
+        <p>80 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
         <div class="tag-row">
           <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
           <span class="tag">Parameter Honoring</span><span class="tag">Supply Chain</span>
@@ -471,7 +471,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 
     <!-- ======== REFERENCE ======== -->
     <div class="page" id="page-reference">
-      <div class="ref-hero"><h1>Detector Reference</h1><p>72 detectors across 5 severity stages</p></div>
+      <div class="ref-hero"><h1>Detector Reference</h1><p>80 detectors across 5 severity stages</p></div>
       <div class="ref-bar" id="ref-bar"></div>
       <div class="ref-grid" id="ref-grid"></div>
     </div>
@@ -1034,6 +1034,14 @@ const DB=[
 {id:"D102",name:"FunctionSchemaFidelity",pri:"P1",desc:"Sends a deeply nested tool schema (3 levels) and verifies the returned arguments preserve full structure.",mode:"once",reqs:1},
 {id:"D103",name:"ContentFilterBias",pri:"P2",desc:"Asks neutral competitor comparison questions. Detects routers that filter/censor mentions of rival AI providers.",mode:"once",reqs:3},
 {id:"D104",name:"EmbeddingDimensionVerify",pri:"P1",desc:"Verifies embedding vector dimensions match the claimed model specification (e.g., 1536 for text-embedding-3-small).",mode:"once",reqs:1},
+{id:"D110",name:"StreamChunkIntegrity",pri:"P1",desc:"Compares stream vs non-stream output for the same prompt. Detects routers that modify content during SSE streaming.",mode:"once",reqs:2},
+{id:"D111",name:"StreamPrematureTermination",pri:"P1",desc:"Detects streams cut short without finish_reason or [DONE] marker — premature termination by the router.",mode:"once",reqs:1},
+{id:"D114",name:"MultiHopRouterDetection",pri:"P0",desc:"Counts distinct proxy header families in response. 2+ families = multi-hop routing chain.",mode:"once",reqs:1},
+{id:"D116",name:"CredentialLeakageInResponse",pri:"S0",desc:"Scans error responses for leaked API keys, bearer tokens, PEM keys, and credential patterns.",mode:"once",reqs:2},
+{id:"D117",name:"HeaderLeakage",pri:"P1",desc:"Checks response headers for leaked backend IPs, upstream URLs, debug headers.",mode:"once",reqs:1},
+{id:"D118",name:"ToolSchemaInjection",pri:"S0",desc:"Detects router injecting unauthorized tools into tool_calls. Only requested tool names should appear.",mode:"once",reqs:1},
+{id:"D119",name:"ToolCallOrderManipulation",pri:"P1",desc:"Sends 3 parallel tool calls. Checks for collapsed calls, duplicated IDs, or unauthorized names.",mode:"once",reqs:1},
+{id:"D122",name:"ResponseRewriteDetection",pri:"P1",desc:"Asks for exact marker output. Detects router-appended branding, disclaimers, or post-processing.",mode:"once",reqs:1},
 ];
 
 let refF='all';

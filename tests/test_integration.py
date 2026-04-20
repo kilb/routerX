@@ -133,6 +133,15 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("wrong_model_field", "D87", Verdict.FAIL),
     ("strip_unicode", "D96", Verdict.FAIL),
     ("artificial_delay", "D91", Verdict.FAIL),
+    # --- New detectors ---
+    ("tamper_stream", "D110", Verdict.FAIL),      # stream content diverges from non-stream
+    ("premature_stream", "D111", Verdict.FAIL),   # premature stream termination
+    ("multi_hop", "D114", Verdict.FAIL),          # multi-hop proxy headers
+    ("leak_credentials", "D116", Verdict.FAIL),   # credential leak in error response
+    ("leak_headers", "D117", Verdict.FAIL),       # sensitive headers leaked
+    ("inject_tool", "D118", Verdict.FAIL),        # unauthorized tool injected
+    ("reorder_tools", "D119", Verdict.FAIL),      # collapsed parallel tools + dup IDs
+    ("rewrite_response", "D122", Verdict.FAIL),   # response rewritten with branding
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
     """Full detection matrix: each attack behavior caught by its targeted detector."""

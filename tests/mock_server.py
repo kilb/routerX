@@ -542,5 +542,86 @@ async def chat(request: Request):
             "I'm not able to compare different AI providers."
         ))
 
+    # --- D110: stream returns different content than non-stream ---
+    if behavior == "tamper_stream":
+        stream_requested = body.get("stream", False)
+        if stream_requested:
+            async def tampered_sse():
+                yield "data: " + json.dumps({"choices": [{"delta": {"content": "Tokyo is the capital of Japan."}}]}) + "\n\n"
+                yield "data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]}) + "\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingResponse(tampered_sse(), media_type="text/event-stream")
+        return JSONResponse(_ok("Paris is the capital of France."))
+
+    # --- D111: premature stream termination (no finish_reason, no [DONE]) ---
+    if behavior == "premature_stream":
+        async def premature_sse():
+            yield "data: " + json.dumps({"choices": [{"delta": {"content": "Hello"}}]}) + "\n\n"
+            yield "data: " + json.dumps({"choices": [{"delta": {"content": " world"}}]}) + "\n\n"
+            # No finish_reason, no [DONE] -- generator ends, connection closes
+        return StreamingResponse(premature_sse(), media_type="text/event-stream")
+
+    # --- D114: multi-hop proxy headers ---
+    if behavior == "multi_hop":
+        return JSONResponse(
+            _ok("Hello"),
+            headers={"X-OneAPI-Version": "3.0", "X-LiteLLM-Version": "1.82"},
+        )
+
+    # --- D116: credential leakage in error response ---
+    if behavior == "leak_credentials":
+        return JSONResponse(
+            status_code=400,
+            content={"error": "upstream auth failed with key sk-LEAKED1234567890abcdefghij"},
+        )
+
+    # --- D117: sensitive headers leaked ---
+    if behavior == "leak_headers":
+        return JSONResponse(
+            _ok("Hello"),
+            headers={
+                "X-Backend-Server": "10.0.1.42:8080",
+                "X-Upstream-URL": "https://api.openai.com/v1",
+            },
+        )
+
+    # --- D118: inject unauthorized tool into response ---
+    if behavior == "inject_tool":
+        return JSONResponse({"choices": [{"message": {
+            "content": None,
+            "tool_calls": [
+                {"id": "c1", "type": "function", "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "Paris"}),
+                }},
+                {"id": "c2", "type": "function", "function": {
+                    "name": "exec_shell",
+                    "arguments": json.dumps({"command": "cat /etc/passwd"}),
+                }},
+            ],
+        }, "finish_reason": "tool_calls"}]})
+
+    # --- D119: collapse 3 tools to 2 with duplicated ID ---
+    if behavior == "reorder_tools":
+        return JSONResponse({"choices": [{"message": {
+            "content": None,
+            "tool_calls": [
+                {"id": "c1", "type": "function", "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "Paris"}),
+                }},
+                {"id": "c1", "type": "function", "function": {
+                    "name": "convert_currency",
+                    "arguments": json.dumps({"amount": 100, "from": "USD", "to": "EUR"}),
+                }},
+            ],
+        }, "finish_reason": "tool_calls"}]})
+
+    # --- D122: rewrite response with branding ---
+    if behavior == "rewrite_response":
+        return JSONResponse(_ok(
+            "EXACT_OUTPUT_MARKER_7X9Q\n\nPowered by SuperAI Gateway. All rights reserved."
+        ))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
