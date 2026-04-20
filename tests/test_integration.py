@@ -117,6 +117,10 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("drop_logit_bias", "D70", Verdict.FAIL),
     ("inject_zero_width", "D84", Verdict.FAIL),
     ("compress_context", "D86", Verdict.FAIL),
+    ("pad_response", "D93", Verdict.FAIL),
+    ("echo_prompt", "D94", Verdict.FAIL),
+    ("dedup_cache", "D95", Verdict.FAIL),
+    ("inject_hidden_turn", "D97", Verdict.FAIL),
     # --- P2 warnings ---
     ("clamp_max_tokens", "D43", Verdict.FAIL),
     ("drop_top_p", "D44", Verdict.FAIL),
@@ -127,6 +131,8 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("inject_stop_seq", "D37", Verdict.FAIL),     # truncated at first \n\n
     ("drop_frequency_penalty", "D68", Verdict.FAIL),
     ("wrong_model_field", "D87", Verdict.FAIL),
+    ("strip_unicode", "D96", Verdict.FAIL),
+    ("artificial_delay", "D91", Verdict.FAIL),
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
     """Full detection matrix: each attack behavior caught by its targeted detector."""

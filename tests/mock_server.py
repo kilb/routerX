@@ -413,5 +413,65 @@ async def chat(request: Request):
         resp["created"] = int(time.time())
         return JSONResponse(resp)
 
+    # --- D91: artificial latency padding on short request ---
+    if behavior == "artificial_delay":
+        # For streaming requests, add 3s delay then return short content
+        stream_requested = body.get("stream", False)
+        max_tok = body.get("max_tokens", 200)
+        if stream_requested and max_tok <= 5:
+            async def delayed_sse():
+                await asyncio.sleep(3.0)
+                yield (
+                    "data: "
+                    + json.dumps({"choices": [{"delta": {"content": "hi"}}]})
+                    + "\n\n"
+                )
+                yield (
+                    "data: "
+                    + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                    + "\n\n"
+                )
+                yield "data: [DONE]\n\n"
+            return StreamingResponse(delayed_sse(), media_type="text/event-stream")
+        if stream_requested:
+            async def normal_sse():
+                yield (
+                    "data: "
+                    + json.dumps({"choices": [{"delta": {"content": "Clouds are fluffy."}}]})
+                    + "\n\n"
+                )
+                yield (
+                    "data: "
+                    + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                    + "\n\n"
+                )
+                yield "data: [DONE]\n\n"
+            return StreamingResponse(normal_sse(), media_type="text/event-stream")
+        return JSONResponse(_ok("hi"))
+
+    # --- D93: pad response with trailing whitespace ---
+    if behavior == "pad_response":
+        return JSONResponse(_ok("4" + "\n" * 200))
+
+    # --- D94: echo the prompt verbatim before answering ---
+    if behavior == "echo_prompt":
+        return JSONResponse(_ok(user_content + " The answer is Tokyo."))
+
+    # --- D95: always return same cached response regardless of prompt ---
+    if behavior == "dedup_cache":
+        return JSONResponse(_ok(
+            "Machine learning is a subset of artificial intelligence."
+        ))
+
+    # --- D96: strip Unicode to ASCII equivalents ---
+    if behavior == "strip_unicode":
+        return JSONResponse(_ok(
+            "cafe -> naive nihongo x2 sum != R TM guillemets"
+        ))
+
+    # --- D97: return count of 3 (simulating hidden injected turn) ---
+    if behavior == "inject_hidden_turn":
+        return JSONResponse(_ok("3"))
+
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
