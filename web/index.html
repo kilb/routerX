@@ -28,27 +28,30 @@ body{
   background:var(--bg);color:var(--t1);font-family:var(--sans);
   line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em;
   background-image:
-    radial-gradient(ellipse 60% 35% at 25% -5%,#10122a,transparent 55%),
-    radial-gradient(ellipse 40% 30% at 80% 90%,#0e0a1e,transparent 45%);
+    radial-gradient(ellipse 80% 50% at 20% -10%,#161840,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 85% 80%,#140e30,transparent 45%),
+    radial-gradient(ellipse 50% 30% at 50% 50%,#0e1020,transparent 50%);
   background-attachment:fixed;
 }
 
-/* Diagonal hatch pattern — engineering blueprint feel */
+/* Diagonal hatch + dot grid — layered for depth */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:
-    repeating-linear-gradient(135deg,transparent,transparent 19px,rgba(100,110,180,0.025) 19px,rgba(100,110,180,0.025) 20px);
+    repeating-linear-gradient(135deg,transparent,transparent 23px,rgba(100,110,200,0.03) 23px,rgba(100,110,200,0.03) 24px),
+    radial-gradient(circle,rgba(100,120,200,0.04) 1px,transparent 1px);
+  background-size:100% 100%,32px 32px;
 }
 
 /* Film grain */
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
-  opacity:0.7;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  opacity:0.5;
 }
 
-/* Ambient glow — warm tinted */
-.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(220px);opacity:0.05}
-.glow-1{width:900px;height:900px;background:#4050c0;top:-350px;right:-250px}
-.glow-2{width:600px;height:600px;background:#302080;bottom:-250px;left:-200px}
+/* Ambient glow — stronger, warmer for glass-morphism contrast */
+.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(180px);opacity:0.10}
+.glow-1{width:1000px;height:1000px;background:#3848b0;top:-350px;right:-200px}
+.glow-2{width:700px;height:700px;background:#2820a0;bottom:-200px;left:-200px}
 
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
 
