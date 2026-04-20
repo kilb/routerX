@@ -356,7 +356,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
     <div class="page active" id="page-scan">
       <div class="hero">
         <h1>Audit Your<br><span class="grad">LLM Router</span></h1>
-        <p>60 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
+        <p>72 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
         <div class="tag-row">
           <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
           <span class="tag">Parameter Honoring</span><span class="tag">Supply Chain</span>
@@ -442,7 +442,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 
     <!-- ======== REFERENCE ======== -->
     <div class="page" id="page-reference">
-      <div class="ref-hero"><h1>Detector Reference</h1><p>60 detectors across 5 severity stages</p></div>
+      <div class="ref-hero"><h1>Detector Reference</h1><p>72 detectors across 5 severity stages</p></div>
       <div class="ref-bar" id="ref-bar"></div>
       <div class="ref-grid" id="ref-grid"></div>
     </div>
@@ -991,6 +991,18 @@ const DB=[
 {id:"D68",name:"FrequencyPenaltyHonor",pri:"P2",desc:"Tests repetition with/without frequency_penalty=1.8. Identical = penalty dropped.",mode:"2/2",reqs:2},
 {id:"D85",name:"IntraFamilyDowngrade",pri:"P2",desc:"Compares per-token latency on trivial vs complex prompts. Detects cheaper intra-family routing.",mode:"2/2",reqs:2},
 {id:"D87",name:"ResponseModelFieldAudit",pri:"P2",desc:"Checks response.model matches request, timestamp is fresh, and field is consistent across calls.",mode:"once",reqs:3},
+{id:"D91",name:"ArtificialLatencyPadding",pri:"P2",desc:"Detects fake TTFT delay on short requests masking a cheap model. Compares max_tokens=1 vs max_tokens=200 streaming latency.",mode:"once",reqs:2},
+{id:"D93",name:"ResponseTokenPadding",pri:"P1",desc:"Detects trailing whitespace injection (spaces, newlines) to inflate completion_tokens billing.",mode:"once",reqs:1},
+{id:"D94",name:"PromptEchoInflation",pri:"P1",desc:"Detects prompt text echoed in response to inflate output token count and billing.",mode:"once",reqs:1},
+{id:"D95",name:"ResponseDeduplication",pri:"P1",desc:"Detects cached/templated responses by sending semantically similar but differently worded prompts and checking for byte-identical output.",mode:"once",reqs:3},
+{id:"D96",name:"UnicodeNormalizationLoss",pri:"P2",desc:"Detects Unicode character loss through router transcoding (emoji, CJK, math symbols, accented chars).",mode:"once",reqs:1},
+{id:"D97",name:"HiddenTurnInjection",pri:"P1",desc:"Detects router injecting hidden conversation turns by asking the model to count user messages.",mode:"once",reqs:1},
+{id:"D99",name:"RateLimitTransparency",pri:"P2",desc:"Verifies rate-limited responses include proper 429 status + Retry-After header instead of opaque 500s.",mode:"once",reqs:15},
+{id:"D100",name:"CrossKeyIsolation",pri:"S0",desc:"Plants a secret via API key 1, attempts extraction via key 2. Detects cross-key session data leakage.",mode:"once",reqs:2},
+{id:"D101",name:"ToolResultManipulation",pri:"S0",desc:"Plants exact values in a tool call result, then asks the model to recall them. Detects router tampering tool results.",mode:"once",reqs:1},
+{id:"D102",name:"FunctionSchemaFidelity",pri:"P1",desc:"Sends a deeply nested tool schema (3 levels) and verifies the returned arguments preserve full structure.",mode:"once",reqs:1},
+{id:"D103",name:"ContentFilterBias",pri:"P2",desc:"Asks neutral competitor comparison questions. Detects routers that filter/censor mentions of rival AI providers.",mode:"once",reqs:3},
+{id:"D104",name:"EmbeddingDimensionVerify",pri:"P1",desc:"Verifies embedding vector dimensions match the claimed model specification (e.g., 1536 for text-embedding-3-small).",mode:"once",reqs:1},
 ];
 
 let refF='all';
