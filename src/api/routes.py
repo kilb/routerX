@@ -74,6 +74,9 @@ def _summary(info: TaskInfo) -> TaskSummary:
             info.report.overall_verdict.value if info.report else None
         ),
         progress=info.progress,
+        passed=info.report.passed if info.report else None,
+        failed=info.report.failed if info.report else None,
+        total_detectors=info.report.total_detectors if info.report else None,
     )
 
 

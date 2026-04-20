@@ -61,6 +61,9 @@ class TaskSummary(BaseModel):
     tier_assignment: str | None = None
     overall_verdict: str | None = None
     progress: str | None = None
+    passed: int | None = None
+    failed: int | None = None
+    total_detectors: int | None = None
 
 
 class TaskDetail(TaskSummary):
