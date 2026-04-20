@@ -247,6 +247,7 @@ class TestConfig(BaseModel):
     timeout: float = 30.0
     max_concurrent: int = 5
     min_request_interval: float = 0.1
+    detector_concurrency: int = 3
 
     @model_validator(mode="after")
     def validate_config(self):

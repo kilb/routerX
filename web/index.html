@@ -483,7 +483,10 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
               <div class="field"><label>Auth Method</label><select id="f-auth"><option value="bearer">Bearer Token</option><option value="x-api-key">X-API-Key</option><option value="query">Query Param</option></select></div>
               <div class="field"><label>API Format</label><select id="f-format"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="auto">Auto</option></select></div>
             </div>
-            <div class="field"><label>Timeout (seconds)</label><input type="number" id="f-timeout" value="60" min="5" max="120"></div>
+            <div class="field-row">
+              <div class="field"><label>Timeout (seconds)</label><input type="number" id="f-timeout" value="60" min="5" max="120"></div>
+              <div class="field"><label>Concurrency</label><input type="number" id="f-concurrency" value="3" min="1" max="10"><div class="hint">Parallel detectors. Lower for rate-limited APIs.</div></div>
+            </div>
             <div style="margin-top:0.5rem;padding:0.8rem 1rem;border-radius:var(--r-sm);background:var(--blue-soft);border:1px solid var(--blue-border);margin-bottom:1rem">
               <div style="font-size:0.82rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem">Second Router API Key (Optional)</div>
               <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">A different API key for the <strong style="color:var(--t2)">same router</strong>. Enables <strong style="color:var(--t2)">D100</strong> cross-key isolation test (checks if data leaks between different keys).</div>
@@ -735,6 +738,7 @@ async function startScan(){
     api_format:document.getElementById('f-format').value,
     capabilities:caps,
     timeout:parseFloat(document.getElementById('f-timeout').value)||60,
+    concurrency:parseInt(document.getElementById('f-concurrency').value)||3,
   };
   const dep=document.getElementById('f-direct-ep').value;
   if(dep){body.direct_endpoint=dep;body.direct_api_key=document.getElementById('f-direct-key').value}
@@ -874,7 +878,7 @@ async function runBatch(models,ep,key,caps,server){
         claimed_provider:document.getElementById('f-provider').value,
         auth_method:document.getElementById('f-auth').value,
         api_format:document.getElementById('f-format').value,
-        capabilities:caps,timeout:parseFloat(document.getElementById('f-timeout').value)||60,
+        capabilities:caps,timeout:parseFloat(document.getElementById('f-timeout').value)||60,concurrency:parseInt(document.getElementById('f-concurrency').value)||3,
       })});
       if(!r.ok)throw new Error('HTTP '+r.status);
       const task=await r.json();

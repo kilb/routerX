@@ -275,11 +275,11 @@ class TestRunner:
         indep = [d for d in dets if not d.depends_on]
         dep = [d for d in dets if d.depends_on]
         out: list[DetectorResult] = []
-        # Windowed parallel: run up to DETECTOR_CONCURRENCY detectors at once.
-        # Each detector itself uses the RouterClient semaphore for request-level
-        # concurrency, so this provides two levels of throttling.
+        # Windowed parallel: run N detectors at once. Configurable via
+        # TestConfig.detector_concurrency (default DETECTOR_CONCURRENCY).
         if indep:
-            sem = asyncio.Semaphore(DETECTOR_CONCURRENCY)
+            n = getattr(self.config, 'detector_concurrency', DETECTOR_CONCURRENCY)
+            sem = asyncio.Semaphore(n)
 
             async def _run_one(d: BaseDetector) -> DetectorResult:
                 async with sem:

@@ -158,6 +158,7 @@ async def create_test(req: CreateTestRequest):
         second_api_key=req.second_api_key,
         task_model_config=task_cfg,
         timeout=req.timeout,
+        detector_concurrency=req.concurrency,
     )
     info = get_tm().create_task(config, only=req.only, callback_url=req.callback_url)
     return CreateTestResponse(
