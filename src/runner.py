@@ -47,7 +47,9 @@ STAGES: list[dict[str, Any]] = [
 # Each detector may itself issue multiple concurrent requests (bounded by
 # RouterClient._semaphore), so this limits detector-level parallelism
 # while the client limits request-level parallelism.
-DETECTOR_CONCURRENCY = 4
+# Default 3 is conservative — some providers (e.g. OpenRouter) return
+# 401 under concurrent load instead of standard 429.
+DETECTOR_CONCURRENCY = 3
 
 # Per-model pricing in USD per 1M tokens (prompt_rate, completion_rate).
 # Rough 2025 list prices; ``_fuzzy_rate`` picks the longest-prefix match so

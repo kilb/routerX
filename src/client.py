@@ -23,7 +23,7 @@ from .models import AuthMethod, ProbeRequest, ProbeResponse
 
 logger = logging.getLogger("router-auditor.client")
 
-_MAX_RETRIES = 2
+_MAX_RETRIES = 3
 _CONNECT_TIMEOUT = 10.0
 _TIMEOUT_BACKOFF_BASE = 1.0  # seconds; doubled each retry with a little jitter
 
@@ -171,13 +171,16 @@ class RouterClient:
                         params=self._query_params(),
                     )
                     elapsed = (time.perf_counter() - t0) * 1000
-                    if resp.status_code == 429 and attempt < _MAX_RETRIES:
+                    # Retry on 429 (standard rate-limit) and 401
+                    # (some providers like OpenRouter return 401 under
+                    # load instead of 429).
+                    if resp.status_code in (429, 401) and attempt < _MAX_RETRIES:
                         retry_after = float(
                             resp.headers.get("retry-after", 2 * (attempt + 1))
                         )
                         logger.warning(
-                            "429 received, retry %d after %.1fs",
-                            attempt + 1, retry_after,
+                            "%d received, retry %d after %.1fs",
+                            resp.status_code, attempt + 1, retry_after,
                         )
                     else:
                         body = _safe_json(resp)
@@ -364,7 +367,7 @@ class RouterClient:
         ) as es:
             status_code = es.response.status_code
             headers = dict(es.response.headers)
-            if status_code == 429:
+            if status_code in (429, 401):
                 try:
                     ra = float(headers.get("retry-after", "0"))
                 except (TypeError, ValueError):
