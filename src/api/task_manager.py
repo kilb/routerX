@@ -3,11 +3,18 @@
 Each TaskInfo owns its own EventBus; events are broadcast to WebSocket
 subscribers via per-connection asyncio.Queue. TaskManager throttles
 concurrent runs via a semaphore.
+
+Completed tasks are persisted as JSON files under ``data/tasks/`` so
+they survive server restarts.  On startup, ``TaskManager._load_persisted``
+reads them back into the in-memory store.
 """
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
+import pathlib
 import traceback
 import uuid
 from datetime import datetime, timezone
@@ -18,7 +25,7 @@ import src.detectors  # noqa: F401  — trigger auto-scan
 
 from src.benchmarks.runner import BenchmarkReport, BenchmarkRunner
 from src.events import Event, EventBus, EventType
-from src.models import AuthMethod, TestConfig, TestReport
+from src.models import AuthMethod, ProviderType, TestConfig, TestReport
 from src.runner import TestRunner
 
 from .schemas import TaskStatus
@@ -79,10 +86,81 @@ class TaskInfo:
                 pass
 
 
+_DATA_DIR = pathlib.Path(__file__).resolve().parent.parent.parent / "data" / "tasks"
+
+
 class TaskManager:
     def __init__(self, max_concurrent: int = 3):
         self._tasks: dict[str, TaskInfo] = {}
         self._semaphore = asyncio.Semaphore(max_concurrent)
+        self._load_persisted()
+
+    # ---------- persistence ----------
+
+    def _load_persisted(self) -> None:
+        """Load completed tasks from disk on startup."""
+        if not _DATA_DIR.exists():
+            return
+        loaded = 0
+        for path in sorted(_DATA_DIR.glob("*.json")):
+            try:
+                raw = json.loads(path.read_text())
+                task_id = raw["task_id"]
+                # Reconstruct a minimal TestConfig (API key redacted on disk)
+                config = TestConfig(
+                    router_endpoint=raw.get("router_endpoint", ""),
+                    api_key="***",
+                    claimed_model=raw.get("claimed_model", ""),
+                    claimed_provider=ProviderType(raw.get("claimed_provider", "any")),
+                )
+                info = TaskInfo(task_id, config, task_type=raw.get("task_type", "audit"))
+                info.status = TaskStatus(raw.get("status", "completed"))
+                info.created_at = datetime.fromisoformat(raw["created_at"])
+                if raw.get("completed_at"):
+                    info.completed_at = datetime.fromisoformat(raw["completed_at"])
+                if raw.get("report"):
+                    info.report = TestReport(**raw["report"])
+                if raw.get("benchmark_report"):
+                    info.benchmark_report = raw["benchmark_report"]
+                info.progress = raw.get("progress")
+                self._tasks[task_id] = info
+                loaded += 1
+            except Exception as e:
+                logger.warning("Failed to load %s: %s", path.name, e)
+        if loaded:
+            logger.info("Loaded %d persisted tasks from %s", loaded, _DATA_DIR)
+
+    def _persist(self, info: TaskInfo) -> None:
+        """Save a completed task to disk."""
+        try:
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+            data = {
+                "task_id": info.task_id,
+                "task_type": info.task_type,
+                "status": info.status.value,
+                "created_at": info.created_at.isoformat(),
+                "completed_at": info.completed_at.isoformat() if info.completed_at else None,
+                "router_endpoint": info.config.router_endpoint,
+                "claimed_model": info.config.claimed_model,
+                "claimed_provider": info.config.claimed_provider.value,
+                "progress": info.progress,
+            }
+            if info.report:
+                data["report"] = info.report.model_dump()
+            if info.benchmark_report:
+                data["benchmark_report"] = info.benchmark_report
+            path = _DATA_DIR / f"{info.task_id}.json"
+            path.write_text(json.dumps(data, indent=2, default=str))
+        except Exception as e:
+            logger.warning("Failed to persist %s: %s", info.task_id, e)
+
+    def _delete_persisted(self, task_id: str) -> None:
+        """Remove persisted file for a deleted task."""
+        path = _DATA_DIR / f"{task_id}.json"
+        try:
+            path.unlink(missing_ok=True)
+        except Exception:
+            pass
 
     def create_task(
         self,
@@ -139,6 +217,7 @@ class TaskManager:
                 info.benchmark_report = report.to_dict()
                 info.status = TaskStatus.COMPLETED
                 info.completed_at = datetime.now(timezone.utc)
+                self._persist(info)
 
             except asyncio.CancelledError:
                 info.status = TaskStatus.CANCELLED
@@ -174,6 +253,7 @@ class TaskManager:
                 info.report = report
                 info.status = TaskStatus.COMPLETED
                 info.completed_at = datetime.now(timezone.utc)
+                self._persist(info)
 
                 if info.callback_url:
                     await self._callback(info)
@@ -246,6 +326,7 @@ class TaskManager:
         # waiting 30s for the next ping when their TaskInfo vanishes.
         info._broadcast({"type": "task_deleted", "data": {"task_id": task_id}})
         del self._tasks[task_id]
+        self._delete_persisted(task_id)
         return True
 
     def task_exists(self, task_id: str) -> bool:
