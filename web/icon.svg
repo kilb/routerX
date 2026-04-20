@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+  <title>LLM Router — Chevron Stack (Dark bg variant)</title>
+  <rect width="200" height="200" rx="44.74" fill="#0a0b10"></rect>
+  <path d="M30 60 L80 100 L30 140" fill="none" stroke="#ffffff" stroke-width="22" stroke-linejoin="round" stroke-linecap="round" opacity=".35"></path>
+  <path d="M75 60 L125 100 L75 140" fill="none" stroke="#ffffff" stroke-width="22" stroke-linejoin="round" stroke-linecap="round" opacity=".65"></path>
+  <path d="M120 60 L170 100 L120 140" fill="none" stroke="#ffffff" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"></path>
+</svg>
