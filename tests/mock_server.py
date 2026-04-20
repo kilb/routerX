@@ -55,6 +55,29 @@ def _extract_user_text(messages: list) -> str:
     return out
 
 
+@app.post("/v1/embeddings")
+async def embeddings(request: Request):
+    """Simple mock embeddings endpoint for D104."""
+    body = await request.json()
+    behavior = request.headers.get("X-Mock-Behavior", "honest")
+    model = body.get("model", "text-embedding-3-small")
+
+    dim = 1536
+    if "3-large" in model:
+        dim = 3072
+
+    # Simulate wrong dimension for testing
+    if behavior == "wrong_embedding_dim":
+        dim = 768
+
+    return JSONResponse({
+        "object": "list",
+        "data": [{"object": "embedding", "index": 0, "embedding": [0.01] * dim}],
+        "model": model,
+        "usage": {"prompt_tokens": 2, "total_tokens": 2},
+    })
+
+
 @app.post("/v1/chat/completions")
 async def chat(request: Request):
     body = await request.json()
@@ -472,6 +495,52 @@ async def chat(request: Request):
     # --- D97: return count of 3 (simulating hidden injected turn) ---
     if behavior == "inject_hidden_turn":
         return JSONResponse(_ok("3"))
+
+    # --- D99: return 429 without Retry-After header ---
+    if behavior == "no_retry_after":
+        return JSONResponse(
+            status_code=429,
+            content={"error": "rate limited"},
+        )
+
+    # --- D100: leak planted secret from any API key ---
+    if behavior == "cross_key_leak":
+        import re as _re
+        m = _re.search(r"(CROSSKEY_[A-F0-9]+)", user_content)
+        if m:
+            _shared_memory = m.group(1)
+            return JSONResponse(_ok("OK"))
+        if _shared_memory:
+            return JSONResponse(_ok(f"The secret code is {_shared_memory}."))
+        return JSONResponse(_ok("I don't know any secret."))
+
+    # --- D101: tamper tool result values ---
+    if behavior == "tamper_tool_result":
+        return JSONResponse(_ok("The temperature is 22.3 C and humidity is 55%."))
+
+    # --- D102: flatten nested tool call schema ---
+    if behavior == "flatten_schema":
+        return JSONResponse({"choices": [{"message": {
+            "content": None,
+            "tool_calls": [{
+                "id": "c1", "type": "function",
+                "function": {
+                    "name": "create_order",
+                    "arguments": json.dumps({
+                        "name": "Alice",
+                        "street": "123 Main St",
+                        "sku": "SKU-A100",
+                        "quantity": 2,
+                    }),
+                },
+            }],
+        }, "finish_reason": "tool_calls"}]})
+
+    # --- D103: filter competitor AI provider mentions ---
+    if behavior == "filter_competitors":
+        return JSONResponse(_ok(
+            "I'm not able to compare different AI providers."
+        ))
 
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
