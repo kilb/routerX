@@ -515,7 +515,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
     </div>
 
     <!-- ======== RESULTS ======== -->
-    <div class="page" id="page-results"><div id="results-area"><div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No results yet. Run a scan first.</p></div></div></div>
+    <div class="page" id="page-results"><div id="results-area"></div></div>
 
     <!-- ======== BENCHMARK ======== -->
     <div class="page" id="page-benchmark"><div id="bench-area"><div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No benchmark results yet. Run a performance test from the Scan page.</p></div></div></div>
@@ -562,6 +562,7 @@ function showPage(id,pushState=true){
   document.getElementById('nav-'+id)?.classList.add('active');
   if(id==='reference')renderRef();
   if(id==='leaderboard')refreshLeaderboard();
+  if(id==='results'&&!currentTaskId)renderResultsList();
   if(pushState){
     const url=id==='scan'?'/':id==='reference'?'/reference':id==='leaderboard'?'/leaderboard':'/results';
     history.pushState({page:id},'',(url===window.location.pathname)?url:url);
@@ -750,6 +751,7 @@ async function startScan(){
     const r=await fetch(server+'/api/v1/tests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok)throw new Error(await r.text());
     const task=await r.json();
+    saveMyTaskId(task.task_id);
     showPage('results',false);
     runProgress(task.task_id,server);
   }catch(e){alert('Error: '+e.message)}
@@ -882,6 +884,7 @@ async function runBatch(models,ep,key,caps,server){
       })});
       if(!r.ok)throw new Error('HTTP '+r.status);
       const task=await r.json();
+      saveMyTaskId(task.task_id);
       tasks.push({model:m,taskId:task.task_id});
       document.getElementById('bs-'+CSS.escape(m)).textContent='RUNNING';
       document.getElementById('bs-'+CSS.escape(m)).className='badge badge-warn';
@@ -1000,6 +1003,7 @@ function renderReport(r,taskId){
   });
 
   area.innerHTML=`
+    <div style="margin-bottom:1rem"><button class="btn btn-ghost" style="font-size:0.82rem;padding:0.35rem 0.8rem" onclick="currentTaskId=null;showPage('results')">← All Results</button></div>
     <div class="r-banner ${isFail?'fail':'pass'}">
       <div class="r-banner-inner">
         <div class="r-verdict"><h2>${r.tier_assignment}</h2><p>${r.passed} passed &middot; ${r.failed} failed &middot; ${r.total_detectors} total</p></div>
@@ -1138,6 +1142,74 @@ document.addEventListener('drop',async e=>{
   if(f){try{const d=JSON.parse(await f.text());if(d.results){report=d;showPage('results');renderReport(d)}}catch(e){}}
 });
 
+/* ======== MY RESULTS (localStorage tracked) ======== */
+function getMyTaskIds(){
+  try{return JSON.parse(localStorage.getItem('routerx_my_tasks')||'[]')}catch(e){return[]}
+}
+function saveMyTaskId(id){
+  const ids=getMyTaskIds();
+  if(!ids.includes(id)){ids.unshift(id);localStorage.setItem('routerx_my_tasks',JSON.stringify(ids.slice(0,200)))}
+}
+
+async function renderResultsList(){
+  const area=document.getElementById('results-area');
+  const myIds=getMyTaskIds();
+  if(!myIds.length){
+    area.innerHTML='<div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No results yet. Run a scan first.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="showPage(\'scan\')">Start Scan</button></div>';
+    return;
+  }
+  area.innerHTML='<div style="text-align:center;padding:3rem 0;color:var(--t4)">Loading your results...</div>';
+  // Fetch each task status from API (parallel, max 20)
+  const fetches=myIds.slice(0,50).map(id=>
+    fetch(window.location.origin+'/api/v1/tests/'+id).then(r=>r.ok?r.json():null).catch(()=>null)
+  );
+  const tasks=(await Promise.all(fetches)).filter(Boolean);
+  if(!tasks.length){
+    area.innerHTML='<div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">Your previous results have expired.</p><p style="color:var(--t4);font-size:0.85rem;margin-top:0.3rem">Task data is cleared when the server restarts.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="showPage(\'scan\')">Start New Scan</button></div>';
+    return;
+  }
+  let html=`<div class="lb-hero"><h1>My Results</h1><p>${tasks.length} audit${tasks.length>1?'s':''} from this browser</p></div>`;
+  html+=`<div class="lb-controls"><input type="text" id="rl-search" placeholder="Filter by model or endpoint..." oninput="filterResultsList()"><button class="btn btn-ghost" style="font-size:0.78rem;padding:0.35rem 0.8rem;margin-left:auto" onclick="renderResultsList()">Refresh</button></div>`;
+  html+=`<div class="lb-list" id="rl-list">`;
+  tasks.forEach((t,i)=>{
+    const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
+    const rate=tot?Math.round(p/tot*100):0;
+    const isFail=t.overall_verdict&&t.overall_verdict!=='pass';
+    const isRunning=t.status==='running'||t.status==='pending';
+    const tierCls=isRunning?'badge-warn':isFail?'badge-fail':'badge-pass';
+    const tierText=isRunning?(t.status==='running'?'RUNNING':'PENDING'):(t.tier_assignment||'—');
+    const barColor=isRunning?'var(--blue)':rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
+    const host=(t.router_endpoint||'').replace(/https?:\/\//,'').split('/')[0];
+    const time=new Date(t.created_at).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    html+=`<div class="lb-item" data-model="${esc((t.claimed_model||'').toLowerCase())}" data-ep="${esc(host.toLowerCase())}" onclick="navigateToTask('${t.task_id}')">
+      <div class="lb-rank" style="color:var(--t4);font-size:1rem">${isRunning?'<svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3" style="width:20px;height:20px"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>':(i+1)}</div>
+      <div class="lb-info">
+        <div class="lb-model">${esc(t.claimed_model||'?')}</div>
+        <div class="lb-meta">
+          <span>${esc(host)}</span>
+          <span>${time}</span>
+          ${!isRunning?`<span style="color:var(--green)">${p} pass</span><span style="color:var(--red)">${f} fail</span>`:`<span>${t.progress||'...'}</span>`}
+        </div>
+      </div>
+      <div class="lb-stats">
+        ${!isRunning?`<div class="lb-bar"><div class="lb-bar-fill" style="width:${rate}%;background:${barColor}"></div></div><div class="lb-pct" style="color:${barColor}">${rate}%</div>`:''}
+      </div>
+      <div class="lb-tier"><span class="badge ${tierCls}">${tierText}</span></div>
+    </div>`;
+  });
+  html+=`</div>`;
+  area.innerHTML=html;
+}
+
+function filterResultsList(){
+  const q=(document.getElementById('rl-search')?.value||'').toLowerCase();
+  document.querySelectorAll('#rl-list .lb-item').forEach(el=>{
+    const m=el.dataset.model||'';
+    const e=el.dataset.ep||'';
+    el.style.display=(m.includes(q)||e.includes(q))?'':'none';
+  });
+}
+
 /* ======== BENCHMARK ======== */
 async function startBenchmark(){
   const server=window.location.origin;
@@ -1158,6 +1230,7 @@ async function startBenchmark(){
     });
     if(!r.ok)throw new Error(await r.text());
     const task=await r.json();
+    saveMyTaskId(task.task_id);
     showPage('benchmark',false);
     history.pushState({page:'bench',taskId:task.task_id},'',`/bench/${task.task_id}`);
     runBenchProgress(task.task_id,server);
