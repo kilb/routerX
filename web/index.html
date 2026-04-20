@@ -376,7 +376,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
     <div class="page active" id="page-scan">
       <div class="hero">
         <h1>Audit Your<br><span class="grad">LLM Router</span></h1>
-        <p>80 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
+        <p>85 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
         <div class="tag-row">
           <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
           <span class="tag">Parameter Honoring</span><span class="tag">Supply Chain</span>
@@ -471,7 +471,7 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
 
     <!-- ======== REFERENCE ======== -->
     <div class="page" id="page-reference">
-      <div class="ref-hero"><h1>Detector Reference</h1><p>80 detectors across 5 severity stages</p></div>
+      <div class="ref-hero"><h1>Detector Reference</h1><p>85 detectors across 5 severity stages</p></div>
       <div class="ref-bar" id="ref-bar"></div>
       <div class="ref-grid" id="ref-grid"></div>
     </div>
@@ -1042,6 +1042,11 @@ const DB=[
 {id:"D118",name:"ToolSchemaInjection",pri:"S0",desc:"Detects router injecting unauthorized tools into tool_calls. Only requested tool names should appear.",mode:"once",reqs:1},
 {id:"D119",name:"ToolCallOrderManipulation",pri:"P1",desc:"Sends 3 parallel tool calls. Checks for collapsed calls, duplicated IDs, or unauthorized names.",mode:"once",reqs:1},
 {id:"D122",name:"ResponseRewriteDetection",pri:"P1",desc:"Asks for exact marker output. Detects router-appended branding, disclaimers, or post-processing.",mode:"once",reqs:1},
+{id:"D92",name:"MultiModalInputStripping",pri:"P1",desc:"Sends image with embedded code, asks model to read it. Detects routers that charge for vision but strip image content.",mode:"once",reqs:1},
+{id:"D112",name:"ThinkingContentIntegrity",pri:"P1",desc:"Sends a math problem requiring step-by-step reasoning. Detects reasoning quality degradation from model substitution.",mode:"once",reqs:1},
+{id:"D113",name:"ThinkingTokenConsistency",pri:"P2",desc:"Sends same reasoning problem twice at temp=0. Detects inconsistent backends via answer/style divergence.",mode:"once",reqs:2},
+{id:"D115",name:"RequestEchoVerification",pri:"P1",desc:"Embeds a nonce in system message and asks model to echo it. Detects system message stripping or modification.",mode:"once",reqs:1},
+{id:"D123",name:"ResponseTruncationBilling",pri:"P1",desc:"Detects truncated output billed at full token count — output is short but completion_tokens is high.",mode:"once",reqs:1},
 ];
 
 let refF='all';

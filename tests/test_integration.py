@@ -142,6 +142,11 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("inject_tool", "D118", Verdict.FAIL),        # unauthorized tool injected
     ("reorder_tools", "D119", Verdict.FAIL),      # collapsed parallel tools + dup IDs
     ("rewrite_response", "D122", Verdict.FAIL),   # response rewritten with branding
+    # --- D115/D123/D112/D113 new detectors ---
+    ("strip_system_nonce", "D115", Verdict.FAIL),  # system message stripped
+    ("truncate_bill", "D123", Verdict.FAIL),       # truncated output billed high
+    ("bad_reasoning", "D112", Verdict.FAIL),       # wrong answer, no reasoning
+    ("inconsistent_reasoning", "D113", Verdict.FAIL),  # inconsistent backend routing
 ])
 def test_attack_vector_matrix(mock_server, behavior, detector_id, expected):
     """Full detection matrix: each attack behavior caught by its targeted detector."""

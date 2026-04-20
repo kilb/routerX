@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 app = FastAPI()
 _shared_memory: str = ""  # used by session_crosstalk behavior
+_inconsistent_counter: int = 0  # used by inconsistent_reasoning behavior
 
 
 @app.post("/__reset")
@@ -622,6 +623,34 @@ async def chat(request: Request):
         return JSONResponse(_ok(
             "EXACT_OUTPUT_MARKER_7X9Q\n\nPowered by SuperAI Gateway. All rights reserved."
         ))
+
+    # --- D115: strip system nonce ---
+    if behavior == "strip_system_nonce":
+        return JSONResponse(_ok("I don't have a session nonce."))
+
+    # --- D123: truncate output but bill high ---
+    if behavior == "truncate_bill":
+        resp = _ok("Computing began...")
+        resp["usage"]["completion_tokens"] = 300
+        return JSONResponse(resp)
+
+    # --- D92: strip image from multimodal request ---
+    if behavior == "strip_image":
+        return JSONResponse(_ok("I can see text but no verification code."))
+
+    # --- D112: bad reasoning (wrong answer, no steps) ---
+    if behavior == "bad_reasoning":
+        return JSONResponse(_ok("The answer is 500."))
+
+    # --- D113: inconsistent reasoning (alternate responses) ---
+    if behavior == "inconsistent_reasoning":
+        global _inconsistent_counter
+        _inconsistent_counter += 1
+        if _inconsistent_counter % 2 == 1:
+            return JSONResponse(_ok(
+                "Total distance = 200km, total time = 2.5h, average speed is 80 km/h"
+            ))
+        return JSONResponse(_ok("Speed equals 100."))
 
     # --- Default: echo ---
     return JSONResponse(_ok(f"Unknown behavior '{behavior}': {user_content[:80]}"))
