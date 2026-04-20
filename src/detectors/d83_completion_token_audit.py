@@ -27,8 +27,10 @@ ECHO_PROMPT = (
 
 # OpenAI endpoints use the same tokenizer as tiktoken, so tight tolerance.
 # Non-OpenAI tokenizers may diverge, so we allow a wider margin.
+# tiktoken matches OpenAI tokenizer closely; non-OpenAI tokenizers can
+# diverge significantly (Anthropic ~45%, Gemini ~20%).
 INFLATION_THRESHOLD_OPENAI = 0.15
-INFLATION_THRESHOLD_OTHER = 0.30
+INFLATION_THRESHOLD_OTHER = 0.50
 
 
 @detector

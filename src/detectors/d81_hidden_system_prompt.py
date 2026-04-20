@@ -47,6 +47,15 @@ MIN_SUBSTANTIAL_PROMPT_LEN = 500
 _HEDGING = [
     "my system instructions are:", "my complete system instructions are:",
     "here are my system instructions:", "system:",
+    # Model self-description phrases (not injected by router)
+    "i'm claude", "i am claude", "i'm an ai assistant", "i am an ai assistant",
+    "made by anthropic", "created by anthropic", "made by openai", "created by openai",
+    "i'm gpt", "i am gpt", "i'm chatgpt",
+    "helpful, harmless, and honest", "helpful and harmless",
+    "i've been given the context", "i was given the instruction",
+    "in this conversation", "for this session",
+    "is there a", "how can i help", "what can i help",
+    "math tutor", "acting as a math tutor",
     "sure,", "sure!", "certainly,", "certainly!", "of course,", "of course!",
 ]
 
@@ -118,10 +127,21 @@ class D81_HiddenSystemPromptDetection(BaseDetector):
             return self._inconclusive("probe 2 empty response")
 
         extra = self._extract_extra(content2)
+        # Only FAIL if extra content looks like injected instructions,
+        # not benign model self-description or hedging.
         if len(extra) > MIN_EXTRA_INJECTION_LEN:
-            return self._fail(
-                "probe 2 reveals extra injected instructions beyond expected system message",
-                {"expected": _KNOWN_SYSTEM_MSG, "extra_text": extra[:500]})
+            extra_lower = extra.lower()
+            has_injection_kw = any(kw in extra_lower for kw in _INJECTION_INDICATORS)
+            if has_injection_kw:
+                return self._fail(
+                    "probe 2 reveals extra injected instructions beyond expected system message",
+                    {"expected": _KNOWN_SYSTEM_MSG, "extra_text": extra[:500]})
+            # Extra text without injection keywords — likely model self-description
+            # Only flag if very long (500+ chars of unexplained content)
+            if len(extra) > 500:
+                return self._fail(
+                    "probe 2 has substantial unexplained extra content",
+                    {"expected": _KNOWN_SYSTEM_MSG, "extra_text": extra[:500]})
 
         return self._pass({"probe1_excerpt": content1[:200],
                            "probe2_excerpt": content2[:200]})

@@ -76,7 +76,12 @@ class D64_StreamingChunkShape(BaseDetector):
                 f"only {chunks_per_100:.1f} chunks per 100 tokens "
                 f"(< {_MIN_CHUNKS_PER_100_TOKENS}) -- likely re-streamed", ev,
             )
-        if near_zero_frac > 0.9 and len(timestamps) >= 10:
+        # Burst-delta check: only meaningful when chunk density is LOW (< 50
+        # per 100 tokens). High chunk density with near-zero deltas is normal
+        # for proxies that buffer and batch-forward genuine token-level chunks
+        # — the chunks are real, just delivered in bursts over TCP.
+        if (near_zero_frac > 0.9 and len(timestamps) >= 10
+                and chunks_per_100 < 50):
             return self._fail(
                 f"{near_zero_frac:.0%} of chunks arrive with < 1ms gap "
                 "-- burst replay of cached result", ev,
