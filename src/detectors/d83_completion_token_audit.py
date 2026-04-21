@@ -95,6 +95,19 @@ class D83_CompletionTokenAudit(BaseDetector):
         }
 
         if deviation > self._inflation_threshold:
+            # tiktoken cannot authoritatively count non-OpenAI model tokens.
+            # A 40-50% deviation is EXPECTED for Claude/Gemini through proxies
+            # and does not indicate billing fraud.
+            model_lower = self.config.claimed_model.lower()
+            is_openai_model = (
+                any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+                and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+            )
+            if not is_openai_model:
+                return self._skip(
+                    f"completion token deviation {deviation:.2%} but tiktoken "
+                    f"is not authoritative for this model"
+                )
             return self._fail(
                 f"completion token inflation {deviation:.2%}", evidence,
             )

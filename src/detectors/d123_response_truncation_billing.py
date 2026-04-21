@@ -85,7 +85,12 @@ class D123_ResponseTruncationBilling(BaseDetector):
             return self._fail("truncated output billed at full token count", evidence)
 
         # Case 2: disproportionate ratio with short output
-        max_ratio = MAX_RATIO_OPENAI if self.config.claimed_provider == ProviderType.OPENAI else MAX_RATIO_OTHER
+        model_lower = self.config.claimed_model.lower()
+        is_openai_model = (
+            any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
+        max_ratio = MAX_RATIO_OPENAI if is_openai_model else MAX_RATIO_OTHER
         if ratio > max_ratio and local < RATIO_FLOOR_LOCAL:
             return self._fail(f"billing ratio {ratio:.2f}x exceeds threshold", evidence)
 

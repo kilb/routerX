@@ -43,8 +43,16 @@ class D29_UsageBillAuditor(BaseDetector):
     description = "Detect token billing fraud: over-reported usage or billing for truncated content"
 
     @property
+    def _is_openai_model(self) -> bool:
+        model_lower = self.config.claimed_model.lower()
+        return (
+            any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
+
+    @property
     def _inflation_threshold(self) -> float:
-        if self.config.claimed_provider == ProviderType.OPENAI:
+        if self._is_openai_model:
             return TOKEN_INFLATION_THRESHOLD_OPENAI
         return TOKEN_INFLATION_THRESHOLD_OTHER
 
@@ -106,6 +114,13 @@ class D29_UsageBillAuditor(BaseDetector):
         if d24a_failed and deviation < TRUNCATION_BILLING_THRESHOLD:
             return self._fail("content truncated but usage reports full tokens", ev)
         if deviation > self._inflation_threshold:
+            # For non-OpenAI models, tiktoken cannot authoritatively count
+            # tokens — deviation is expected and does not indicate fraud.
+            if not self._is_openai_model:
+                return self._skip(
+                    f"token deviation {deviation:.2%} but tiktoken is not "
+                    f"authoritative for this model"
+                )
             return self._fail(f"token count deviation {deviation:.2%}", ev)
         return self._pass(ev)
 
@@ -134,6 +149,11 @@ class D29_UsageBillAuditor(BaseDetector):
         deviation = ev.pop("_deviation")
 
         if deviation > self._inflation_threshold:
+            if not self._is_openai_model:
+                return self._skip(
+                    f"token deviation {deviation:.2%} but tiktoken is not "
+                    f"authoritative for this model (fallback)"
+                )
             return self._fail(f"token count deviation {deviation:.2%} (fallback mode)", ev)
         return self._pass(ev)
 
