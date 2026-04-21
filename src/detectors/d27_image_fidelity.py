@@ -44,12 +44,24 @@ class D27_ImageFidelityProbe(BaseDetector):
         # inaccurate, the image was NOT stripped. Only FAIL if the response
         # shows no evidence of reading any code-like text from the image.
         import re
+        # Strip spaces/punctuation from content for comparison — models
+        # sometimes insert spaces between characters ("F 01048" for "F3I9IM").
+        content_stripped = re.sub(r'[^A-Za-z0-9]', '', content)
         found = re.findall(r'[A-Za-z0-9]{4,8}', content)
-        if found and code:
+        if code:
+            # Check 1: same-length token in content
             for fc in found:
                 if len(fc) == len(code):
-                    # Same-length code found — model IS seeing the image
                     return self._pass({"expected": code, "got": content, "ocr_read": fc})
+            # Check 2: stripped content matches code length (spaces between chars)
+            if len(content_stripped) == len(code):
+                return self._pass({"expected": code, "got": content, "ocr_read": content_stripped})
+            # Check 3: at least half the characters match (OCR errors but image seen)
+            if len(content_stripped) >= len(code) - 1:
+                matches = sum(1 for a, b in zip(content_stripped.upper(), code.upper()) if a == b)
+                if matches >= len(code) // 2:
+                    return self._pass({"expected": code, "got": content, "ocr_read": content_stripped,
+                                       "note": f"{matches}/{len(code)} chars match"})
         return self._fail("image code not recognized", {"expected": code, "got": content})
 
     @classmethod

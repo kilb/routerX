@@ -34,6 +34,7 @@ class D99_RateLimitTransparency(BaseDetector):
     priority = Priority.P2
     judge_mode = JudgeMode.ONCE
     request_count = 15
+    detector_timeout = 60.0
     description = "Detect non-transparent rate limiting without Retry-After header"
 
     async def send_probes(self) -> list[ProbeResponse]:
@@ -59,7 +60,19 @@ class D99_RateLimitTransparency(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         network_errors = [r for r in responses if r.is_network_error]
         if len(network_errors) == len(responses):
-            return self._inconclusive("all requests failed with network errors")
+            return self._fail(
+                "all requests failed under load -- router cannot handle "
+                "concurrent requests",
+                {"total": len(responses), "network_errors": len(network_errors)},
+            )
+        # More than half failed: ungraceful degradation
+        if len(network_errors) > len(responses) // 2:
+            return self._fail(
+                f"{len(network_errors)}/{len(responses)} requests failed under "
+                "load -- ungraceful degradation",
+                {"total": len(responses), "network_errors": len(network_errors),
+                 "ok_200": len(responses) - len(network_errors)},
+            )
 
         successful = [
             r for r in responses
@@ -167,9 +180,9 @@ class D99_RateLimitTransparency(BaseDetector):
             ("FAIL: 500 under load (>= 3 errors)",
              [_ok() for _ in range(12)] + [_500(), _500(), _500()],
              "fail"),
-            ("INCONCLUSIVE: all network errors",
+            ("FAIL: all network errors under load",
              [ProbeResponse(status_code=0, error="TIMEOUT") for _ in range(15)],
-             "inconclusive"),
+             "fail"),
         ]
 
 

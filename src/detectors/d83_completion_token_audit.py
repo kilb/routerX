@@ -44,7 +44,12 @@ class D83_CompletionTokenAudit(BaseDetector):
 
     @property
     def _inflation_threshold(self) -> float:
-        if self.config.claimed_provider == ProviderType.OPENAI:
+        model_lower = self.config.claimed_model.lower()
+        is_openai_model = (
+            any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
+        if is_openai_model:
             return INFLATION_THRESHOLD_OPENAI
         return INFLATION_THRESHOLD_OTHER
 
@@ -150,9 +155,9 @@ class D83_CompletionTokenAudit(BaseDetector):
              [_resp("", 15)],
              "inconclusive"),
 
-            # PASS: slight over-count within 30% tolerance (9 tokens * 1.3 = 11.7)
+            # PASS: slight over-count within 15% tolerance (9 tokens * 1.15 = 10.35)
             ("PASS: within tolerance threshold",
-             [_resp(expected_content, 11)],
+             [_resp(expected_content, 10)],
              "pass"),
         ]
 

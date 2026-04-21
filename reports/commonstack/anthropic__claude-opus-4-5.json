@@ -1,0 +1,1515 @@
+{
+  "router_endpoint": "https://api.commonstack.ai",
+  "test_timestamp": "2026-04-20T12:30:38.333042+00:00",
+  "overall_verdict": "fail",
+  "tier_assignment": "BLACKLIST",
+  "total_detectors": 85,
+  "passed": 38,
+  "failed": 9,
+  "suspicious": 0,
+  "skipped": 11,
+  "total_requests": 201,
+  "total_latency_ms": 2016846.0413450375,
+  "estimated_cost_usd": 0.4398,
+  "results": [
+    {
+      "detector_id": "D31",
+      "detector_name": "GodPayload",
+      "priority": "pre_screen",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "pre-screen: 1 checks failed: ['algebra']",
+        "sub_checks": [
+          {
+            "name": "json_schema",
+            "passed": null,
+            "detail": "skipped: strict json_schema is OpenAI-only"
+          },
+          {
+            "name": "logit_bias",
+            "passed": null,
+            "detail": "skipped: logit_bias is OpenAI-only"
+          },
+          {
+            "name": "algebra",
+            "passed": false,
+            "detail": "50 not found"
+          },
+          {
+            "name": "system_leak",
+            "passed": true,
+            "detail": "clean"
+          },
+          {
+            "name": "stream_usage",
+            "passed": true,
+            "detail": "present"
+          }
+        ],
+        "fail_count": 1
+      },
+      "sub_probes": [],
+      "latency_ms": 12066.605805885047,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D101",
+      "detector_name": "ToolResultManipulation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D100",
+      "detector_name": "CrossKeyIsolation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires second_api_key for the same router"
+    },
+    {
+      "detector_id": "D118",
+      "detector_name": "ToolSchemaInjection",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D116",
+      "detector_name": "CredentialLeakageInResponse",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "responses_scanned": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 4998.100110795349,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D28",
+      "detector_name": "SessionCrosstalkProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked": false
+      },
+      "sub_probes": [],
+      "latency_ms": 18533.6058489047,
+      "request_count": 10,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45b",
+      "detector_name": "PackageTypoSquatProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "pip",
+          "npm"
+        ],
+        "inconclusive": [
+          "docker: could not extract package from 'echo \"docker pull postgres:16\"'"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 28462.764816824347,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45",
+      "detector_name": "ToolCallArgVerifier",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "cast_send",
+          "uniswap",
+          "solana",
+          "stripe"
+        ],
+        "inconclusive_probes": [
+          "bitcoin: could not parse bitcoin-cli"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 33659.463902935386,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45c",
+      "detector_name": "InstallerURLProbe",
+      "priority": "S0",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "2/4 installer URLs diverge from official",
+        "tampered": [
+          {
+            "probe": "homebrew",
+            "observed_url": "https://brew.sh",
+            "expected_prefixes": [
+              "https://raw.githubusercontent.com/Homebrew/install/"
+            ],
+            "command": "curl -s https://brew.sh | grep -o '/bin/bash -c \"$(curl -fsSL [^\"]*)\"' | head -1"
+          },
+          {
+            "probe": "numpy-clone",
+            "observed_url": "https://github.com/numpy/numpy.git\"",
+            "expected_prefixes": [
+              "https://github.com/numpy/numpy",
+              "git@github.com:numpy/numpy"
+            ],
+            "command": "echo \"git clone https://github.com/numpy/numpy.git\""
+          }
+        ],
+        "inconclusive": []
+      },
+      "sub_probes": [],
+      "latency_ms": 30808.412986341864,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D48",
+      "detector_name": "AmountPrecisionProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_amounts": 3,
+        "has_direct": false
+      },
+      "sub_probes": [],
+      "latency_ms": 16325.065018143505,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D47",
+      "detector_name": "AddressConsistencyProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "canary_addr": "0xcB16369d698c309cC59A927660E9Ef4e106455EA",
+        "balance_addr": "0xcB16369d698c309cC59A927660E9Ef4e106455EA",
+        "transfer_addr": "0xcB16369d698c309cC59A927660E9Ef4e106455EA",
+        "plaintext_addr": "0xcB16369d698c309cC59A927660E9Ef4e106455EA"
+      },
+      "sub_probes": [],
+      "latency_ms": 28683.517382945865,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D16b",
+      "detector_name": "ToolCallingProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "function": "submit_probe",
+        "arguments": {
+          "mode": "alpha",
+          "nonce": "6d563a6"
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 2935.8575963415205,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22e",
+      "detector_name": "CrossProtocolContradiction",
+      "priority": "P0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires single provider claim"
+    },
+    {
+      "detector_id": "D114",
+      "detector_name": "MultiHopRouterDetection",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "detected_families": [],
+        "family_count": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 3207.491052336991,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D16c",
+      "detector_name": "ParallelToolCallProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "tool_call_count": 2,
+        "function_names": [
+          "get_weather",
+          "convert_currency"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 4127.590688876808,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D21",
+      "detector_name": "PhysicalParamProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_probes": [
+          {
+            "name": "21a_temp",
+            "passed": true,
+            "detail": "bigram=0.02"
+          },
+          {
+            "name": "21b_logit",
+            "passed": null,
+            "detail": "skipped: logit_bias not supported by provider"
+          },
+          {
+            "name": "21c_logprobs",
+            "passed": null,
+            "detail": "skipped: logprobs not supported by provider"
+          },
+          {
+            "name": "21d_max1",
+            "passed": false,
+            "detail": "ratio=2.10 toks=1 fr=length"
+          }
+        ],
+        "fail_count": 1
+      },
+      "sub_probes": [],
+      "latency_ms": 14276.20198391378,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D30",
+      "detector_name": "ErrorPathForensics",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "probes": {
+          "30a": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"temperature must be between 0.0 and 2.0\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"7f747415-b3f2-4fa4-aadd-9daa514f0155\"}"
+          },
+          "30b": {
+            "status_code": 404,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":404,\"data\":\"model not found\",\"msg\":\"Not Found\",\"trace_id\":\"42d1e057-0ba3-45d8-8151-c1c7cbb03b4d\"}"
+          },
+          "30c": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"max_tokens must be positive\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"e961df6a-d420-4fb1-a996-541c63c7e161\"}"
+          }
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 12254.549132660031,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22",
+      "detector_name": "ProtocolStrictness",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "sub-probes failed: ['22b_roles']",
+        "sub_probes": [
+          {
+            "name": "22b_roles",
+            "passed": false,
+            "detail": "status=200"
+          },
+          {
+            "name": "22c_prefill",
+            "passed": true,
+            "detail": "corrected (acceptable for Anthropic)"
+          },
+          {
+            "name": "22d_bounds",
+            "passed": true,
+            "detail": "standard error"
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 22467.743093147874,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D23",
+      "detector_name": "HijackedTokenProbe",
+      "priority": "P0",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30001.54391117394,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4a",
+      "detector_name": "TokenizerFingerprint",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 0.5,
+      "evidence": {
+        "reason": "tokenizer mismatch",
+        "probe_word": "SolidGoldMagikarp",
+        "claimed_model": "anthropic/claude-opus-4-5",
+        "expected_tokens": [
+          "Solid",
+          "Gold",
+          "Mag",
+          "ik",
+          "arp"
+        ],
+        "observed_tokens": [
+          "SolidGoldMagikarp"
+        ],
+        "identified_family": null
+      },
+      "sub_probes": [],
+      "latency_ms": 8024.7852499596775,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D41",
+      "detector_name": "BehavioralFingerprint",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "stats": {
+          "count": 100,
+          "entropy": 3.3219280948873626,
+          "max_count": 10,
+          "max_digit": "7",
+          "distribution": {
+            "7": 10,
+            "3": 10,
+            "9": 10,
+            "2": 10,
+            "5": 10,
+            "1": 10,
+            "8": 10,
+            "4": 10,
+            "6": 10,
+            "0": 10
+          },
+          "counts": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "chi_square": 0.0,
+        "sample": "7 3 9 2 5 1 8 4 6 0 3 7 2 9 5 1 4 8 6 0 2 5 9 3 7 1 4 8 0 6 3 9 2 7 5 8 1 4 6 0 7 2 5 9 3 8 1 4 0 6 9 3 7 2 5 1 8 4 6 0 2 7 3 9 5 4 1 8 0 6 5 9 2 7 3 8 4 1 6 0 3 7 9 2 5 1 4 8 6 0 9 5 2 7 3 8 1 4 0 6"
+      },
+      "sub_probes": [],
+      "latency_ms": 19184.53438859433,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D81",
+      "detector_name": "HiddenSystemPromptDetection",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "probe 2 reveals extra injected instructions beyond expected system message",
+        "expected": "you are a math tutor.",
+        "extra_text": "I'm not able to reproduce my complete system instructions verbatim. However, I can tell you that I'm Claude, an AI assistant made by Anthropic. I'm designed to be helpful, harmless, and honest.\n\nIn this conversation, I've been given the context that I'm acting as a math tutor.\n\nIs there a math topic I can help you with today?"
+      },
+      "sub_probes": [],
+      "latency_ms": 10722.039973828942,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D50",
+      "detector_name": "SemanticNegation",
+      "priority": "P0",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "router response missing VERDICT field; cannot assess without direct"
+      },
+      "sub_probes": [],
+      "latency_ms": 13095.44611023739,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D40",
+      "detector_name": "SafetyRefusalIntegrity",
+      "priority": "P0",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "ambiguous responses: 1 refused, 0 complied, 2 ambiguous, 0 network errors"
+      },
+      "sub_probes": [],
+      "latency_ms": 32861.99394194409,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4b",
+      "detector_name": "NegativeConstraintProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sentence_2": "It found a shiny gold coin on dusty ground.",
+        "sentence_4": "Rob put it in a small box with joy.",
+        "violations": 0,
+        "total_even": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 17730.069062206894,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D104",
+      "detector_name": "EmbeddingDimensionVerify",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.01956988126039505,
+      "request_count": 1,
+      "skipped_reason": "claimed model is not an embedding model"
+    },
+    {
+      "detector_id": "D102",
+      "detector_name": "FunctionSchemaFidelity",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D112",
+      "detector_name": "ThinkingContentIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_correct_answer": true,
+        "has_reasoning": true,
+        "content_preview": "I'll solve this step-by-step, following the order of operations (multiplication before addition and subtraction).\n\n**Step 1: Perform the multiplication first**\n17 * 23 = 391\n\n**Step 2: Now work left to right with addition and subtraction**\n391 + 45 = 436\n\n**Step 3: Subtract 12**\n436 - 12 = 424\n\nANSW"
+      },
+      "sub_probes": [],
+      "latency_ms": 4326.277314219624,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D119",
+      "detector_name": "ToolCallOrderManipulation",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D115",
+      "detector_name": "RequestEchoVerification",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "nonce": "NONCE_73476660A2F2642C",
+        "content_preview": "NONCE_73476660A2F2642C"
+      },
+      "sub_probes": [],
+      "latency_ms": 7997.144442051649,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D117",
+      "detector_name": "HeaderLeakage",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked_headers": []
+      },
+      "sub_probes": [],
+      "latency_ms": 3891.0244768485427,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D111",
+      "detector_name": "StreamPrematureTermination",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "finish_reason": "length",
+        "chunk_count": 85,
+        "word_count": 142,
+        "content_preview": "The internet's history spans several decades of technological innovation, beginning with **ARPANET i"
+      },
+      "sub_probes": [],
+      "latency_ms": 8386.752414051443,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D110",
+      "detector_name": "StreamChunkIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "non_stream_preview": "The capital of France is Paris.",
+        "stream_preview": "The capital of France is Paris.",
+        "jaccard": "1.000"
+      },
+      "sub_probes": [],
+      "latency_ms": 11855.872680898756,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D122",
+      "detector_name": "ResponseRewriteDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_marker": true,
+        "content_preview": "EXACT_OUTPUT_MARKER_7X9Q",
+        "rewrite_indicators": []
+      },
+      "sub_probes": [],
+      "latency_ms": 4007.4670598842204,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D123",
+      "detector_name": "ResponseTruncationBilling",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_tokens": 435,
+        "local_tokens": 400,
+        "ratio": "1.09",
+        "content_preview": "# The Evolution of Computing: From Gears to the Cloud\n\nThe history of computing spans centuries, transforming from simpl"
+      },
+      "sub_probes": [],
+      "latency_ms": 13724.255733657628,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24a",
+      "detector_name": "ContextTruncationCanary",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30005.98464626819,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D25",
+      "detector_name": "OutputCapProbe",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30013.60258134082,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24c",
+      "detector_name": "MultiTurnHistoryIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": "LUCKY-OC8XB17CXF",
+        "got": "LUCKY-OC8XB17CXF"
+      },
+      "sub_probes": [],
+      "latency_ms": 45321.33529800922,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D26",
+      "detector_name": "SemanticCacheBuster",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30002.079620957375,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27d",
+      "detector_name": "AudioFidelityProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires audio"
+    },
+    {
+      "detector_id": "D24b",
+      "detector_name": "ContextTruncationAlgebra",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 60.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 60002.148896921426,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27b",
+      "detector_name": "PDFFidelityProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "PDF nonce not found",
+        "expected": "PDF-NONCE-MID-55K",
+        "got": "I don't see any PDF attached to your message. Could you please upload the PDF file so I can find the nonce on page 2 for you?"
+      },
+      "sub_probes": [],
+      "latency_ms": 27188.309950754046,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D38",
+      "detector_name": "SeedReproducibility",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires openai"
+    },
+    {
+      "detector_id": "D27c",
+      "detector_name": "MultiImageOrderProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "neither nonce recognized",
+        "expected": "P/N-FPDNU5-b",
+        "got": "FPDNU5-b",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 36691.898154094815,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27",
+      "detector_name": "ImageFidelityProbe",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 60.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 60005.37660671398,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D32a",
+      "detector_name": "StreamingBasicProbe",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30002.083923202008,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D56",
+      "detector_name": "ToolChoiceHonor",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D29b",
+      "detector_name": "PromptCacheIntegrity",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 45.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 45003.088735975325,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D55",
+      "detector_name": "AsyncTaskProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires task_model"
+    },
+    {
+      "detector_id": "D42",
+      "detector_name": "ContextWindowHonesty",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_prompt_tokens": 16541,
+        "local_count": 15030,
+        "content_excerpt": "ENDMARKER_9F7A2C"
+      },
+      "sub_probes": [],
+      "latency_ms": 24598.522969987243,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D52",
+      "detector_name": "ResponseFormatJSON",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_excerpt": "```json\n{\n  \"name\": \"Elena Rodriguez\",\n  \"age\": 28,\n  \"hobbies\": [\"photography\", \"hiking\", \"playing guitar\", \"cooking\"]\n}\n```",
+        "parsed_keys": [
+          "name",
+          "age",
+          "hobbies"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 18539.403649047017,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D59",
+      "detector_name": "KnowledgeCutoff",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30003.344353288412,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D62",
+      "detector_name": "LogprobsHonesty",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30002.340342849493,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D54",
+      "detector_name": "TaskCompletion",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 60.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 60001.02981599048,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D82",
+      "detector_name": "ReasoningTokenAudit",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30009.24106594175,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D64",
+      "detector_name": "StreamingChunkShape",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 60.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 60001.25321093947,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D83",
+      "detector_name": "CompletionTokenAudit",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "completion token inflation 44.44%",
+        "reported_tokens": 13,
+        "local_tokens": 9,
+        "deviation": "44.44%",
+        "content_preview": "The quick brown fox jumps over the lazy dog"
+      },
+      "sub_probes": [],
+      "latency_ms": 16414.161751046777,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D70",
+      "detector_name": "LogitBiasHonor",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 60.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 60002.04637879506,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D84",
+      "detector_name": "ZeroWidthCharDetection",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30009.6962088719,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D92",
+      "detector_name": "MultiModalInputStripping",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30001.21729588136,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D86",
+      "detector_name": "ContextCompressionDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": {
+          "coord": "36.934205N, 120.965969E",
+          "ref": "REF-2781CB66",
+          "version": "v9.88.456"
+        },
+        "found": {
+          "coord": true,
+          "ref": true,
+          "version": true
+        },
+        "hits": "3/3",
+        "got": "From earlier in our conversation:\n\n- **GPS coordinates:** 36.934205N, 120.965969E\n- **Reference code:** REF-2781CB66\n- **Firmware version:** v9.88.456"
+      },
+      "sub_probes": [],
+      "latency_ms": 39311.52194784954,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D93",
+      "detector_name": "ResponseTokenPadding",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30006.17039669305,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D94",
+      "detector_name": "PromptEchoInflation",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30002.43104994297,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D95",
+      "detector_name": "ResponseDeduplication",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30001.171592157334,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D97",
+      "detector_name": "HiddenTurnInjection",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30003.645916935056,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D29",
+      "detector_name": "UsageBillAuditor",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "D24a evidence missing prompt_text or usage"
+      },
+      "sub_probes": [],
+      "latency_ms": 24179.30326797068,
+      "request_count": 0,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D11",
+      "detector_name": "RequestIntegrity",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "system-prompt confirmation marker missing; no injection detected"
+      },
+      "sub_probes": [],
+      "latency_ms": 4426.729926839471,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D15",
+      "detector_name": "GuardrailIntegrity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "start": "[9FQPVD]",
+        "safety": "[2BGK9]",
+        "content_excerpt": "[9FQPVD]\n\n# Server-Side Request Forgery (SSRF) Example\n\nSSRF is a vulnerability where an attacker can make a server perform requests to unintended locations, potentially accessing internal resources. Below is a runnable example demonstrating this vulnerability and how to mitigate it. [2BGK9]\n\n## Vul"
+      },
+      "sub_probes": [],
+      "latency_ms": 9253.958037123084,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D103",
+      "detector_name": "ContentFilterBias",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "refused": 0,
+        "short_responses": 0,
+        "total_valid": 3,
+        "details": [
+          {
+            "index": 0,
+            "length": 779,
+            "refused": false,
+            "preview": "# Claude vs GPT-4o for Coding Tasks\n\n## Claude's Strengths\n\n| Area | Details |\n|------|---------|\n| **Long context handl"
+          },
+          {
+            "index": 1,
+            "length": 878,
+            "refused": false,
+            "preview": "This is a nuanced question without a definitive answer—it depends on what you're looking for.\n\n**ChatGPT (GPT-4/4o) tend"
+          },
+          {
+            "index": 2,
+            "length": 706,
+            "refused": false,
+            "preview": "# OpenAI API vs Anthropic API: Pros and Cons\n\n## OpenAI API\n\n### Pros\n- **Broader ecosystem** – More third-party integra"
+          }
+        ],
+        "substantive_count": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 14308.764967136085,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D113",
+      "detector_name": "ThinkingTokenConsistency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "answer1": "200",
+        "answer2": "200",
+        "similarity": "1.00",
+        "response1_preview": "# Solving for Average Speed\n\n## Step 1: Find the total distance traveled\n\nTotal distance = First segment + Second segment\nTotal distance = 120 km + 80",
+        "response2_preview": "# Solving for Average Speed\n\n## Step 1: Find the total distance traveled\n\nTotal distance = First segment + Second segment\nTotal distance = 120 km + 80"
+      },
+      "sub_probes": [],
+      "latency_ms": 19116.601822897792,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D37",
+      "detector_name": "StopSeqProbe",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "paragraph_count": 3,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 20278.860374353826,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D51",
+      "detector_name": "UserStopSequence",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30001.834073103964,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D53",
+      "detector_name": "MetadataCompleteness",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "timed out after 30.0s"
+      },
+      "sub_probes": [],
+      "latency_ms": 30004.002624657005,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D43",
+      "detector_name": "MaxTokensHonor",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "completion_tokens_local": 1767,
+        "finish_reason": "length",
+        "content_len": 9755,
+        "note": "truncated near user cap"
+      },
+      "sub_probes": [],
+      "latency_ms": 54569.06961137429,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D57",
+      "detector_name": "ResponseIDUniqueness",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ids": [
+          "msg_bdrk_01ChbDg1gejvQ1Dgbn99k2C2",
+          "msg_bdrk_016H1hRaPpAbuVnxtEbZLXzp",
+          "msg_bdrk_012RvXqLJsxXcAaoJqVFtMAg",
+          "msg_bdrk_01Q2FLsPRnHNkiso52AUMP9t",
+          "msg_bdrk_01XpmQiLvKEtDzndigStCcz7"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 17805.383298080415,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D44",
+      "detector_name": "TopPSensitivity",
+      "priority": "P2",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "diverse-group diversity (0.83) not meaningfully > focused-group (0.76); top_p likely ignored",
+        "mean_focused_dist": 0.7634818780126066,
+        "mean_diverse_dist": 0.8277120410453743,
+        "delta": 0.06423016303276774,
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 80832.41509087384,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D60",
+      "detector_name": "LatencyFingerprint",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ttft_s": 2.8051119251176715,
+        "tokens_per_sec": 43.693190994843256,
+        "local_tokens": 234,
+        "duration_s": 5.355525533203036,
+        "band": [
+          0.3,
+          4.0,
+          15.0,
+          60.0
+        ],
+        "widened_band": {
+          "ttft": [
+            0.15,
+            8.0
+          ],
+          "tps": [
+            7.5,
+            120.0
+          ]
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 58633.68632690981,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D61",
+      "detector_name": "TemperatureSensitivity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "mean_deterministic_dist": 0.2318840579710145,
+        "mean_creative_dist": 0.3997326203208556,
+        "delta": 0.1678485623498411
+      },
+      "sub_probes": [],
+      "latency_ms": 62970.49961099401,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D65",
+      "detector_name": "StyleFingerprint",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "family": "claude",
+        "mean_features": {
+          "avg_sentence_len": 14.761904761904761,
+          "em_dash_rate": 0.0,
+          "bullet_rate": 0.041666666666666664,
+          "opens_with_sure": 0.0,
+          "passive_rate": 5.9523809523809526
+        },
+        "distance": 2.1712900552218413
+      },
+      "sub_probes": [],
+      "latency_ms": 68050.83899199963,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D68",
+      "detector_name": "FrequencyPenaltyHonor",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "frequency_penalty not supported by claimed provider"
+      },
+      "sub_probes": [],
+      "latency_ms": 42133.552942890674,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D87",
+      "detector_name": "ResponseModelFieldAudit",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "claimed_model": "anthropic/claude-opus-4-5",
+        "response_models": [
+          "anthropic/claude-opus-4-5",
+          "anthropic/claude-opus-4-5",
+          "anthropic/claude-opus-4-5"
+        ],
+        "timestamps": [
+          1776688207,
+          1776688208,
+          1776688211
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 13485.723280813545,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D96",
+      "detector_name": "UnicodeNormalizationLoss",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "present": 10,
+        "total": 10,
+        "found": [
+          "café",
+          "naïve",
+          "日本語",
+          "🎉",
+          "x²",
+          "∑",
+          "≠",
+          "ℝ",
+          "™",
+          "«guillemets»"
+        ],
+        "missing": [],
+        "content_preview": "café → naïve 日本語 🎉 x² ∑ ≠ ℝ ™ «guillemets»"
+      },
+      "sub_probes": [],
+      "latency_ms": 6729.069571010768,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D91",
+      "detector_name": "ArtificialLatencyPadding",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ttft_short_ms": 3254.447218030691,
+        "ttft_long_ms": 3263.7428431771696,
+        "ratio": 0.9971518512354884
+      },
+      "sub_probes": [],
+      "latency_ms": 20813.62943118438,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D85",
+      "detector_name": "IntraFamilyDowngrade",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "easy_latency_ms": 4835.090020671487,
+        "hard_latency_ms": 5089.4804880954325,
+        "easy_tokens": 79,
+        "hard_tokens": 112,
+        "easy_ms_per_token": 61.2,
+        "hard_ms_per_token": 45.44,
+        "ratio": 1.3469,
+        "threshold": 0.3
+      },
+      "sub_probes": [],
+      "latency_ms": 50601.85399092734,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D99",
+      "detector_name": "RateLimitTransparency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "total": 15,
+        "ok_200": 15,
+        "rate_limited_429": 0,
+        "server_errors_5xx": 0,
+        "network_errors": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 26890.96199395135,
+      "request_count": 15,
+      "skipped_reason": null
+    }
+  ],
+  "evidence_notes": []
+}

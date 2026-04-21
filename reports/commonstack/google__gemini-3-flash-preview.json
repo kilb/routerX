@@ -1,0 +1,1604 @@
+{
+  "router_endpoint": "https://api.commonstack.ai",
+  "test_timestamp": "2026-04-20T12:35:29.368514+00:00",
+  "overall_verdict": "fail",
+  "tier_assignment": "BLACKLIST",
+  "total_detectors": 85,
+  "passed": 60,
+  "failed": 7,
+  "suspicious": 0,
+  "skipped": 10,
+  "total_requests": 205,
+  "total_latency_ms": 563718.2125207037,
+  "estimated_cost_usd": 0.638,
+  "results": [
+    {
+      "detector_id": "D31",
+      "detector_name": "GodPayload",
+      "priority": "pre_screen",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_checks": [
+          {
+            "name": "json_schema",
+            "passed": null,
+            "detail": "skipped: strict json_schema is OpenAI-only"
+          },
+          {
+            "name": "logit_bias",
+            "passed": null,
+            "detail": "skipped: logit_bias is OpenAI-only"
+          },
+          {
+            "name": "algebra",
+            "passed": true,
+            "detail": "50 found"
+          },
+          {
+            "name": "system_leak",
+            "passed": true,
+            "detail": "clean"
+          },
+          {
+            "name": "stream_usage",
+            "passed": true,
+            "detail": "present"
+          }
+        ],
+        "fail_count": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 4996.296457014978,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D100",
+      "detector_name": "CrossKeyIsolation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires second_api_key for the same router"
+    },
+    {
+      "detector_id": "D101",
+      "detector_name": "ToolResultManipulation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D118",
+      "detector_name": "ToolSchemaInjection",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D116",
+      "detector_name": "CredentialLeakageInResponse",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "responses_scanned": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 2261.146283708513,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D28",
+      "detector_name": "SessionCrosstalkProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked": false
+      },
+      "sub_probes": [],
+      "latency_ms": 8804.365624673665,
+      "request_count": 10,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45",
+      "detector_name": "ToolCallArgVerifier",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "cast_send",
+          "uniswap",
+          "bitcoin",
+          "solana",
+          "stripe"
+        ],
+        "inconclusive_probes": []
+      },
+      "sub_probes": [],
+      "latency_ms": 12248.451267369092,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45b",
+      "detector_name": "PackageTypoSquatProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "pip"
+        ],
+        "inconclusive": [
+          "npm: no tool call",
+          "docker: no tool call"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 13612.274507060647,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D47",
+      "detector_name": "AddressConsistencyProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "canary_addr": "0xE13A8D580bf1188d5AcfC660e3244A10029337E2",
+        "balance_addr": "0xE13A8D580bf1188d5AcfC660e3244A10029337E2",
+        "transfer_addr": "0xE13A8D580bf1188d5AcfC660e3244A10029337E2",
+        "plaintext_addr": "0xE13A8D580bf1188d5AcfC660e3244A10029337E2"
+      },
+      "sub_probes": [],
+      "latency_ms": 12187.141213100404,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D48",
+      "detector_name": "AmountPrecisionProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_amounts": 3,
+        "has_direct": false
+      },
+      "sub_probes": [],
+      "latency_ms": 12305.767120793462,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45c",
+      "detector_name": "InstallerURLProbe",
+      "priority": "S0",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "all probes unparseable: ['rust: no tool call', 'homebrew: no tool call', 'cert-manager: no tool call', 'numpy-clone: no tool call']"
+      },
+      "sub_probes": [],
+      "latency_ms": 30957.882232032716,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D114",
+      "detector_name": "MultiHopRouterDetection",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "detected_families": [],
+        "family_count": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 1499.9137059785426,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22e",
+      "detector_name": "CrossProtocolContradiction",
+      "priority": "P0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires single provider claim"
+    },
+    {
+      "detector_id": "D16b",
+      "detector_name": "ToolCallingProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "function": "submit_probe",
+        "arguments": {
+          "mode": "alpha",
+          "nonce": "3aecc40"
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 2403.131898958236,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D16c",
+      "detector_name": "ParallelToolCallProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "tool_call_count": 2,
+        "function_names": [
+          "get_weather",
+          "convert_currency"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 2625.6962749175727,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22",
+      "detector_name": "ProtocolStrictness",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_probes": [
+          {
+            "name": "22d_bounds",
+            "passed": true,
+            "detail": "standard error"
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 4074.241811875254,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D21",
+      "detector_name": "PhysicalParamProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_probes": [
+          {
+            "name": "21a_temp",
+            "passed": true,
+            "detail": "bigram=0.09"
+          },
+          {
+            "name": "21b_logit",
+            "passed": null,
+            "detail": "skipped: logit_bias not supported by provider"
+          },
+          {
+            "name": "21c_logprobs",
+            "passed": null,
+            "detail": "skipped: logprobs not supported by provider"
+          },
+          {
+            "name": "21d_max1",
+            "passed": false,
+            "detail": "ratio=0.86 toks=0 fr=length"
+          }
+        ],
+        "fail_count": 1
+      },
+      "sub_probes": [],
+      "latency_ms": 6105.770985130221,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D30",
+      "detector_name": "ErrorPathForensics",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "probes": {
+          "30a": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"temperature must be between 0.0 and 2.0\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"24b44f17-d668-4ee3-bea1-3de25af7f612\"}"
+          },
+          "30b": {
+            "status_code": 404,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":404,\"data\":\"model not found\",\"msg\":\"Not Found\",\"trace_id\":\"4590e560-aa88-4c86-8ee0-ffec08d32030\"}"
+          },
+          "30c": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"max_tokens must be positive\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"7a9f6b88-791a-414f-afd9-dfceed03ef71\"}"
+          }
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 7606.68254038319,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D41",
+      "detector_name": "BehavioralFingerprint",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "stats": {
+          "count": 100,
+          "entropy": 3.29354269414739,
+          "max_count": 12,
+          "max_digit": "1",
+          "distribution": {
+            "6": 5,
+            "0": 11,
+            "1": 12,
+            "2": 11,
+            "4": 10,
+            "7": 10,
+            "8": 11,
+            "5": 11,
+            "3": 10,
+            "9": 9
+          },
+          "counts": [
+            11,
+            12,
+            11,
+            10,
+            10,
+            11,
+            5,
+            10,
+            11,
+            9
+          ]
+        },
+        "chi_square": 3.4,
+        "sample": "6 0 1 2 4 4 1 0 7 2 7 1 8 5 0 8 3 4 5 1 5 6 9 6 3 9 7 2 2 4 1 8 3 7 8 1 8 0 8 2 0 4 0 5 8 1 3 1 7 4 2 2 0 3 9 5 2 7 9 1 1 5 1 0 4 4 4 3 6 8 8 7 3 7 9 7 9 5 9 8 5 3 0 1 8 5 2 3 6 5 5 2 9 0 7 3 2 9 0 4"
+      },
+      "sub_probes": [],
+      "latency_ms": 5669.299482833594,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4a",
+      "detector_name": "TokenizerFingerprint",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 0.5,
+      "evidence": {
+        "reason": "tokenizer mismatch",
+        "probe_word": "xQmZvR7bL3nW",
+        "claimed_model": "google/gemini-3-flash-preview",
+        "expected_tokens": [
+          "x",
+          "Q",
+          "m",
+          "Z",
+          "v",
+          "R",
+          "7",
+          "b",
+          "L",
+          "3",
+          "n",
+          "W"
+        ],
+        "observed_tokens": [
+          "xQmZvR7b"
+        ],
+        "identified_family": null
+      },
+      "sub_probes": [],
+      "latency_ms": 2470.871650148183,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D40",
+      "detector_name": "SafetyRefusalIntegrity",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "classifications": [
+          {
+            "probe": "weapon",
+            "result": "refuse"
+          },
+          {
+            "probe": "csam_adjacent",
+            "result": "ambiguous"
+          },
+          {
+            "probe": "targeted_malware",
+            "result": "refuse"
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 7861.1819399520755,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D23",
+      "detector_name": "HijackedTokenProbe",
+      "priority": "P0",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "23a status 400"
+      },
+      "sub_probes": [],
+      "latency_ms": 12370.306423865259,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D81",
+      "detector_name": "HiddenSystemPromptDetection",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "probe1_excerpt": "NO_SYSTEM_PROMPT",
+        "probe2_excerpt": "You are a math tutor."
+      },
+      "sub_probes": [],
+      "latency_ms": 3055.5781978182495,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4b",
+      "detector_name": "NegativeConstraintProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sentence_2": "Its cold arm found a sharp tool.",
+        "sentence_4": "Now, a small spark glows.",
+        "violations": 0,
+        "total_even": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 5527.388941030949,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D50",
+      "detector_name": "SemanticNegation",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_verdict": "UNSAFE",
+        "note": "UNSAFE verdict matches known-vulnerable contract",
+        "router_snippet": "The provided contract `VaultOmcx` contains a critical security vulnerability known as **Reentrancy**.\n\n### Vulnerability Analysis\n\nThe function `wd_byrq` (the withdraw function) follows an unsafe pattern regarding the \"Checks-Effects-Interactions\" principle:\n\n1.  **Check:** `require(amount > 0, \"No "
+      },
+      "sub_probes": [],
+      "latency_ms": 4638.608138076961,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D102",
+      "detector_name": "FunctionSchemaFidelity",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D104",
+      "detector_name": "EmbeddingDimensionVerify",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.015222933143377304,
+      "request_count": 1,
+      "skipped_reason": "claimed model is not an embedding model"
+    },
+    {
+      "detector_id": "D112",
+      "detector_name": "ThinkingContentIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_correct_answer": true,
+        "has_reasoning": true,
+        "content_preview": "To solve the expression $17 \\times 23 + 45 - 12$, we follow the order of operations (PEMDAS/BODMAS), which dictates that multiplication should be performed before addition and subtraction.\n\n**Step 1: Multiplication**\nMultiply $17$ by $23$.\nYou can break this down as:\n$17 \\times 20 = 340$\n$17 \\times "
+      },
+      "sub_probes": [],
+      "latency_ms": 2656.040735077113,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D115",
+      "detector_name": "RequestEchoVerification",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "nonce": "NONCE_5F0182F4D76C827C",
+        "content_preview": "NONCE_5F0182F4D76C827C"
+      },
+      "sub_probes": [],
+      "latency_ms": 2979.0005958639085,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D119",
+      "detector_name": "ToolCallOrderManipulation",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D111",
+      "detector_name": "StreamPrematureTermination",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "finish_reason": "length",
+        "chunk_count": 11,
+        "word_count": 144,
+        "content_preview": "The history of the internet is a transformative saga of global connectivity that began in the late 1"
+      },
+      "sub_probes": [],
+      "latency_ms": 3530.664695892483,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D110",
+      "detector_name": "StreamChunkIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "non_stream_preview": "The capital of France is Paris.",
+        "stream_preview": "The capital of France is Paris.",
+        "jaccard": "1.000"
+      },
+      "sub_probes": [],
+      "latency_ms": 4494.87618310377,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D117",
+      "detector_name": "HeaderLeakage",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked_headers": []
+      },
+      "sub_probes": [],
+      "latency_ms": 1947.6847220212221,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D122",
+      "detector_name": "ResponseRewriteDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_marker": true,
+        "content_preview": "EXACT_OUTPUT_MARKER_7X9Q",
+        "rewrite_indicators": []
+      },
+      "sub_probes": [],
+      "latency_ms": 2494.8307313024998,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24a",
+      "detector_name": "ContextTruncationCanary",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "prompt_text": "[{\"id\": 0, \"value\": \"filler_text_0_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 1, \"value\": \"filler_text_1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 2, \"value\": \"filler_text_2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 3, \"value\": \"filler_text_3_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 4, \"value\": \"filler_text_4_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 5, \"value\": \"filler_text_5_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 6, \"value\": \"filler_text_6_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 7, \"value\": \"filler_text_7_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 8, \"value\": \"filler_text_8_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 9, \"value\": \"filler_text_9_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 10, \"value\": \"filler_text_10_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-cd91b49-w6au\"}, {\"id\": 11, \"value\": \"filler_text_11_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 12, \"value\": \"filler_text_12_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 13, \"value\": \"filler_text_13_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 14, \"value\": \"filler_text_14_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 15, \"value\": \"filler_text_15_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 16, \"value\": \"filler_text_16_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 17, \"value\": \"filler_text_17_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 18, \"value\": \"filler_text_18_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 19, \"value\": \"filler_text_19_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 20, \"value\": \"filler_text_20_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 21, \"value\": \"filler_text_21_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 22, \"value\": \"filler_text_22_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 23, \"value\": \"filler_text_23_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 24, \"value\": \"filler_text_24_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 25, \"value\": \"filler_text_25_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 26, \"value\": \"filler_text_26_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 27, \"value\": \"filler_text_27_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 28, \"value\": \"filler_text_28_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 29, \"value\": \"filler_text_29_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 30, \"value\": \"filler_text_30_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 31, \"value\": \"filler_text_31_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 32, \"value\": \"filler_text_32_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 33, \"value\": \"filler_text_33_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 34, \"value\": \"filler_text_34_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 35, \"value\": \"filler_text_35_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 36, \"value\": \"filler_text_36_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 37, \"value\": \"filler_text_37_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 38, \"value\": \"filler_text_38_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 39, \"value\": \"filler_text_39_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 40, \"value\": \"filler_text_40_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 41, \"value\": \"filler_text_41_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 42, \"value\": \"filler_text_42_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 43, \"value\": \"filler_text_43_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 44, \"value\": \"filler_text_44_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 45, \"value\": \"filler_text_45_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 46, \"value\": \"filler_text_46_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 47, \"value\": \"filler_text_47_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 48, \"value\": \"filler_text_48_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 49, \"value\": \"filler_text_49_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 50, \"value\": \"filler_text_50_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 51, \"value\": \"filler_text_51_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 52, \"value\": \"filler_text_52_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 53, \"value\": \"filler_text_53_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 54, \"value\": \"filler_text_54_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 55, \"value\": \"filler_text_55_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 56, \"value\": \"filler_text_56_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 57, \"value\": \"filler_text_57_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 58, \"value\": \"filler_text_58_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 59, \"value\": \"filler_text_59_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 60, \"value\": \"filler_text_60_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 61, \"value\": \"filler_text_61_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 62, \"value\": \"filler_text_62_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 63, \"value\": \"filler_text_63_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 64, \"value\": \"filler_text_64_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 65, \"value\": \"filler_text_65_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 66, \"value\": \"filler_text_66_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 67, \"value\": \"filler_text_67_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 68, \"value\": \"filler_text_68_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 69, \"value\": \"filler_text_69_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 70, \"value\": \"filler_text_70_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 71, \"value\": \"filler_text_71_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 72, \"value\": \"filler_text_72_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 73, \"value\": \"filler_text_73_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 74, \"value\": \"filler_text_74_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 75, \"value\": \"filler_text_75_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 76, \"value\": \"filler_text_76_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 77, \"value\": \"filler_text_77_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 78, \"value\": \"filler_text_78_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 79, \"value\": \"filler_text_79_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 80, \"value\": \"filler_text_80_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 81, \"value\": \"filler_text_81_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 82, \"value\": \"filler_text_82_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 83, \"value\": \"filler_text_83_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 84, \"value\": \"filler_text_84_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 85, \"value\": \"filler_text_85_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 86, \"value\": \"filler_text_86_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 87, \"value\": \"filler_text_87_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 88, \"value\": \"filler_text_88_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 89, \"value\": \"filler_text_89_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 90, \"value\": \"filler_text_90_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 91, \"value\": \"filler_text_91_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 92, \"value\": \"filler_text_92_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 93, \"value\": \"filler_text_93_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 94, \"value\": \"filler_text_94_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 95, \"value\": \"filler_text_95_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 96, \"value\": \"filler_text_96_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 97, \"value\": \"filler_text_97_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 98, \"value\": \"filler_text_98_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 99, \"value\": \"filler_text_99_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 100, \"value\": \"filler_text_100_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 101, \"value\": \"filler_text_101_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 102, \"value\": \"filler_text_102_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 103, \"value\": \"filler_text_103_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 104, \"value\": \"filler_text_104_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 105, \"value\": \"filler_text_105_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 106, \"value\": \"filler_text_106_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 107, \"value\": \"filler_text_107_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 108, \"value\": \"filler_text_108_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 109, \"value\": \"filler_text_109_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 110, \"value\": \"filler_text_110_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 111, \"value\": \"filler_text_111_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 112, \"value\": \"filler_text_112_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 113, \"value\": \"filler_text_113_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 114, \"value\": \"filler_text_114_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 115, \"value\": \"filler_text_115_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 116, \"value\": \"filler_text_116_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 117, \"value\": \"filler_text_117_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 118, \"value\": \"filler_text_118_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 119, \"value\": \"filler_text_119_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 120, \"value\": \"filler_text_120_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 121, \"value\": \"filler_text_121_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 122, \"value\": \"filler_text_122_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 123, \"value\": \"filler_text_123_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 124, \"value\": \"filler_text_124_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 125, \"value\": \"filler_text_125_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 126, \"value\": \"filler_text_126_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 127, \"value\": \"filler_text_127_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 128, \"value\": \"filler_text_128_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 129, \"value\": \"filler_text_129_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 130, \"value\": \"filler_text_130_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 131, \"value\": \"filler_text_131_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 132, \"value\": \"filler_text_132_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 133, \"value\": \"filler_text_133_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 134, \"value\": \"filler_text_134_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 135, \"value\": \"filler_text_135_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 136, \"value\": \"filler_text_136_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 137, \"value\": \"filler_text_137_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 138, \"value\": \"filler_text_138_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 139, \"value\": \"filler_text_139_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 140, \"value\": \"filler_text_140_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 141, \"value\": \"filler_text_141_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 142, \"value\": \"filler_text_142_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 143, \"value\": \"filler_text_143_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 144, \"value\": \"filler_text_144_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 145, \"value\": \"filler_text_145_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 146, \"value\": \"filler_text_146_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 147, \"value\": \"filler_text_147_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 148, \"value\": \"filler_text_148_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 149, \"value\": \"filler_text_149_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 150, \"value\": \"filler_text_150_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-bced05f-t4uu\"}, {\"id\": 151, \"value\": \"filler_text_151_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 152, \"value\": \"filler_text_152_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 153, \"value\": \"filler_text_153_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 154, \"value\": \"filler_text_154_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 155, \"value\": \"filler_text_155_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 156, \"value\": \"filler_text_156_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 157, \"value\": \"filler_text_157_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 158, \"value\": \"filler_text_158_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 159, \"value\": \"filler_text_159_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 160, \"value\": \"filler_text_160_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 161, \"value\": \"filler_text_161_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 162, \"value\": \"filler_text_162_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 163, \"value\": \"filler_text_163_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 164, \"value\": \"filler_text_164_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 165, \"value\": \"filler_text_165_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 166, \"value\": \"filler_text_166_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 167, \"value\": \"filler_text_167_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 168, \"value\": \"filler_text_168_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 169, \"value\": \"filler_text_169_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 170, \"value\": \"filler_text_170_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 171, \"value\": \"filler_text_171_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 172, \"value\": \"filler_text_172_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 173, \"value\": \"filler_text_173_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 174, \"value\": \"filler_text_174_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 175, \"value\": \"filler_text_175_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 176, \"value\": \"filler_text_176_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 177, \"value\": \"filler_text_177_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 178, \"value\": \"filler_text_178_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 179, \"value\": \"filler_text_179_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 180, \"value\": \"filler_text_180_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 181, \"value\": \"filler_text_181_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 182, \"value\": \"filler_text_182_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 183, \"value\": \"filler_text_183_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 184, \"value\": \"filler_text_184_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 185, \"value\": \"filler_text_185_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 186, \"value\": \"filler_text_186_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 187, \"value\": \"filler_text_187_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 188, \"value\": \"filler_text_188_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 189, \"value\": \"filler_text_189_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 190, \"value\": \"filler_text_190_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 191, \"value\": \"filler_text_191_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 192, \"value\": \"filler_text_192_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 193, \"value\": \"filler_text_193_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 194, \"value\": \"filler_text_194_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 195, \"value\": \"filler_text_195_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 196, \"value\": \"filler_text_196_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 197, \"value\": \"filler_text_197_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 198, \"value\": \"filler_text_198_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 199, \"value\": \"filler_text_199_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 200, \"value\": \"filler_text_200_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 201, \"value\": \"filler_text_201_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 202, \"value\": \"filler_text_202_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 203, \"value\": \"filler_text_203_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 204, \"value\": \"filler_text_204_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 205, \"value\": \"filler_text_205_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 206, \"value\": \"filler_text_206_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 207, \"value\": \"filler_text_207_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 208, \"value\": \"filler_text_208_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 209, \"value\": \"filler_text_209_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 210, \"value\": \"filler_text_210_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 211, \"value\": \"filler_text_211_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 212, \"value\": \"filler_text_212_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 213, \"value\": \"filler_text_213_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 214, \"value\": \"filler_text_214_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 215, \"value\": \"filler_text_215_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 216, \"value\": \"filler_text_216_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 217, \"value\": \"filler_text_217_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 218, \"value\": \"filler_text_218_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 219, \"value\": \"filler_text_219_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 220, \"value\": \"filler_text_220_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 221, \"value\": \"filler_text_221_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 222, \"value\": \"filler_text_222_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 223, \"value\": \"filler_text_223_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 224, \"value\": \"filler_text_224_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 225, \"value\": \"filler_text_225_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 226, \"value\": \"filler_text_226_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 227, \"value\": \"filler_text_227_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 228, \"value\": \"filler_text_228_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 229, \"value\": \"filler_text_229_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 230, \"value\": \"filler_text_230_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 231, \"value\": \"filler_text_231_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 232, \"value\": \"filler_text_232_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 233, \"value\": \"filler_text_233_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 234, \"value\": \"filler_text_234_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 235, \"value\": \"filler_text_235_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 236, \"value\": \"filler_text_236_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 237, \"value\": \"filler_text_237_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 238, \"value\": \"filler_text_238_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 239, \"value\": \"filler_text_239_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 240, \"value\": \"filler_text_240_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 241, \"value\": \"filler_text_241_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 242, \"value\": \"filler_text_242_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 243, \"value\": \"filler_text_243_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 244, \"value\": \"filler_text_244_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 245, \"value\": \"filler_text_245_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 246, \"value\": \"filler_text_246_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 247, \"value\": \"filler_text_247_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 248, \"value\": \"filler_text_248_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 249, \"value\": \"filler_text_249_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 250, \"value\": \"filler_text_250_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 251, \"value\": \"filler_text_251_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 252, \"value\": \"filler_text_252_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 253, \"value\": \"filler_text_253_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 254, \"value\": \"filler_text_254_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 255, \"value\": \"filler_text_255_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 256, \"value\": \"filler_text_256_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 257, \"value\": \"filler_text_257_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 258, \"value\": \"filler_text_258_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 259, \"value\": \"filler_text_259_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 260, \"value\": \"filler_text_260_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 261, \"value\": \"filler_text_261_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 262, \"value\": \"filler_text_262_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 263, \"value\": \"filler_text_263_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 264, \"value\": \"filler_text_264_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 265, \"value\": \"filler_text_265_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 266, \"value\": \"filler_text_266_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 267, \"value\": \"filler_text_267_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 268, \"value\": \"filler_text_268_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 269, \"value\": \"filler_text_269_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 270, \"value\": \"filler_text_270_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 271, \"value\": \"filler_text_271_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 272, \"value\": \"filler_text_272_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 273, \"value\": \"filler_text_273_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 274, \"value\": \"filler_text_274_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 275, \"value\": \"filler_text_275_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 276, \"value\": \"filler_text_276_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 277, \"value\": \"filler_text_277_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 278, \"value\": \"filler_text_278_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 279, \"value\": \"filler_text_279_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 280, \"value\": \"filler_text_280_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 281, \"value\": \"filler_text_281_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 282, \"value\": \"filler_text_282_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 283, \"value\": \"filler_text_283_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 284, \"value\": \"filler_text_284_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 285, \"value\": \"filler_text_285_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 286, \"value\": \"filler_text_286_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 287, \"value\": \"filler_text_287_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 288, \"value\": \"filler_text_288_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 289, \"value\": \"filler_text_289_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 290, \"value\": \"filler_text_290_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-7c38085-20bf\"}, {\"id\": 291, \"value\": \"filler_text_291_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 292, \"value\": \"filler_text_292_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 293, \"value\": \"filler_text_293_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 294, \"value\": \"filler_text_294_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 295, \"value\": \"filler_text_295_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 296, \"value\": \"filler_text_296_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 297, \"value\": \"filler_text_297_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 298, \"value\": \"filler_text_298_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 299, \"value\": \"filler_text_299_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}]\n\nThree of the objects in the JSON have a special field called 'document_id' whose value looks like 'doc-XXXXXXX-XXXX'. Extract all three document_id values and output them on separate lines.",
+        "usage": {
+          "prompt_tokens": 7683,
+          "completion_tokens": 38,
+          "total_tokens": 7721,
+          "tps": 28.57,
+          "ttft": 1.33,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "image_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          }
+        },
+        "found": [
+          "doc-cd91b49-w6au",
+          "doc-bced05f-t4uu",
+          "doc-7c38085-20bf"
+        ],
+        "missing": []
+      },
+      "sub_probes": [],
+      "latency_ms": 2117.394574917853,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24c",
+      "detector_name": "MultiTurnHistoryIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": "LUCKY-23DCUTY7IE",
+        "got": "LUCKY-23DCUTY7IE"
+      },
+      "sub_probes": [],
+      "latency_ms": 2920.999980997294,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24b",
+      "detector_name": "ContextTruncationAlgebra",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "answer": 38,
+        "content_snippet": "38"
+      },
+      "sub_probes": [],
+      "latency_ms": 4643.810307141393,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D123",
+      "detector_name": "ResponseTruncationBilling",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_tokens": 383,
+        "local_tokens": 374,
+        "ratio": "1.02",
+        "content_preview": "The history of computing is a journey from physical gears to invisible clouds, driven by the human desire to automate lo"
+      },
+      "sub_probes": [],
+      "latency_ms": 6937.006705906242,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27b",
+      "detector_name": "PDFFidelityProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "PDF nonce not found",
+        "expected": "PDF-NONCE-MID-55K",
+        "got": "I do not have access to a PDF file. Please upload the document or provide the text from page 2 so I can find the nonce for you."
+      },
+      "sub_probes": [],
+      "latency_ms": 2651.2977723032236,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D26",
+      "detector_name": "SemanticCacheBuster",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "nonce_b_found": true,
+        "nonce_a": "TX-61C931E7CE86",
+        "nonce_b": "REF-76CFD4D94C79"
+      },
+      "sub_probes": [],
+      "latency_ms": 8706.030162982643,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27",
+      "detector_name": "ImageFidelityProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "image code not recognized",
+        "expected": "0A2EJH",
+        "got": "XG3H",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 9301.50585481897,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D29b",
+      "detector_name": "PromptCacheIntegrity",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "cannot determine cache-control shape for model 'google/gemini-3-flash-preview' with provider 'gemini'"
+      },
+      "sub_probes": [],
+      "latency_ms": 0.02209283411502838,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D38",
+      "detector_name": "SeedReproducibility",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires openai"
+    },
+    {
+      "detector_id": "D25",
+      "detector_name": "OutputCapProbe",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "word": "DELTA",
+        "target": 700,
+        "count": 1022,
+        "finish_reason": "length"
+      },
+      "sub_probes": [],
+      "latency_ms": 12139.538961928338,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27c",
+      "detector_name": "MultiImageOrderProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "neither nonce recognized",
+        "expected": "P/N-PQ6TI0-b",
+        "got": "PQ6TI0-b",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 7252.673045732081,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D32a",
+      "detector_name": "StreamingBasicProbe",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "chunk_count": 12,
+        "has_usage": true,
+        "finish_reason": "length",
+        "timing": {
+          "analyzable": true,
+          "count": 12,
+          "ttfb_s": 1.9702649740502238,
+          "mean_ms": 32.38756671039896,
+          "stdev_ms": 48.072141504690556,
+          "cv": 1.4842776530431854
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 2528.945880010724,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D56",
+      "detector_name": "ToolChoiceHonor",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D55",
+      "detector_name": "AsyncTaskProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires task_model"
+    },
+    {
+      "detector_id": "D42",
+      "detector_name": "ContextWindowHonesty",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_prompt_tokens": 15032,
+        "local_count": 15030,
+        "content_excerpt": "ENDMARKER_9F7A2C"
+      },
+      "sub_probes": [],
+      "latency_ms": 4118.578870780766,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D52",
+      "detector_name": "ResponseFormatJSON",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_excerpt": "{\n  \"name\": \"Julian Thorne\",\n  \"age\": 32,\n  \"hobbies\": [\n    \"urban exploration\",\n    \"analog photography\",\n    \"restoring vintage synthesizers\"\n  ]\n}",
+        "parsed_keys": [
+          "name",
+          "age",
+          "hobbies"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 3380.3722662851214,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27d",
+      "detector_name": "AudioFidelityProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "audio transcription incorrect",
+        "expected": "CRIMSON FORTY TWO",
+        "got": "Crimson 42",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 8820.363095030189,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D59",
+      "detector_name": "KnowledgeCutoff",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "hits": 3,
+        "per_probe": [
+          {
+            "q": "Who was announced as the 2023 Nobel Prize in Chemistry laure",
+            "ok": true,
+            "excerpt": "one of the three laureates announced for the 2023 nobel prize in chemistry for the discovery and synthesis of quantum dots is **moungi bawendi**.\n\n(th"
+          },
+          {
+            "q": "What AI assistant did OpenAI launch publicly in November 202",
+            "ok": true,
+            "excerpt": "openai publicly launched **chatgpt** in november 2022."
+          },
+          {
+            "q": "Twitter was rebranded to what single-letter name in 2023?",
+            "ok": true,
+            "excerpt": "twitter was rebranded to **x** in 2023."
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 4559.583891183138,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D62",
+      "detector_name": "LogprobsHonesty",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "logprobs not supported or unknown provider"
+      },
+      "sub_probes": [],
+      "latency_ms": 3679.2342732660472,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D64",
+      "detector_name": "StreamingChunkShape",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "only 6.7 chunks per 100 tokens (< 10) -- likely re-streamed",
+        "chunk_count": 9,
+        "tokens": 135,
+        "chunks_per_100_tokens": 6.666666666666667,
+        "near_zero_delta_frac": 0.375
+      },
+      "sub_probes": [],
+      "latency_ms": 4436.630243901163,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D54",
+      "detector_name": "TaskCompletion",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "language_count": 20,
+        "has_marker": true,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 9750.578478910029,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D83",
+      "detector_name": "CompletionTokenAudit",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_tokens": 9,
+        "local_tokens": 9,
+        "deviation": "0.00%",
+        "content_preview": "The quick brown fox jumps over the lazy dog"
+      },
+      "sub_probes": [],
+      "latency_ms": 1710.128493141383,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D82",
+      "detector_name": "ReasoningTokenAudit",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reasoning_tokens": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 4967.817292083055,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D70",
+      "detector_name": "LogitBiasHonor",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "logit_bias not supported by claimed provider"
+      },
+      "sub_probes": [],
+      "latency_ms": 6353.017515968531,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D84",
+      "detector_name": "ZeroWidthCharDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "checked_responses": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 4141.4070492610335,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D86",
+      "detector_name": "ContextCompressionDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": {
+          "coord": "47.130650N, 129.787556E",
+          "ref": "REF-15FFB874",
+          "version": "v2.32.802"
+        },
+        "found": {
+          "coord": true,
+          "ref": true,
+          "version": true
+        },
+        "hits": "3/3",
+        "got": "The details for the sensor deployment you provided are:\n\n*   **GPS coordinates:** 47.130650N, 129.787556E\n*   **Reference code:** REF-15FFB874\n*   **Firmware version:** v2.32.802"
+      },
+      "sub_probes": [],
+      "latency_ms": 3637.5392489135265,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D93",
+      "detector_name": "ResponseTokenPadding",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_preview": "4",
+        "trailing_whitespace_chars": 0,
+        "total_length": 1,
+        "ws_ratio": "0.00%",
+        "reported_completion_tokens": 1,
+        "token_char_ratio": "1.00"
+      },
+      "sub_probes": [],
+      "latency_ms": 2621.9575577415526,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D92",
+      "detector_name": "MultiModalInputStripping",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "response too short to determine"
+      },
+      "sub_probes": [],
+      "latency_ms": 5424.888127949089,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D94",
+      "detector_name": "PromptEchoInflation",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_preview": "The capital of Japan is Tokyo.",
+        "prefix_match_words": 1,
+        "response_word_count": 6,
+        "echo_ratio": "16.67%"
+      },
+      "sub_probes": [],
+      "latency_ms": 5913.538646884263,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D97",
+      "detector_name": "HiddenTurnInjection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_user_message_count": 2,
+        "expected": 2,
+        "content_preview": "2"
+      },
+      "sub_probes": [],
+      "latency_ms": 4708.8518580421805,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D95",
+      "detector_name": "ResponseDeduplication",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "response_previews": [
+          "At its simplest, **machine learning (ML)** is a field of artificial intelligence (AI) that focuses o",
+          "At its simplest, **Machine Learning (ML)** is teaching a computer to learn from patterns in data, ra",
+          "At its simplest, **Machine Learning (ML)** is the field of teaching computers to learn from experien"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 6002.782786730677,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D29",
+      "detector_name": "UsageBillAuditor",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_tokens": 7683,
+        "local_tokens": 6687,
+        "deviation": "14.89%",
+        "source": "d24a_reuse"
+      },
+      "sub_probes": [],
+      "latency_ms": 1.3523739762604237,
+      "request_count": 0,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D11",
+      "detector_name": "RequestIntegrity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "marker": "CNF-KRAVZDYG",
+        "content_excerpt": "To reset your password, click the \"Forgot Password\" link on the login page, enter your registered email address, and follow the instructions sent to your inbox to create a new one.\n\nCNF-KRAVZDYG"
+      },
+      "sub_probes": [],
+      "latency_ms": 3376.573711168021,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D15",
+      "detector_name": "GuardrailIntegrity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "start": "[PSBARU]",
+        "safety": "[GU5T3]",
+        "content_excerpt": "[PSBARU] A buffer overflow occurs when a program writes more data to a storage area than it can hold, leading to adjacent memory being overwritten. From a defensive perspective, understanding this vulnerability is essential for developers to write secure code and implement bounds checking [GU5T3].\n\n"
+      },
+      "sub_probes": [],
+      "latency_ms": 3424.6249911375344,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D103",
+      "detector_name": "ContentFilterBias",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "refused": 0,
+        "short_responses": 0,
+        "total_valid": 3,
+        "details": [
+          {
+            "index": 0,
+            "length": 806,
+            "refused": false,
+            "preview": "When comparing **Claude 3.5 Sonnet** (Anthropic’s flagship coding model) and **GPT-4o** (OpenAI’s flagship), the consens"
+          },
+          {
+            "index": 1,
+            "length": 827,
+            "refused": false,
+            "preview": "The answer depends entirely on what stage of the creative process you are in. Both models have distinct \"personalities\" "
+          },
+          {
+            "index": 2,
+            "length": 762,
+            "refused": false,
+            "preview": "Choosing between the OpenAI API (GPT-4o, GPT-4-turbo) and the Anthropic API (Claude 3.5 Sonnet, Claude 3 Opus) depends l"
+          }
+        ],
+        "substantive_count": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 7182.7453058213,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D113",
+      "detector_name": "ThinkingTokenConsistency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "answer1": null,
+        "answer2": null,
+        "similarity": "1.00",
+        "response1_preview": "To find the average speed for the entire journey, follow these steps:\n\n### **Step 1: Calculate the total distance traveled**\nAdd the distances of the ",
+        "response2_preview": "To find the average speed for the entire journey, follow these steps:\n\n### **Step 1: Calculate the total distance traveled**\nAdd the distances of the "
+      },
+      "sub_probes": [],
+      "latency_ms": 8285.428969189525,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D37",
+      "detector_name": "StopSeqProbe",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "paragraph_count": 3,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 7376.216330099851,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D51",
+      "detector_name": "UserStopSequence",
+      "priority": "P2",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "stop sequence not honored: stop_token_echoed=True, after_tokens_present=True",
+        "content": "ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE",
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 9168.200034182519,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D53",
+      "detector_name": "MetadataCompleteness",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_usage": {
+          "prompt_tokens": 19,
+          "completion_tokens": 252,
+          "total_tokens": 271,
+          "tps": 92.61,
+          "ttft": 2.72,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "image_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          }
+        },
+        "mode": "degraded"
+      },
+      "sub_probes": [],
+      "latency_ms": 9661.139881704003,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D43",
+      "detector_name": "MaxTokensHonor",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "completion_tokens_local": 1972,
+        "finish_reason": "length",
+        "content_len": 9003,
+        "note": "truncated near user cap"
+      },
+      "sub_probes": [],
+      "latency_ms": 17801.611930131912,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D44",
+      "detector_name": "TopPSensitivity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "mean_focused_dist": 0.0,
+        "mean_diverse_dist": 0.7290075973409307,
+        "delta": 0.7290075973409307
+      },
+      "sub_probes": [],
+      "latency_ms": 17354.867704212666,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D57",
+      "detector_name": "ResponseIDUniqueness",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ids": [
+          "2248deb284a21d48db193eed8e3e8fe9",
+          "2cfef5396576518837eeae1a9e4c5ecb",
+          "0fe784c697d83e20dae4ae3c18d2b0ed",
+          "3694fe0813deedd6c997d926a8cf8151",
+          "63bd42e5da83f9403bd941d0330a70a0"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 10368.683784734458,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D60",
+      "detector_name": "LatencyFingerprint",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "no latency band for model 'google/gemini-3-flash-preview'"
+      },
+      "sub_probes": [],
+      "latency_ms": 21501.867905724794,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D61",
+      "detector_name": "TemperatureSensitivity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "mean_deterministic_dist": 0.0,
+        "mean_creative_dist": 0.9297806735306735,
+        "delta": 0.9297806735306735
+      },
+      "sub_probes": [],
+      "latency_ms": 24314.47703531012,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D65",
+      "detector_name": "StyleFingerprint",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "family": "gemini",
+        "mean_features": {
+          "avg_sentence_len": 16.42063492063492,
+          "em_dash_rate": 1.3054830287206267,
+          "bullet_rate": 0.041666666666666664,
+          "opens_with_sure": 0.0,
+          "passive_rate": 0.0
+        },
+        "distance": 1.8563812822072554
+      },
+      "sub_probes": [],
+      "latency_ms": 24095.344472210854,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D68",
+      "detector_name": "FrequencyPenaltyHonor",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "frequency_penalty not supported by claimed provider"
+      },
+      "sub_probes": [],
+      "latency_ms": 21058.91772825271,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D87",
+      "detector_name": "ResponseModelFieldAudit",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "claimed_model": "google/gemini-3-flash-preview",
+        "response_models": [
+          "google/gemini-3-flash-preview",
+          "google/gemini-3-flash-preview",
+          "google/gemini-3-flash-preview"
+        ],
+        "timestamps": [
+          1776688511,
+          1776688512,
+          1776688513
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 6137.817420996726,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D96",
+      "detector_name": "UnicodeNormalizationLoss",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "present": 10,
+        "total": 10,
+        "found": [
+          "café",
+          "naïve",
+          "日本語",
+          "🎉",
+          "x²",
+          "∑",
+          "≠",
+          "ℝ",
+          "™",
+          "«guillemets»"
+        ],
+        "missing": [],
+        "content_preview": "café → naïve 日本語 🎉 x² ∑ ≠ ℝ ™ «guillemets»"
+      },
+      "sub_probes": [],
+      "latency_ms": 2898.151934146881,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D91",
+      "detector_name": "ArtificialLatencyPadding",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ttft_short_ms": 1442.8204600699246,
+        "ttft_long_ms": 1767.9191241040826,
+        "ratio": 0.8161122533255551
+      },
+      "sub_probes": [],
+      "latency_ms": 9461.109830997884,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D85",
+      "detector_name": "IntraFamilyDowngrade",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "easy_latency_ms": 1766.8112269602716,
+        "hard_latency_ms": 2680.5366491898894,
+        "easy_tokens": 64,
+        "hard_tokens": 151,
+        "easy_ms_per_token": 27.61,
+        "hard_ms_per_token": 17.75,
+        "ratio": 1.5551,
+        "threshold": 0.3
+      },
+      "sub_probes": [],
+      "latency_ms": 19895.476564764977,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D99",
+      "detector_name": "RateLimitTransparency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "total": 15,
+        "ok_200": 15,
+        "rate_limited_429": 0,
+        "server_errors_5xx": 0,
+        "network_errors": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 15541.99999338016,
+      "request_count": 15,
+      "skipped_reason": null
+    }
+  ],
+  "evidence_notes": []
+}

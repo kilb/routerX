@@ -1,0 +1,45 @@
+{
+  "router_endpoint": "https://api.bltcy.ai/v1/chat/completions",
+  "test_timestamp": "2026-04-14T18:09:28.353287+00:00",
+  "overall_verdict": "pass",
+  "tier_assignment": "TIER_1",
+  "total_detectors": 2,
+  "passed": 1,
+  "failed": 0,
+  "suspicious": 0,
+  "skipped": 0,
+  "total_requests": 11,
+  "total_latency_ms": 2138.5840298607945,
+  "estimated_cost_usd": 0.0,
+  "results": [
+    {
+      "detector_id": "D28",
+      "detector_name": "SessionCrosstalkProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked": false
+      },
+      "sub_probes": [],
+      "latency_ms": 1720.8548788912594,
+      "request_count": 10,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D11",
+      "detector_name": "RequestIntegrity",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "status 404"
+      },
+      "sub_probes": [],
+      "latency_ms": 417.7291509695351,
+      "request_count": 1,
+      "skipped_reason": null
+    }
+  ],
+  "evidence_notes": []
+}

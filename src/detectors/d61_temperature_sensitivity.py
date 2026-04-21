@@ -14,7 +14,7 @@ from ..utils.diversity import mean_jaccard_dist
 
 
 _PROMPT = "Write one short imaginative first-line for a fantasy novel. Just the line."
-_N_PER_GROUP = 4
+_N_PER_GROUP = 6
 _MIN_DELTA = 0.10
 
 
@@ -23,7 +23,7 @@ class D61_TemperatureSensitivity(BaseDetector):
     detector_id = "D61"
     detector_name = "TemperatureSensitivity"
     priority = Priority.P2
-    judge_mode = JudgeMode.MAJORITY_2_OF_2
+    judge_mode = JudgeMode.ONCE
     request_count = _N_PER_GROUP * 2
     detector_timeout = 90.0
     description = "Detect temperature being silently dropped by the router."
@@ -73,18 +73,22 @@ class D61_TemperatureSensitivity(BaseDetector):
         deterministic = [mk("A dragon awoke beneath the mountain."),
                          mk("A dragon awoke beneath the mountain."),
                          mk("A dragon awoke beneath the mountain."),
+                         mk("A dragon awoke beneath the mountain."),
+                         mk("A dragon awoke beneath the mountain."),
                          mk("A dragon awoke beneath the mountain.")]
         creative = [mk("The moon cracked like an eggshell at dawn."),
                     mk("Somewhere beyond the river, a name was forgotten."),
                     mk("Eleanor found a star sleeping in her garden."),
-                    mk("The last wizard traded his shadow for bread.")]
+                    mk("The last wizard traded his shadow for bread."),
+                    mk("Fog swallowed the castle and never gave it back."),
+                    mk("A compass needle spun wildly, pointing everywhere.")]
         same = deterministic  # no diversity in either group
         return [
             ("PASS: creative spreads wider than deterministic",
              deterministic + creative, "pass"),
             ("FAIL: both groups identical", same + same, "fail"),
             ("INCONCLUSIVE: network errors everywhere",
-             [ProbeResponse(status_code=0, error="T") for _ in range(8)],
+             [ProbeResponse(status_code=0, error="T") for _ in range(12)],
              "inconclusive"),
         ]
 

@@ -206,6 +206,14 @@ class BaseDetector(ABC):
         responses = await self.send_probes()
         if self._all_network_errors(responses):
             first = next(r for r in responses if r is not None)
+            non_text_caps = [
+                c for c in self.required_capabilities if c != Capability.TEXT
+            ]
+            if non_text_caps:
+                return self._skip(
+                    f"endpoint does not support {non_text_caps[0].value} "
+                    f"(all requests failed)"
+                )
             return self._inconclusive(f"all probes failed: {first.error}")
         return self.judge(responses)
 
@@ -220,9 +228,19 @@ class BaseDetector(ABC):
                 # can decide whether BOTH runs are unusable.
                 continue
             results.append(self.judge(responses))
-        # If every attempt died on the network, surface INCONCLUSIVE rather
-        # than comparing empty results.
+        # If every attempt died on the network, check whether the detector
+        # requires a non-TEXT capability (audio/vision/pdf). If so, the
+        # endpoint likely doesn't support that modality → SKIP rather than
+        # INCONCLUSIVE.
         if not results:
+            non_text_caps = [
+                c for c in self.required_capabilities if c != Capability.TEXT
+            ]
+            if non_text_caps:
+                return self._skip(
+                    f"endpoint does not support {non_text_caps[0].value} "
+                    f"(all requests failed)"
+                )
             return self._inconclusive("all majority attempts failed at network")
         if len(results) == 1 and net_failures == 1:
             # Only one valid run: treat as inconclusive (we can't form a

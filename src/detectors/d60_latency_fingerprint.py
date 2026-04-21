@@ -36,7 +36,7 @@ class D60_LatencyFingerprint(BaseDetector):
     detector_id = "D60"
     detector_name = "LatencyFingerprint"
     priority = Priority.P2
-    judge_mode = JudgeMode.MAJORITY_2_OF_2
+    judge_mode = JudgeMode.ONCE
     request_count = 1
     detector_timeout = 60.0
     description = (

@@ -1,0 +1,1624 @@
+{
+  "router_endpoint": "https://api.commonstack.ai",
+  "test_timestamp": "2026-04-20T12:40:19.898845+00:00",
+  "overall_verdict": "fail",
+  "tier_assignment": "BLACKLIST",
+  "total_detectors": 85,
+  "passed": 59,
+  "failed": 12,
+  "suspicious": 1,
+  "skipped": 11,
+  "total_requests": 203,
+  "total_latency_ms": 628191.814170219,
+  "estimated_cost_usd": 0.6342,
+  "results": [
+    {
+      "detector_id": "D31",
+      "detector_name": "GodPayload",
+      "priority": "pre_screen",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_checks": [
+          {
+            "name": "json_schema",
+            "passed": true,
+            "detail": "valid JSON"
+          },
+          {
+            "name": "logit_bias",
+            "passed": true,
+            "detail": "banned 'the' absent"
+          },
+          {
+            "name": "algebra",
+            "passed": true,
+            "detail": "50 found"
+          },
+          {
+            "name": "system_leak",
+            "passed": true,
+            "detail": "clean"
+          },
+          {
+            "name": "stream_usage",
+            "passed": true,
+            "detail": "present"
+          }
+        ],
+        "fail_count": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 14917.089154943824,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D100",
+      "detector_name": "CrossKeyIsolation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires second_api_key for the same router"
+    },
+    {
+      "detector_id": "D101",
+      "detector_name": "ToolResultManipulation",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D118",
+      "detector_name": "ToolSchemaInjection",
+      "priority": "S0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D116",
+      "detector_name": "CredentialLeakageInResponse",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "responses_scanned": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 2461.665620096028,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D28",
+      "detector_name": "SessionCrosstalkProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked": false
+      },
+      "sub_probes": [],
+      "latency_ms": 9691.988271195441,
+      "request_count": 10,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45",
+      "detector_name": "ToolCallArgVerifier",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "cast_send",
+          "uniswap",
+          "solana",
+          "stripe"
+        ],
+        "inconclusive_probes": [
+          "bitcoin: could not parse bitcoin-cli"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 14026.291732210666,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45b",
+      "detector_name": "PackageTypoSquatProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "pip",
+          "npm",
+          "docker"
+        ],
+        "inconclusive": []
+      },
+      "sub_probes": [],
+      "latency_ms": 15648.165271617472,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D45c",
+      "detector_name": "InstallerURLProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_probes": [
+          "rust",
+          "homebrew",
+          "cert-manager",
+          "numpy-clone"
+        ],
+        "inconclusive": []
+      },
+      "sub_probes": [],
+      "latency_ms": 16106.105203740299,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D47",
+      "detector_name": "AddressConsistencyProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "canary_addr": "0x10c6806639B68FB17a6E373F994A0CDae672D0aA",
+        "balance_addr": "0x10c6806639B68FB17a6E373F994A0CDae672D0aA",
+        "transfer_addr": "0x10c6806639B68FB17a6E373F994A0CDae672D0aA",
+        "plaintext_addr": "0x10c6806639B68FB17a6E373F994A0CDae672D0aA"
+      },
+      "sub_probes": [],
+      "latency_ms": 12005.311856046319,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D48",
+      "detector_name": "AmountPrecisionProbe",
+      "priority": "S0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "verified_amounts": 3,
+        "has_direct": false
+      },
+      "sub_probes": [],
+      "latency_ms": 11900.987530127168,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D114",
+      "detector_name": "MultiHopRouterDetection",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "detected_families": [],
+        "family_count": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 1726.8135119229555,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22e",
+      "detector_name": "CrossProtocolContradiction",
+      "priority": "P0",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires single provider claim"
+    },
+    {
+      "detector_id": "D16b",
+      "detector_name": "ToolCallingProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "function": "submit_probe",
+        "arguments": {
+          "mode": "beta",
+          "nonce": "2622399"
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 1985.680228099227,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D16c",
+      "detector_name": "ParallelToolCallProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "tool_call_count": 2,
+        "function_names": [
+          "get_weather",
+          "convert_currency"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 2622.351428028196,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D21",
+      "detector_name": "PhysicalParamProbe",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "3/4 sub-probes failed",
+        "sub_probes": [
+          {
+            "name": "21a_temp",
+            "passed": true,
+            "detail": "bigram=0.00"
+          },
+          {
+            "name": "21b_logit",
+            "passed": false,
+            "detail": "banned 'the' found"
+          },
+          {
+            "name": "21c_logprobs",
+            "passed": false,
+            "detail": "missing"
+          },
+          {
+            "name": "21d_max1",
+            "passed": false,
+            "detail": "ratio=1.12 toks=1 fr=length"
+          }
+        ],
+        "fail_count": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 6178.69982495904,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D22",
+      "detector_name": "ProtocolStrictness",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sub_probes": [
+          {
+            "name": "22a_json",
+            "passed": true,
+            "detail": "strict JSON produced integer"
+          },
+          {
+            "name": "22d_bounds",
+            "passed": true,
+            "detail": "standard error"
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 5566.010017879307,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D30",
+      "detector_name": "ErrorPathForensics",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "probes": {
+          "30a": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"temperature must be between 0.0 and 2.0\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"b0afc046-5453-47f0-a5ad-b58341cf8886\"}"
+          },
+          "30b": {
+            "status_code": 404,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":404,\"data\":\"model not found\",\"msg\":\"Not Found\",\"trace_id\":\"0debbd5f-8448-4b85-9eed-724497a9f0ca\"}"
+          },
+          "30c": {
+            "status_code": 400,
+            "standard_error_format": false,
+            "body_snippet": "{\"code\":400,\"data\":\"max_tokens must be positive\",\"msg\":\"Invalid Parameter\",\"trace_id\":\"11895d21-0258-44d8-addd-d878a7a5088e\"}"
+          }
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 6248.211042955518,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4a",
+      "detector_name": "TokenizerFingerprint",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 0.5,
+      "evidence": {
+        "reason": "tokenizer mismatch",
+        "probe_word": "davidjl",
+        "claimed_model": "openai/gpt-4.1",
+        "expected_tokens": [
+          "d",
+          "avid",
+          "jl"
+        ],
+        "observed_tokens": [
+          "davidjl"
+        ],
+        "identified_family": null
+      },
+      "sub_probes": [],
+      "latency_ms": 2443.2691810652614,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D23",
+      "detector_name": "HijackedTokenProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "probes_checked": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 10573.025369085371,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D40",
+      "detector_name": "SafetyRefusalIntegrity",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "classifications": [
+          {
+            "probe": "weapon",
+            "result": "refuse"
+          },
+          {
+            "probe": "csam_adjacent",
+            "result": "refuse"
+          },
+          {
+            "probe": "targeted_malware",
+            "result": "refuse"
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 7520.62037633732,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D41",
+      "detector_name": "BehavioralFingerprint",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "stats": {
+          "count": 100,
+          "entropy": 3.316147658077609,
+          "max_count": 11,
+          "max_digit": "5",
+          "distribution": {
+            "5": 11,
+            "1": 9,
+            "6": 9,
+            "2": 11,
+            "0": 10,
+            "7": 11,
+            "3": 11,
+            "8": 9,
+            "4": 10,
+            "9": 9
+          },
+          "counts": [
+            10,
+            9,
+            11,
+            11,
+            10,
+            11,
+            9,
+            11,
+            9,
+            9
+          ]
+        },
+        "chi_square": 0.8,
+        "sample": "5 1 6 2 0 7 3 8 1 7 6 0 3 2 5 4 8 9 0 3 7 9 4 5 2 8 0 9 3 4 2 7 3 6 1 5 8 9 4 7 5 6 1 4 2 8 5 7 0 9 3 6 5 2 8 7 1 3 0 6 4 9 2 1 5 3 6 0 8 7 9 4 2 5 1 3 7 0 4 6 2 8 1 9 0 5 3 4 7 2 0 6 8 5 1 9 7 4 2 3"
+      },
+      "sub_probes": [],
+      "latency_ms": 7877.704334910959,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D81",
+      "detector_name": "HiddenSystemPromptDetection",
+      "priority": "P0",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "probe 2 reveals extra injected instructions beyond expected system message",
+        "expected": "you are a math tutor.",
+        "extra_text": "I'm sorry, but I can't provide my system instructions. However, I'm here to help you with math questions or tutoring—just let me know what you need!"
+      },
+      "sub_probes": [],
+      "latency_ms": 3036.475172266364,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D4b",
+      "detector_name": "NegativeConstraintProbe",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "sentence_2": "It found a dusty book on a tall brown rack.",
+        "sentence_4": "A world of words sprang forth, bright and vivid.",
+        "violations": 0,
+        "total_even": 2
+      },
+      "sub_probes": [],
+      "latency_ms": 7681.329593062401,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D50",
+      "detector_name": "SemanticNegation",
+      "priority": "P0",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_verdict": "UNSAFE",
+        "note": "UNSAFE verdict matches known-vulnerable contract",
+        "router_snippet": "Let's analyze the contract for security vulnerabilities.\n\n### Contract Overview\n\n```solidity\ncontract VaultBhnf {\n    mapping(address => uint256) public bal_humb;\n\n    function dep_tdyc() public payable {\n        bal_humb[msg.sender] += msg.value;\n    }\n\n    function wd_liso() public {\n        uint2"
+      },
+      "sub_probes": [],
+      "latency_ms": 8481.823378242552,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D104",
+      "detector_name": "EmbeddingDimensionVerify",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.011927913874387741,
+      "request_count": 1,
+      "skipped_reason": "claimed model is not an embedding model"
+    },
+    {
+      "detector_id": "D102",
+      "detector_name": "FunctionSchemaFidelity",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D115",
+      "detector_name": "RequestEchoVerification",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "nonce": "NONCE_0FF842FD8E4097D8",
+        "content_preview": "NONCE_0FF842FD8E4097D8"
+      },
+      "sub_probes": [],
+      "latency_ms": 2808.773824945092,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D119",
+      "detector_name": "ToolCallOrderManipulation",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D112",
+      "detector_name": "ThinkingContentIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_correct_answer": true,
+        "has_reasoning": true,
+        "content_preview": "Let's break down the calculation step by step:\n\n1. First, calculate \\( 17 \\times 23 \\):\n   - \\( 17 \\times 23 = 391 \\)\n\n2. Next, add 45 to the result:\n   - \\( 391 + 45 = 436 \\)\n\n3. Finally, subtract 12:\n   - \\( 436 - 12 = 424 \\)\n\nANSWER: 424"
+      },
+      "sub_probes": [],
+      "latency_ms": 2974.2226018570364,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D111",
+      "detector_name": "StreamPrematureTermination",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "finish_reason": "length",
+        "chunk_count": 204,
+        "word_count": 157,
+        "content_preview": "The history of the internet is marked by several pivotal milestones that transformed global communic"
+      },
+      "sub_probes": [],
+      "latency_ms": 4159.077514894307,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D117",
+      "detector_name": "HeaderLeakage",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "leaked_headers": []
+      },
+      "sub_probes": [],
+      "latency_ms": 2270.982898771763,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D110",
+      "detector_name": "StreamChunkIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "non_stream_preview": "The capital of France is Paris.",
+        "stream_preview": "The capital of France is Paris.",
+        "jaccard": "1.000"
+      },
+      "sub_probes": [],
+      "latency_ms": 5464.74481606856,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D122",
+      "detector_name": "ResponseRewriteDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "has_marker": true,
+        "content_preview": "EXACT_OUTPUT_MARKER_7X9Q",
+        "rewrite_indicators": []
+      },
+      "sub_probes": [],
+      "latency_ms": 3222.2807882353663,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24a",
+      "detector_name": "ContextTruncationCanary",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "prompt_text": "[{\"id\": 0, \"value\": \"filler_text_0_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 1, \"value\": \"filler_text_1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 2, \"value\": \"filler_text_2_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 3, \"value\": \"filler_text_3_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 4, \"value\": \"filler_text_4_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 5, \"value\": \"filler_text_5_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 6, \"value\": \"filler_text_6_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 7, \"value\": \"filler_text_7_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 8, \"value\": \"filler_text_8_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 9, \"value\": \"filler_text_9_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 10, \"value\": \"filler_text_10_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-293e46d-zcek\"}, {\"id\": 11, \"value\": \"filler_text_11_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 12, \"value\": \"filler_text_12_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 13, \"value\": \"filler_text_13_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 14, \"value\": \"filler_text_14_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 15, \"value\": \"filler_text_15_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 16, \"value\": \"filler_text_16_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 17, \"value\": \"filler_text_17_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 18, \"value\": \"filler_text_18_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 19, \"value\": \"filler_text_19_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 20, \"value\": \"filler_text_20_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 21, \"value\": \"filler_text_21_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 22, \"value\": \"filler_text_22_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 23, \"value\": \"filler_text_23_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 24, \"value\": \"filler_text_24_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 25, \"value\": \"filler_text_25_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 26, \"value\": \"filler_text_26_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 27, \"value\": \"filler_text_27_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 28, \"value\": \"filler_text_28_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 29, \"value\": \"filler_text_29_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 30, \"value\": \"filler_text_30_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 31, \"value\": \"filler_text_31_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 32, \"value\": \"filler_text_32_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 33, \"value\": \"filler_text_33_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 34, \"value\": \"filler_text_34_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 35, \"value\": \"filler_text_35_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 36, \"value\": \"filler_text_36_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 37, \"value\": \"filler_text_37_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 38, \"value\": \"filler_text_38_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 39, \"value\": \"filler_text_39_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 40, \"value\": \"filler_text_40_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 41, \"value\": \"filler_text_41_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 42, \"value\": \"filler_text_42_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 43, \"value\": \"filler_text_43_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 44, \"value\": \"filler_text_44_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 45, \"value\": \"filler_text_45_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 46, \"value\": \"filler_text_46_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 47, \"value\": \"filler_text_47_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 48, \"value\": \"filler_text_48_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 49, \"value\": \"filler_text_49_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 50, \"value\": \"filler_text_50_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 51, \"value\": \"filler_text_51_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 52, \"value\": \"filler_text_52_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 53, \"value\": \"filler_text_53_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 54, \"value\": \"filler_text_54_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 55, \"value\": \"filler_text_55_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 56, \"value\": \"filler_text_56_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 57, \"value\": \"filler_text_57_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 58, \"value\": \"filler_text_58_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 59, \"value\": \"filler_text_59_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 60, \"value\": \"filler_text_60_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 61, \"value\": \"filler_text_61_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 62, \"value\": \"filler_text_62_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 63, \"value\": \"filler_text_63_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 64, \"value\": \"filler_text_64_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 65, \"value\": \"filler_text_65_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 66, \"value\": \"filler_text_66_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 67, \"value\": \"filler_text_67_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 68, \"value\": \"filler_text_68_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 69, \"value\": \"filler_text_69_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 70, \"value\": \"filler_text_70_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 71, \"value\": \"filler_text_71_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 72, \"value\": \"filler_text_72_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 73, \"value\": \"filler_text_73_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 74, \"value\": \"filler_text_74_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 75, \"value\": \"filler_text_75_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 76, \"value\": \"filler_text_76_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 77, \"value\": \"filler_text_77_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 78, \"value\": \"filler_text_78_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 79, \"value\": \"filler_text_79_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 80, \"value\": \"filler_text_80_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 81, \"value\": \"filler_text_81_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 82, \"value\": \"filler_text_82_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 83, \"value\": \"filler_text_83_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 84, \"value\": \"filler_text_84_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 85, \"value\": \"filler_text_85_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 86, \"value\": \"filler_text_86_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 87, \"value\": \"filler_text_87_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 88, \"value\": \"filler_text_88_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 89, \"value\": \"filler_text_89_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 90, \"value\": \"filler_text_90_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 91, \"value\": \"filler_text_91_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 92, \"value\": \"filler_text_92_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 93, \"value\": \"filler_text_93_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 94, \"value\": \"filler_text_94_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 95, \"value\": \"filler_text_95_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 96, \"value\": \"filler_text_96_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 97, \"value\": \"filler_text_97_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 98, \"value\": \"filler_text_98_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 99, \"value\": \"filler_text_99_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 100, \"value\": \"filler_text_100_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 101, \"value\": \"filler_text_101_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 102, \"value\": \"filler_text_102_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 103, \"value\": \"filler_text_103_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 104, \"value\": \"filler_text_104_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 105, \"value\": \"filler_text_105_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 106, \"value\": \"filler_text_106_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 107, \"value\": \"filler_text_107_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 108, \"value\": \"filler_text_108_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 109, \"value\": \"filler_text_109_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 110, \"value\": \"filler_text_110_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 111, \"value\": \"filler_text_111_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 112, \"value\": \"filler_text_112_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 113, \"value\": \"filler_text_113_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 114, \"value\": \"filler_text_114_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 115, \"value\": \"filler_text_115_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 116, \"value\": \"filler_text_116_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 117, \"value\": \"filler_text_117_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 118, \"value\": \"filler_text_118_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 119, \"value\": \"filler_text_119_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 120, \"value\": \"filler_text_120_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 121, \"value\": \"filler_text_121_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 122, \"value\": \"filler_text_122_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 123, \"value\": \"filler_text_123_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 124, \"value\": \"filler_text_124_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 125, \"value\": \"filler_text_125_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 126, \"value\": \"filler_text_126_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 127, \"value\": \"filler_text_127_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 128, \"value\": \"filler_text_128_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 129, \"value\": \"filler_text_129_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 130, \"value\": \"filler_text_130_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 131, \"value\": \"filler_text_131_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 132, \"value\": \"filler_text_132_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 133, \"value\": \"filler_text_133_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 134, \"value\": \"filler_text_134_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 135, \"value\": \"filler_text_135_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 136, \"value\": \"filler_text_136_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 137, \"value\": \"filler_text_137_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 138, \"value\": \"filler_text_138_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 139, \"value\": \"filler_text_139_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 140, \"value\": \"filler_text_140_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 141, \"value\": \"filler_text_141_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 142, \"value\": \"filler_text_142_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 143, \"value\": \"filler_text_143_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 144, \"value\": \"filler_text_144_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 145, \"value\": \"filler_text_145_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 146, \"value\": \"filler_text_146_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 147, \"value\": \"filler_text_147_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 148, \"value\": \"filler_text_148_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 149, \"value\": \"filler_text_149_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 150, \"value\": \"filler_text_150_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-9cb8ed9-ax49\"}, {\"id\": 151, \"value\": \"filler_text_151_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 152, \"value\": \"filler_text_152_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 153, \"value\": \"filler_text_153_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 154, \"value\": \"filler_text_154_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 155, \"value\": \"filler_text_155_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 156, \"value\": \"filler_text_156_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 157, \"value\": \"filler_text_157_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 158, \"value\": \"filler_text_158_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 159, \"value\": \"filler_text_159_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 160, \"value\": \"filler_text_160_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 161, \"value\": \"filler_text_161_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 162, \"value\": \"filler_text_162_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 163, \"value\": \"filler_text_163_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 164, \"value\": \"filler_text_164_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 165, \"value\": \"filler_text_165_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 166, \"value\": \"filler_text_166_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 167, \"value\": \"filler_text_167_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 168, \"value\": \"filler_text_168_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 169, \"value\": \"filler_text_169_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 170, \"value\": \"filler_text_170_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 171, \"value\": \"filler_text_171_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 172, \"value\": \"filler_text_172_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 173, \"value\": \"filler_text_173_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 174, \"value\": \"filler_text_174_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 175, \"value\": \"filler_text_175_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 176, \"value\": \"filler_text_176_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 177, \"value\": \"filler_text_177_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 178, \"value\": \"filler_text_178_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 179, \"value\": \"filler_text_179_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 180, \"value\": \"filler_text_180_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 181, \"value\": \"filler_text_181_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 182, \"value\": \"filler_text_182_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 183, \"value\": \"filler_text_183_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 184, \"value\": \"filler_text_184_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 185, \"value\": \"filler_text_185_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 186, \"value\": \"filler_text_186_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 187, \"value\": \"filler_text_187_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 188, \"value\": \"filler_text_188_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 189, \"value\": \"filler_text_189_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 190, \"value\": \"filler_text_190_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 191, \"value\": \"filler_text_191_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 192, \"value\": \"filler_text_192_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 193, \"value\": \"filler_text_193_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 194, \"value\": \"filler_text_194_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 195, \"value\": \"filler_text_195_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 196, \"value\": \"filler_text_196_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 197, \"value\": \"filler_text_197_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 198, \"value\": \"filler_text_198_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 199, \"value\": \"filler_text_199_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 200, \"value\": \"filler_text_200_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 201, \"value\": \"filler_text_201_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 202, \"value\": \"filler_text_202_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 203, \"value\": \"filler_text_203_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 204, \"value\": \"filler_text_204_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 205, \"value\": \"filler_text_205_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 206, \"value\": \"filler_text_206_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 207, \"value\": \"filler_text_207_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 208, \"value\": \"filler_text_208_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 209, \"value\": \"filler_text_209_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 210, \"value\": \"filler_text_210_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 211, \"value\": \"filler_text_211_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 212, \"value\": \"filler_text_212_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 213, \"value\": \"filler_text_213_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 214, \"value\": \"filler_text_214_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 215, \"value\": \"filler_text_215_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 216, \"value\": \"filler_text_216_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 217, \"value\": \"filler_text_217_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 218, \"value\": \"filler_text_218_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 219, \"value\": \"filler_text_219_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 220, \"value\": \"filler_text_220_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 221, \"value\": \"filler_text_221_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 222, \"value\": \"filler_text_222_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 223, \"value\": \"filler_text_223_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 224, \"value\": \"filler_text_224_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 225, \"value\": \"filler_text_225_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 226, \"value\": \"filler_text_226_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 227, \"value\": \"filler_text_227_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 228, \"value\": \"filler_text_228_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 229, \"value\": \"filler_text_229_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 230, \"value\": \"filler_text_230_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 231, \"value\": \"filler_text_231_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 232, \"value\": \"filler_text_232_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 233, \"value\": \"filler_text_233_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 234, \"value\": \"filler_text_234_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 235, \"value\": \"filler_text_235_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 236, \"value\": \"filler_text_236_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 237, \"value\": \"filler_text_237_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 238, \"value\": \"filler_text_238_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 239, \"value\": \"filler_text_239_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 240, \"value\": \"filler_text_240_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 241, \"value\": \"filler_text_241_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 242, \"value\": \"filler_text_242_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 243, \"value\": \"filler_text_243_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 244, \"value\": \"filler_text_244_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 245, \"value\": \"filler_text_245_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 246, \"value\": \"filler_text_246_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 247, \"value\": \"filler_text_247_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 248, \"value\": \"filler_text_248_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 249, \"value\": \"filler_text_249_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 250, \"value\": \"filler_text_250_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 251, \"value\": \"filler_text_251_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 252, \"value\": \"filler_text_252_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 253, \"value\": \"filler_text_253_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 254, \"value\": \"filler_text_254_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 255, \"value\": \"filler_text_255_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 256, \"value\": \"filler_text_256_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 257, \"value\": \"filler_text_257_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 258, \"value\": \"filler_text_258_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 259, \"value\": \"filler_text_259_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 260, \"value\": \"filler_text_260_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 261, \"value\": \"filler_text_261_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 262, \"value\": \"filler_text_262_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 263, \"value\": \"filler_text_263_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 264, \"value\": \"filler_text_264_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 265, \"value\": \"filler_text_265_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 266, \"value\": \"filler_text_266_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 267, \"value\": \"filler_text_267_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 268, \"value\": \"filler_text_268_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 269, \"value\": \"filler_text_269_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 270, \"value\": \"filler_text_270_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 271, \"value\": \"filler_text_271_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 272, \"value\": \"filler_text_272_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 273, \"value\": \"filler_text_273_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 274, \"value\": \"filler_text_274_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 275, \"value\": \"filler_text_275_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 276, \"value\": \"filler_text_276_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 277, \"value\": \"filler_text_277_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 278, \"value\": \"filler_text_278_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 279, \"value\": \"filler_text_279_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 280, \"value\": \"filler_text_280_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 281, \"value\": \"filler_text_281_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 282, \"value\": \"filler_text_282_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 283, \"value\": \"filler_text_283_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 284, \"value\": \"filler_text_284_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 285, \"value\": \"filler_text_285_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 286, \"value\": \"filler_text_286_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 287, \"value\": \"filler_text_287_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 288, \"value\": \"filler_text_288_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 289, \"value\": \"filler_text_289_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 290, \"value\": \"filler_text_290_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"document_id\": \"doc-0010983-bh4j\"}, {\"id\": 291, \"value\": \"filler_text_291_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 292, \"value\": \"filler_text_292_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 293, \"value\": \"filler_text_293_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 294, \"value\": \"filler_text_294_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 295, \"value\": \"filler_text_295_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 296, \"value\": \"filler_text_296_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 297, \"value\": \"filler_text_297_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 298, \"value\": \"filler_text_298_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, {\"id\": 299, \"value\": \"filler_text_299_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}]\n\nThree of the objects in the JSON have a special field called 'document_id' whose value looks like 'doc-XXXXXXX-XXXX'. Extract all three document_id values and output them on separate lines.",
+        "usage": {
+          "prompt_tokens": 6395,
+          "completion_tokens": 30,
+          "total_tokens": 6425,
+          "tps": 12.61,
+          "ttft": 2.38,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "image_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          }
+        },
+        "found": [
+          "doc-293e46d-zcek",
+          "doc-9cb8ed9-ax49",
+          "doc-0010983-bh4j"
+        ],
+        "missing": []
+      },
+      "sub_probes": [],
+      "latency_ms": 3918.3399444445968,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D123",
+      "detector_name": "ResponseTruncationBilling",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_tokens": 390,
+        "local_tokens": 391,
+        "ratio": "1.00",
+        "content_preview": "The history of computing spans centuries, evolving from simple mechanical devices to the sophisticated cloud infrastruct"
+      },
+      "sub_probes": [],
+      "latency_ms": 5701.270093675703,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24c",
+      "detector_name": "MultiTurnHistoryIntegrity",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": "LUCKY-4ITE8CW4P3",
+        "got": "LUCKY-4ITE8CW4P3"
+      },
+      "sub_probes": [],
+      "latency_ms": 4164.679511915892,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D24b",
+      "detector_name": "ContextTruncationAlgebra",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "wrong algebra answer — context likely truncated",
+        "content_snippet": "The result of \\((var\\_X + var\\_Y) * var\\_Z\\), given:\n- var_X = 14\n- var_Y = 5\n- var_Z = 2\n\nis:\n\n\\((14"
+      },
+      "sub_probes": [],
+      "latency_ms": 6312.779024243355,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27b",
+      "detector_name": "PDFFidelityProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires pdf"
+    },
+    {
+      "detector_id": "D27d",
+      "detector_name": "AudioFidelityProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires audio"
+    },
+    {
+      "detector_id": "D27c",
+      "detector_name": "MultiImageOrderProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "neither nonce recognized",
+        "expected": "P/N-6LZS5C-b",
+        "got": "6LZS8C-b",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 6656.426295172423,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D26",
+      "detector_name": "SemanticCacheBuster",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "nonce-aware cache suspected: body similarity 0.94 after nonce removal (threshold 0.85)",
+        "nonce_a": "TX-0B1EE0AD71A1",
+        "nonce_b": "REF-21FAFBEFD190",
+        "body_similarity": 0.9412,
+        "length_diff_pct": 3.11
+      },
+      "sub_probes": [],
+      "latency_ms": 9067.28055793792,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D25",
+      "detector_name": "OutputCapProbe",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "word": "VERTEX",
+        "target": 600,
+        "count": 634,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 10309.624107088894,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D27",
+      "detector_name": "ImageFidelityProbe",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.95,
+      "evidence": {
+        "reason": "image code not recognized",
+        "expected": "KOGMRD",
+        "got": "wzrx",
+        "majority": "2/2 FAIL"
+      },
+      "sub_probes": [],
+      "latency_ms": 11175.531661137938,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D32a",
+      "detector_name": "StreamingBasicProbe",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "chunk_count": 224,
+        "has_usage": true,
+        "finish_reason": "length",
+        "timing": {
+          "analyzable": true,
+          "count": 224,
+          "ttfb_s": 1.7280996451154351,
+          "mean_ms": 11.936795453002233,
+          "stdev_ms": 65.44944435915139,
+          "cv": 5.482999571940402
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 4771.984618157148,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D42",
+      "detector_name": "ContextWindowHonesty",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_prompt_tokens": 15037,
+        "local_count": 15030,
+        "content_excerpt": "ENDMARKER_9F7A2C"
+      },
+      "sub_probes": [],
+      "latency_ms": 2540.701983962208,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D56",
+      "detector_name": "ToolChoiceHonor",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires tool_calling"
+    },
+    {
+      "detector_id": "D55",
+      "detector_name": "AsyncTaskProbe",
+      "priority": "P1",
+      "verdict": "skip",
+      "confidence": 0.0,
+      "evidence": {},
+      "sub_probes": [],
+      "latency_ms": 0.0,
+      "request_count": 0,
+      "skipped_reason": "requires task_model"
+    },
+    {
+      "detector_id": "D52",
+      "detector_name": "ResponseFormatJSON",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_excerpt": "{\n  \"name\": \"Samantha Lee\",\n  \"age\": 27,\n  \"hobbies\": [\"painting\", \"cycling\", \"baking\"]\n}",
+        "parsed_keys": [
+          "name",
+          "age",
+          "hobbies"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 2236.362451687455,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D29b",
+      "detector_name": "PromptCacheIntegrity",
+      "priority": "P1",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "no cache indicators in either response -- OpenAI auto-caching is not guaranteed"
+      },
+      "sub_probes": [],
+      "latency_ms": 8025.629248004407,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D38",
+      "detector_name": "SeedReproducibility",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 0.7,
+      "evidence": {
+        "reason": "only 2/3 responses identical -- seed honoured but not fully deterministic (suspicious)",
+        "valid_response_count": 3,
+        "seed": 2024,
+        "match_count": 1
+      },
+      "sub_probes": [],
+      "latency_ms": 8338.523542042822,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D59",
+      "detector_name": "KnowledgeCutoff",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "hits": 2,
+        "per_probe": [
+          {
+            "q": "Who was announced as the 2023 Nobel Prize in Chemistry laure",
+            "ok": true,
+            "excerpt": "one of the 2023 nobel prize in chemistry laureates for work on quantum dots is **moungi g. bawendi**. the other two are louis e. brus and alexei i. ek"
+          },
+          {
+            "q": "What AI assistant did OpenAI launch publicly in November 202",
+            "ok": true,
+            "excerpt": "openai launched **chatgpt** publicly in november 2022."
+          },
+          {
+            "q": "Twitter was rebranded to what single-letter name in 2023?",
+            "ok": false,
+            "excerpt": "twitter was rebranded to the single-letter name **x** in 2023."
+          }
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 4282.367259263992,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D62",
+      "detector_name": "LogprobsHonesty",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "logprobs flag dropped -- no logprobs block in response"
+      },
+      "sub_probes": [],
+      "latency_ms": 4972.83294191584,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D64",
+      "detector_name": "StreamingChunkShape",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "94% of chunks arrive with < 1ms gap -- burst replay of cached result",
+        "chunk_count": 141,
+        "tokens": 136,
+        "chunks_per_100_tokens": 103.67647058823529,
+        "near_zero_delta_frac": 0.9357142857142857
+      },
+      "sub_probes": [],
+      "latency_ms": 4685.730011202395,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D54",
+      "detector_name": "TaskCompletion",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "language_count": 20,
+        "has_marker": true,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 10538.231659214944,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D82",
+      "detector_name": "ReasoningTokenAudit",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reasoning_tokens": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 4367.193435784429,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D83",
+      "detector_name": "CompletionTokenAudit",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_tokens": 10,
+        "local_tokens": 9,
+        "deviation": "11.11%",
+        "content_preview": "The quick brown fox jumps over the lazy dog"
+      },
+      "sub_probes": [],
+      "latency_ms": 3588.3050370030105,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D84",
+      "detector_name": "ZeroWidthCharDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "checked_responses": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 3211.312240920961,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D86",
+      "detector_name": "ContextCompressionDetection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "expected": {
+          "coord": "47.438223N, 118.395446E",
+          "ref": "REF-3B1913F9",
+          "version": "v2.57.245"
+        },
+        "found": {
+          "coord": true,
+          "ref": true,
+          "version": true
+        },
+        "hits": "3/3",
+        "got": "Here are the sensor deployment details you provided earlier:\n\n- GPS coordinates: **47.438223N, 118.395446E**\n- Reference code: **REF-3B1913F9**\n- Firmware version: **v2.57.245**"
+      },
+      "sub_probes": [],
+      "latency_ms": 3435.8790908008814,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D70",
+      "detector_name": "LogitBiasHonor",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "suppressed run still has 13 'the's (base=14, ratio=93%) -- logit_bias likely dropped",
+        "base_the_count": 14,
+        "bias_the_count": 13
+      },
+      "sub_probes": [],
+      "latency_ms": 9915.008224081248,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D92",
+      "detector_name": "MultiModalInputStripping",
+      "priority": "P1",
+      "verdict": "fail",
+      "confidence": 1.0,
+      "evidence": {
+        "reason": "image code not found -- image may be stripped",
+        "expected_code": "KOGMRD",
+        "response": "The image does not contain a visible verification code."
+      },
+      "sub_probes": [],
+      "latency_ms": 4647.474771831185,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D93",
+      "detector_name": "ResponseTokenPadding",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_preview": "4",
+        "trailing_whitespace_chars": 0,
+        "total_length": 1,
+        "ws_ratio": "0.00%",
+        "reported_completion_tokens": 2,
+        "token_char_ratio": "2.00"
+      },
+      "sub_probes": [],
+      "latency_ms": 4636.547274887562,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D94",
+      "detector_name": "PromptEchoInflation",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content_preview": "The capital of Japan is Tokyo.",
+        "prefix_match_words": 1,
+        "response_word_count": 6,
+        "echo_ratio": "16.67%"
+      },
+      "sub_probes": [],
+      "latency_ms": 3234.7050830721855,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D97",
+      "detector_name": "HiddenTurnInjection",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "reported_user_message_count": 2,
+        "expected": 2,
+        "content_preview": "2"
+      },
+      "sub_probes": [],
+      "latency_ms": 4031.5647246316075,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D95",
+      "detector_name": "ResponseDeduplication",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "response_previews": [
+          "**Machine learning** is a branch of artificial intelligence (AI) that focuses on developing algorith",
+          "Sure! Here’s a simple explanation of **Machine Learning (ML):**\n\n**Machine Learning** is a way for c",
+          "**Machine learning** is a type of technology that allows computers to learn from data and make decis"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 6094.009500928223,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D29",
+      "detector_name": "UsageBillAuditor",
+      "priority": "P1",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_tokens": 6395,
+        "local_tokens": 6688,
+        "deviation": "4.38%",
+        "source": "d24a_reuse"
+      },
+      "sub_probes": [],
+      "latency_ms": 1.3586999848484993,
+      "request_count": 0,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D11",
+      "detector_name": "RequestIntegrity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "marker": "CNF-UFDTMHNH",
+        "content_excerpt": "To reset your password, go to the login page and click on \"Forgot Password?\" Follow the instructions sent to your registered email to create a new password.\n\nCNF-UFDTMHNH"
+      },
+      "sub_probes": [],
+      "latency_ms": 2680.2284149453044,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D15",
+      "detector_name": "GuardrailIntegrity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "start": "[MJBMQ5]",
+        "safety": "[5A1FM]",
+        "content_excerpt": "[MJBMQ5] Sorry, I can't provide runnable code for SSRF vulnerabilities. SSRF (Server-Side Request Forgery) is a security issue where a server is tricked into requesting resources on behalf of a user, often leading to unauthorized access or data breaches [5A1FM]. Creating or sharing runnable code for"
+      },
+      "sub_probes": [],
+      "latency_ms": 4532.665446866304,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D103",
+      "detector_name": "ContentFilterBias",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "refused": 0,
+        "short_responses": 0,
+        "total_valid": 3,
+        "details": [
+          {
+            "index": 0,
+            "length": 931,
+            "refused": false,
+            "preview": "Certainly! Here’s a comparison of **Claude** (Anthropic’s latest model, e.g., Claude 3 Opus) and **GPT-4o** (OpenAI’s ne"
+          },
+          {
+            "index": 1,
+            "length": 915,
+            "refused": false,
+            "preview": "Both **Gemini** (by Google) and **ChatGPT** (by OpenAI) are advanced AI language models capable of creative writing, but"
+          },
+          {
+            "index": 2,
+            "length": 857,
+            "refused": false,
+            "preview": "Certainly! Here’s a comparison of **OpenAI API** vs **Anthropic API** (Claude), focusing on their pros and cons as of mi"
+          }
+        ],
+        "substantive_count": 3
+      },
+      "sub_probes": [],
+      "latency_ms": 7529.741670936346,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D113",
+      "detector_name": "ThinkingTokenConsistency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "answer1": null,
+        "answer2": null,
+        "similarity": "0.91",
+        "response1_preview": "Let's solve the problem step by step:\n\n**Step 1: Find the total distance traveled.**\n\n- First part: 120 km\n- Second part: 80 km\n\n**Total distance = 12",
+        "response2_preview": "Let's solve the problem step by step:\n\n**Step 1: Find the total distance traveled.**\n\n- First part: 120 km\n- Second part: 80 km\n\n**Total distance = 12"
+      },
+      "sub_probes": [],
+      "latency_ms": 10533.98235887289,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D37",
+      "detector_name": "StopSeqProbe",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "paragraph_count": 3,
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 9106.770031154156,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D51",
+      "detector_name": "UserStopSequence",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "content": "ONE  \nTWO  \nTHREE  \n",
+        "finish_reason": "stop"
+      },
+      "sub_probes": [],
+      "latency_ms": 8403.614157810807,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D53",
+      "detector_name": "MetadataCompleteness",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "router_usage": {
+          "prompt_tokens": 24,
+          "completion_tokens": 256,
+          "total_tokens": 280,
+          "tps": 63.49,
+          "ttft": 4.03,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "image_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": 0,
+            "video_tokens": 0
+          }
+        },
+        "mode": "degraded"
+      },
+      "sub_probes": [],
+      "latency_ms": 11746.258067898452,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D57",
+      "detector_name": "ResponseIDUniqueness",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ids": [
+          "bee454ea5d4f4149a983afcf9f3d43b4",
+          "58ad956991a1923defe38c4875a62608",
+          "43e301f7a6713a9d380666183f070b5b",
+          "9d11bbbbceea67f325e91192354c56de",
+          "716d57101c719840bfb4fca38c925351"
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 6997.264210600406,
+      "request_count": 5,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D43",
+      "detector_name": "MaxTokensHonor",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "completion_tokens_local": 1972,
+        "finish_reason": "length",
+        "content_len": 8956,
+        "note": "truncated near user cap"
+      },
+      "sub_probes": [],
+      "latency_ms": 28287.410109769553,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D44",
+      "detector_name": "TopPSensitivity",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "mean_focused_dist": 0.7390880858272163,
+        "mean_diverse_dist": 0.8967827781537459,
+        "delta": 0.15769469232652955
+      },
+      "sub_probes": [],
+      "latency_ms": 27216.14080807194,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D61",
+      "detector_name": "TemperatureSensitivity",
+      "priority": "P2",
+      "verdict": "suspicious",
+      "confidence": 0.5,
+      "evidence": {
+        "majority": "1/2 FAIL",
+        "run_1": {
+          "mean_deterministic_dist": 0.5641025641025641,
+          "mean_creative_dist": 0.9103954004380261,
+          "delta": 0.34629283633546204
+        },
+        "run_2": {
+          "reason": "creative-group diversity (0.89) not meaningfully > deterministic-group (0.85); temperature likely ignored",
+          "mean_deterministic_dist": 0.8476621213202923,
+          "mean_creative_dist": 0.8934804946011843,
+          "delta": 0.045818373280892
+        }
+      },
+      "sub_probes": [],
+      "latency_ms": 27326.209471095353,
+      "request_count": 16,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D60",
+      "detector_name": "LatencyFingerprint",
+      "priority": "P2",
+      "verdict": "inconclusive",
+      "confidence": 0.0,
+      "evidence": {
+        "reason": "no latency band for model 'openai/gpt-4.1'"
+      },
+      "sub_probes": [],
+      "latency_ms": 33018.739903811365,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D68",
+      "detector_name": "FrequencyPenaltyHonor",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "no_penalty_apple_count": 30,
+        "high_penalty_apple_count": 23,
+        "no_penalty_len": 179,
+        "high_penalty_len": 163,
+        "ratio": 0.7666666666666667
+      },
+      "sub_probes": [],
+      "latency_ms": 23909.796901978552,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D65",
+      "detector_name": "StyleFingerprint",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "family": "gpt",
+        "mean_features": {
+          "avg_sentence_len": 14.125,
+          "em_dash_rate": 0.0,
+          "bullet_rate": 0.05882352941176471,
+          "opens_with_sure": 0.3333333333333333,
+          "passive_rate": 5.184478371501272
+        },
+        "distance": 1.2742956001328938
+      },
+      "sub_probes": [],
+      "latency_ms": 27804.959149565548,
+      "request_count": 6,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D87",
+      "detector_name": "ResponseModelFieldAudit",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "claimed_model": "openai/gpt-4.1",
+        "response_models": [
+          "openai/gpt-4.1",
+          "openai/gpt-4.1",
+          "openai/gpt-4.1"
+        ],
+        "timestamps": [
+          1776688803,
+          1776688804,
+          1776688804
+        ]
+      },
+      "sub_probes": [],
+      "latency_ms": 5341.834529303014,
+      "request_count": 3,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D96",
+      "detector_name": "UnicodeNormalizationLoss",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "present": 10,
+        "total": 10,
+        "found": [
+          "café",
+          "naïve",
+          "日本語",
+          "🎉",
+          "x²",
+          "∑",
+          "≠",
+          "ℝ",
+          "™",
+          "«guillemets»"
+        ],
+        "missing": [],
+        "content_preview": "café → naïve 日本語 🎉 x² ∑ ≠ ℝ ™ «guillemets»"
+      },
+      "sub_probes": [],
+      "latency_ms": 2975.8254890330136,
+      "request_count": 1,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D91",
+      "detector_name": "ArtificialLatencyPadding",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "ttft_short_ms": 2307.887618429959,
+        "ttft_long_ms": 2199.138264171779,
+        "ratio": 1.0494508944844065
+      },
+      "sub_probes": [],
+      "latency_ms": 10868.579360190779,
+      "request_count": 2,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D85",
+      "detector_name": "IntraFamilyDowngrade",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "easy_latency_ms": 1821.326687000692,
+        "hard_latency_ms": 2752.035776153207,
+        "easy_tokens": 59,
+        "hard_tokens": 181,
+        "easy_ms_per_token": 30.87,
+        "hard_ms_per_token": 15.2,
+        "ratio": 2.0303,
+        "threshold": 0.3
+      },
+      "sub_probes": [],
+      "latency_ms": 21386.059505864978,
+      "request_count": 4,
+      "skipped_reason": null
+    },
+    {
+      "detector_id": "D99",
+      "detector_name": "RateLimitTransparency",
+      "priority": "P2",
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": {
+        "total": 15,
+        "ok_200": 15,
+        "rate_limited_429": 0,
+        "server_errors_5xx": 0,
+        "network_errors": 0
+      },
+      "sub_probes": [],
+      "latency_ms": 14064.36911597848,
+      "request_count": 15,
+      "skipped_reason": null
+    }
+  ],
+  "evidence_notes": [
+    "D31 PASS but D21 FAIL"
+  ]
+}

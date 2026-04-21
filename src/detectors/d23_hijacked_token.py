@@ -57,32 +57,30 @@ class D23_HijackedTokenProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         """Fail if any probe reveals domain-specific or third-party brand guidance."""
         # responses: [23a_empty, 23a_space, 23a_minimal, 23b]
-        for i, r in enumerate(responses[:-1]):
-            result = self._judge_probe_23a(r)
-            if result is not None:
-                return result
+        # 23a: check all probes; FAIL immediately if any reveals keywords,
+        # but skip non-200 / empty / error probes and continue to the next.
+        any_23a_checked = False
+        for r in responses[:-1]:
+            if r.is_network_error or r.status_code != 200:
+                continue
+            content = r.content
+            if not content:
+                continue
+            any_23a_checked = True
+            matched = _find_hijack_keyword(content)
+            if matched:
+                return self._fail(
+                    "blank probe reveals domain-specific guidance",
+                    {"matched_keyword": matched, "response_excerpt": content[:200]},
+                )
+        # 23b: system prompt extraction
         resp_23b = responses[-1]
         result_23b = self._judge_probe_23b(resp_23b)
         if result_23b is not None:
             return result_23b
+        if not any_23a_checked:
+            return self._inconclusive("all 23a probes failed (non-200 or empty)")
         return self._pass({"probes_checked": len(responses)})
-
-    def _judge_probe_23a(self, r: ProbeResponse) -> DetectorResult | None:
-        """Return FAIL if 23a reveals domain-specific guidance, else None."""
-        if r.is_network_error:
-            return self._inconclusive(f"23a network error: {r.error}")
-        if r.status_code != 200:
-            return self._inconclusive(f"23a status {r.status_code}")
-        content = r.content
-        if not content:
-            return self._inconclusive("23a empty content")
-        matched = _find_hijack_keyword(content)
-        if matched:
-            return self._fail(
-                "blank probe reveals domain-specific guidance",
-                {"matched_keyword": matched, "response_excerpt": content[:200]},
-            )
-        return None
 
     def _judge_probe_23b(self, r: ProbeResponse) -> DetectorResult | None:
         """Return FAIL if 23b reveals third-party brand names, else None."""
@@ -143,19 +141,23 @@ class D23_HijackedTokenProbe(BaseDetector):
              [neutral_23a, neutral_23a, neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
              "fail"),
 
-            # INCONCLUSIVE: 23a network error on first probe
-            ("INCONCLUSIVE: 23a network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT"), neutral_23a, neutral_23a, neutral_23b],
+            # PASS: first 23a probe fails (400) but others are neutral
+            ("PASS: 23a first probe 400, others neutral",
+             [make_resp("", status_code=400), neutral_23a, neutral_23a, neutral_23b],
+             "pass"),
+
+            # INCONCLUSIVE: all 23a probes fail + 23b neutral
+            ("INCONCLUSIVE: all 23a probes fail",
+             [ProbeResponse(status_code=0, error="TIMEOUT"),
+              make_resp("", status_code=400),
+              make_resp(""),
+              neutral_23b],
              "inconclusive"),
 
-            # INCONCLUSIVE: 23a empty content
-            ("INCONCLUSIVE: 23a empty content",
-             [make_resp(""), neutral_23a, neutral_23a, neutral_23b],
-             "inconclusive"),
-
-            # INCONCLUSIVE: 23b non-200 status
+            # INCONCLUSIVE: 23b non-200 status (23a all neutral → no fail,
+            # but 23b returns inconclusive which short-circuits)
             ("INCONCLUSIVE: 23b 503 status",
-             [neutral_23a, neutral_23a, ProbeResponse(status_code=503, body=None)],
+             [neutral_23a, neutral_23a, neutral_23a, ProbeResponse(status_code=503, body=None)],
              "inconclusive"),
         ]
 

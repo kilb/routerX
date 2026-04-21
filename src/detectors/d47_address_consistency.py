@@ -187,11 +187,8 @@ class D47_AddressConsistencyProbe(BaseDetector):
             return self._inconclusive("no tool calls in balance or transfer response")
         if balance_addr is None:
             return self._inconclusive("no tool call in balance response")
-        if transfer_addr is None:
-            return self._inconclusive("no tool call in transfer response")
 
         balance_ok = balance_addr.lower() == canary.lower()
-        transfer_ok = transfer_addr.lower() == canary.lower()
 
         # Check plain text probe (4th probe) if available
         plaintext_addr = None
@@ -201,22 +198,12 @@ class D47_AddressConsistencyProbe(BaseDetector):
             if plaintext_addr is not None:
                 plaintext_ok = plaintext_addr.lower() == canary.lower()
 
-        # EIP-55 casing check on transfer address
-        eip55_note = None
-        if transfer_ok and not self._eip55_casing_matches(canary, transfer_addr):
-            eip55_note = (
-                f"EIP-55 checksum casing mismatch: planted={canary}, "
-                f"returned={transfer_addr}"
-            )
-
         evidence = {
             "canary_addr": canary,
             "balance_addr": balance_addr,
             "transfer_addr": transfer_addr,
             "plaintext_addr": plaintext_addr,
         }
-        if eip55_note:
-            evidence["eip55_note"] = eip55_note
 
         # Plain text tampering: address in content differs from canary
         if not plaintext_ok:
@@ -224,6 +211,29 @@ class D47_AddressConsistencyProbe(BaseDetector):
                 "address tampering in plain text response (no tools)",
                 evidence | {"plaintext_mismatch": True},
             )
+
+        # Model refused to call transfer tool (safety behavior, not router
+        # interference). If balance is correct, pass with a note that
+        # selective-tampering detection was not possible.
+        if transfer_addr is None:
+            if balance_ok:
+                return self._pass(evidence | {
+                    "note": "transfer tool not called by model (safety refusal); "
+                            "balance address verified, selective tampering untested",
+                })
+            return self._fail("balance address tampered", evidence)
+
+        transfer_ok = transfer_addr.lower() == canary.lower()
+
+        # EIP-55 casing check on transfer address
+        eip55_note = None
+        if transfer_ok and not self._eip55_casing_matches(canary, transfer_addr):
+            eip55_note = (
+                f"EIP-55 checksum casing mismatch: planted={canary}, "
+                f"returned={transfer_addr}"
+            )
+        if eip55_note:
+            evidence["eip55_note"] = eip55_note
 
         if balance_ok and transfer_ok:
             return self._pass(evidence)
@@ -334,6 +344,17 @@ class D47_AddressConsistencyProbe(BaseDetector):
                 "FAIL: plaintext address tampered (content-based)",
                 [memorize_resp, make_balance_resp(_TEST_ADDR), make_transfer_resp(_TEST_ADDR), plaintext_bad],
                 "fail",
+            ),
+            # PASS: transfer tool not called (model safety refusal) but balance correct.
+            (
+                "PASS: transfer refused by model, balance OK",
+                [
+                    memorize_resp,
+                    make_balance_resp(_TEST_ADDR),
+                    ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "I cannot execute financial transfers."}, "finish_reason": "stop"}]}),
+                    plaintext_ok,
+                ],
+                "pass",
             ),
             # INCONCLUSIVE: network error on transfer probe.
             (

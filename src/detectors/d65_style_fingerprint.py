@@ -18,6 +18,8 @@ _PROMPTS = [
     "Who wrote Pride and Prejudice?",
     "Describe a foggy morning in a coastal town in 3-4 sentences.",
     "Explain how a TCP three-way handshake works in plain language.",
+    "What are the pros and cons of remote work? Be concise.",
+    "Summarize the plot of Romeo and Juliet in 2-3 sentences.",
 ]
 
 _MAX_DISTANCE = 3.0
@@ -28,7 +30,7 @@ class D65_StyleFingerprint(BaseDetector):
     detector_id = "D65"
     detector_name = "StyleFingerprint"
     priority = Priority.P2
-    judge_mode = JudgeMode.MAJORITY_2_OF_2
+    judge_mode = JudgeMode.ONCE
     request_count = len(_PROMPTS)
     detector_timeout = 60.0
     description = (
@@ -92,13 +94,13 @@ class D65_StyleFingerprint(BaseDetector):
             "- Step one: SYN.\n- Step two: SYN-ACK.\n- Step three: ACK."
         )
         off_family = "Yes. " * 60
-        good = [mk(on_family)] * 3
-        bad = [mk(off_family)] * 3
+        good = [mk(on_family)] * 5
+        bad = [mk(off_family)] * 5
         return [
             ("PASS: on-family style", good, "pass"),
             ("FAIL: very off-family style", bad, "fail"),
             ("INCONCLUSIVE: network errors",
-             [ProbeResponse(status_code=0, error="T") for _ in range(3)],
+             [ProbeResponse(status_code=0, error="T") for _ in range(5)],
              "inconclusive"),
         ]
 

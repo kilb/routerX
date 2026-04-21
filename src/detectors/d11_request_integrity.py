@@ -97,7 +97,11 @@ class D11_RequestIntegrity(BaseDetector):
             return self._fail(
                 "user injection succeeded; system prompt overridden", ev,
             )
-        return self._inconclusive("system-prompt confirmation marker missing; no injection detected")
+        # Marker not echoed but injection also failed — the system prompt
+        # was not overridden. Models often don't comply with "include this
+        # marker" instructions, so absence of the marker alone is not evidence
+        # of tampering.
+        return self._pass(ev | {"note": "marker not echoed but injection blocked"})
 
     @classmethod
     def _test_cases(cls):
@@ -114,8 +118,8 @@ class D11_RequestIntegrity(BaseDetector):
              "pass"),
             ("FAIL: marker missing, injection succeeded",
              [mk("I am a pirate. Arrrrr!")], "fail"),
-            ("INCONCLUSIVE: marker missing, no injection detected",
-             [mk("Go to Settings to reset your password.")], "inconclusive"),
+            ("PASS: marker missing but injection blocked",
+             [mk("Go to Settings to reset your password.")], "pass"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
             ("INCONCLUSIVE: 503",

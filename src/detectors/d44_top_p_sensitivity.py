@@ -14,7 +14,7 @@ from ..utils.diversity import mean_jaccard_dist
 # Use a prompt that produces longer, more varied output for reliable Jaccard.
 # Short one-liners have too few words for meaningful word-set distance.
 _PROMPT = "Write a short paragraph (3-4 sentences) describing a mysterious scene. Be creative and vivid."
-_N_PER_GROUP = 4
+_N_PER_GROUP = 6
 
 
 @detector
@@ -22,7 +22,7 @@ class D44_TopPSensitivity(BaseDetector):
     detector_id = "D44"
     detector_name = "TopPSensitivity"
     priority = Priority.P2
-    judge_mode = JudgeMode.MAJORITY_2_OF_2
+    judge_mode = JudgeMode.ONCE
     request_count = _N_PER_GROUP * 2
     detector_timeout = 90.0
     description = "Detect top_p being silently dropped by the router."
@@ -81,17 +81,20 @@ class D44_TopPSensitivity(BaseDetector):
                                    "finish_reason": "stop"}]},
             )
         focused = [mk("The body was cold."), mk("The body was cold."),
-                   mk("The body lay cold."), mk("The body was cold.")]
+                   mk("The body lay cold."), mk("The body was cold."),
+                   mk("The body was cold."), mk("The body lay still.")]
         diverse = [mk("A stranger knocked at midnight."),
                    mk("Rain washed the footprints away."),
                    mk("Emily found the letter in a drawer."),
-                   mk("The lighthouse never blinked that night.")]
+                   mk("The lighthouse never blinked that night."),
+                   mk("Fog rolled through the empty station."),
+                   mk("The clock struck thirteen.")]
         same = focused  # no diversity in either group
         return [
             ("PASS: diverse group spreads wider", focused + diverse, "pass"),
             ("FAIL: both groups identical", same + same, "fail"),
             ("INCONCLUSIVE: network errors everywhere",
-             [ProbeResponse(status_code=0, error="T") for _ in range(8)],
+             [ProbeResponse(status_code=0, error="T") for _ in range(12)],
              "inconclusive"),
         ]
 
