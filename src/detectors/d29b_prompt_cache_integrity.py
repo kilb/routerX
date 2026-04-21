@@ -64,9 +64,10 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         # ANY provider: infer from model name. Avoids sending OpenAI-shape
         # payload (no cache_control) to a Claude router, which would
         # guarantee FAIL on a compliant router.
-        if provider == ProviderType.ANTHROPIC or model.lower().startswith("claude"):
+        model_lower = model.lower()
+        if provider == ProviderType.ANTHROPIC or "claude" in model_lower:
             builder = _build_anthropic_payload
-        elif provider == ProviderType.OPENAI or model.lower().startswith(("gpt", "o1", "o3")):
+        elif provider == ProviderType.OPENAI or any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-")):
             builder = _build_openai_payload
         else:
             # Unknown provider — cannot pick the right cache_control shape.
