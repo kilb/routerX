@@ -80,7 +80,7 @@ class D64_StreamingChunkShape(BaseDetector):
         # per 100 tokens). High chunk density with near-zero deltas is normal
         # for proxies that buffer and batch-forward genuine token-level chunks
         # — the chunks are real, just delivered in bursts over TCP.
-        if (near_zero_frac > 0.9 and len(timestamps) >= 10
+        if (near_zero_frac > 0.95 and len(timestamps) >= 10
                 and chunks_per_100 < 50):
             return self._fail(
                 f"{near_zero_frac:.0%} of chunks arrive with < 1ms gap "

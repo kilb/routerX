@@ -70,36 +70,39 @@ class D54_TaskCompletion(BaseDetector):
         if not content:
             return self._inconclusive("empty content")
 
-        finish_reason = r.finish_reason or ""
+        raw_finish = r.finish_reason or ""
+        fr = raw_finish.lower()
+        # Normalize Anthropic "end_turn"/"end" to be equivalent to "stop"
+        is_natural_stop = fr in ("stop", "end_turn", "end")
         language_count = _count_language_entries(content)
         has_marker = COMPLETION_MARKER in content
 
-        if language_count >= MIN_LANGUAGES_PASS and has_marker and finish_reason == "stop":
+        if language_count >= MIN_LANGUAGES_PASS and has_marker and is_natural_stop:
             return self._pass({
                 "language_count": language_count,
                 "has_marker": has_marker,
-                "finish_reason": finish_reason,
+                "finish_reason": raw_finish,
             })
 
-        if finish_reason == "length":
+        if fr == "length":
             return self._fail("crude truncation: finish_reason=length", {
                 "language_count": language_count,
                 "has_marker": has_marker,
-                "finish_reason": finish_reason,
+                "finish_reason": raw_finish,
             })
 
-        if language_count < MIN_LANGUAGES_FAIL and not has_marker and finish_reason == "stop":
+        if language_count < MIN_LANGUAGES_FAIL and not has_marker and is_natural_stop:
             return self._fail("semantic truncation: list incomplete before marker", {
                 "language_count": language_count,
                 "has_marker": has_marker,
-                "finish_reason": finish_reason,
+                "finish_reason": raw_finish,
             })
 
         # Ambiguous: partial completion or marker present but count low
         return self._pass({
             "language_count": language_count,
             "has_marker": has_marker,
-            "finish_reason": finish_reason,
+            "finish_reason": raw_finish,
         })
 
     @classmethod

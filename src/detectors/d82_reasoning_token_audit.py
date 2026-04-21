@@ -22,7 +22,12 @@ MAX_TOKENS = 20
 # If reasoning_tokens > RATIO_THRESHOLD * completion_tokens, flag fraud.
 RATIO_THRESHOLD = 5
 # Absolute cap: no honest model needs 100+ reasoning tokens for "2+2".
+# Reasoning-specialized models (o1, o3, thinking) get a higher cap.
 ABSOLUTE_CAP = 100
+ABSOLUTE_CAP_REASONING_MODEL = 500
+
+# Substrings in model names that indicate a reasoning-specialized model.
+_REASONING_MODEL_INDICATORS = ("o1", "o3", "thinking", "reasoning")
 
 
 @detector
@@ -60,15 +65,23 @@ class D82_ReasoningTokenAudit(BaseDetector):
             return self._pass({"reasoning_tokens": reasoning_tokens or 0})
 
         completion_tokens = usage.get("completion_tokens") or usage.get("output_tokens") or 0
+        model_lower = (self.config.claimed_model or "").lower()
+        is_reasoning_model = any(
+            ind in model_lower for ind in _REASONING_MODEL_INDICATORS
+        )
+        cap = ABSOLUTE_CAP_REASONING_MODEL if is_reasoning_model else ABSOLUTE_CAP
+
         ev = {
             "reasoning_tokens": reasoning_tokens,
             "completion_tokens": completion_tokens,
+            "is_reasoning_model": is_reasoning_model,
+            "absolute_cap": cap,
         }
 
-        if reasoning_tokens > ABSOLUTE_CAP:
+        if reasoning_tokens > cap:
             return self._fail(
                 f"reasoning_tokens={reasoning_tokens} exceeds absolute cap "
-                f"of {ABSOLUTE_CAP} for trivial prompt",
+                f"of {cap} for trivial prompt",
                 ev,
             )
 

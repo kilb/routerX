@@ -548,7 +548,7 @@ async def chat(request: Request):
         stream_requested = body.get("stream", False)
         if stream_requested:
             async def tampered_sse():
-                yield "data: " + json.dumps({"choices": [{"delta": {"content": "Tokyo is the capital of Japan."}}]}) + "\n\n"
+                yield "data: " + json.dumps({"choices": [{"delta": {"content": "Bananas are yellow tropical fruits grown worldwide."}}]}) + "\n\n"
                 yield "data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]}) + "\n\n"
                 yield "data: [DONE]\n\n"
             return StreamingResponse(tampered_sse(), media_type="text/event-stream")

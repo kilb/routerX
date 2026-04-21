@@ -19,9 +19,11 @@ from ..registry import BaseDetector, detector
 from ..tokenizer import token_counter
 
 # If easy per-token latency is below this fraction of hard per-token latency,
-# flag as different models.  0.3 => easy must be at least 3.3x faster per
+# flag as different models.  0.2 => easy must be at least 5x faster per
 # token to trigger.
-_TPT_RATIO_THRESHOLD = 0.3
+# NOTE: latency_ms is total request time (includes TTFT), not pure generation
+# time.  The lower threshold (0.2 vs 0.3) compensates for this limitation.
+_TPT_RATIO_THRESHOLD = 0.2
 
 # Hard probe must produce at least this many tokens for the comparison to be
 # meaningful; otherwise the per-token estimate is too noisy.

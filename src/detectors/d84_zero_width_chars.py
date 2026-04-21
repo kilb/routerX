@@ -84,11 +84,14 @@ class D84_ZeroWidthCharDetection(BaseDetector):
             hits: list[dict[str, object]] = []
             for pos, ch in enumerate(content):
                 cp = ord(ch)
+                # Variation selectors (U+FE00..U+FE0F) are part of standard
+                # emoji sequences (e.g. heart emoji) and never used for
+                # watermarking -- skip them entirely.
+                if 0xFE00 <= cp <= 0xFE0F:
+                    continue
                 is_invisible = (
                     ch in _INVISIBLE_CHARS
                     or unicodedata.category(ch) == "Cf"
-                    # Variation selectors (Mn category, U+FE00..U+FE0F)
-                    or 0xFE00 <= cp <= 0xFE0F
                     # Tag characters (U+E0000..U+E007F)
                     or 0xE0000 <= cp <= 0xE007F
                 )
@@ -158,13 +161,13 @@ class D84_ZeroWidthCharDetection(BaseDetector):
                 "fail",
             ),
             (
-                "FAIL: variation selector in response 2",
+                "PASS: variation selector is standard emoji (not watermark)",
                 [
                     _ok("Paris is the capital."),
                     _ok("Red\ufe0f, blue, yellow."),
                     _ok("56."),
                 ],
-                "fail",
+                "pass",
             ),
             (
                 "INCONCLUSIVE: all network errors",

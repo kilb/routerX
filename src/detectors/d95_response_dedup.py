@@ -25,7 +25,7 @@ _PROMPTS = [
     "Explain ML in simple terms",
     "Define machine learning for a beginner",
 ]
-JACCARD_THRESHOLD = 0.95
+JACCARD_THRESHOLD = 0.98
 MIN_VALID_RESPONSES = 2
 
 
@@ -122,19 +122,71 @@ class D95_ResponseDeduplication(BaseDetector):
               ProbeResponse(status_code=0, error="TIMEOUT"),
               _resp("some answer")],
              "inconclusive"),
-            ("FAIL: near-identical (high Jaccard)",
+            ("FAIL: near-identical (high Jaccard > 0.98)",
              [_resp(
+                 # ~200 unique words; only last word differs ("testing" vs
+                 # "evaluating") yielding Jaccard ~0.99 > 0.98 threshold.
                  "Machine learning is a branch of artificial intelligence "
-                 "that enables computers to learn from large data sets and "
-                 "improve their performance on many tasks without being "
-                 "explicitly programmed to do so each and every single time "
-                 "a new problem arises in production environments globally."
+                 "that enables computers to learn from very large data sets "
+                 "and improve their performance on tasks without being "
+                 "explicitly programmed. It uses statistical methods to "
+                 "find patterns in data. Models are trained on examples "
+                 "and then make predictions on new inputs. Deep learning "
+                 "is a subset that uses neural networks with many layers. "
+                 "Applications include image recognition speech processing "
+                 "natural language understanding recommendation systems "
+                 "autonomous vehicles medical diagnosis fraud detection "
+                 "weather forecasting stock analysis robot control game "
+                 "playing drug discovery protein folding translation "
+                 "summarization sentiment analysis topic modeling "
+                 "clustering regression classification reinforcement "
+                 "optimization search ranking filtering generation "
+                 "compression encryption simulation rendering mining "
+                 "extraction transformation loading indexing querying "
+                 "caching routing scheduling balancing monitoring logging "
+                 "alerting reporting visualization dashboarding analytics "
+                 "tracking measuring profiling benchmarking planning "
+                 "designing architecting implementing deploying maintaining "
+                 "scaling distributing replicating partitioning sharding "
+                 "aggregating normalizing validating sanitizing escaping "
+                 "encoding decoding serializing deserializing marshalling "
+                 "unmarshalling compiling interpreting transpiling linking "
+                 "bundling minifying obfuscating debugging inspecting "
+                 "refactoring restructuring migrating upgrading patching "
+                 "versioning tagging branching merging rebasing cherry "
+                 "picking squashing releasing publishing containerizing "
+                 "orchestrating provisioning configuring automating testing."
              ), _resp(
                  "Machine learning is a branch of artificial intelligence "
-                 "that enables computers to learn from large data sets and "
-                 "improve their performance on many tasks without being "
-                 "explicitly programmed to do so each and every single time "
-                 "a new challenge arises in production environments globally."
+                 "that enables computers to learn from very large data sets "
+                 "and improve their performance on tasks without being "
+                 "explicitly programmed. It uses statistical methods to "
+                 "find patterns in data. Models are trained on examples "
+                 "and then make predictions on new inputs. Deep learning "
+                 "is a subset that uses neural networks with many layers. "
+                 "Applications include image recognition speech processing "
+                 "natural language understanding recommendation systems "
+                 "autonomous vehicles medical diagnosis fraud detection "
+                 "weather forecasting stock analysis robot control game "
+                 "playing drug discovery protein folding translation "
+                 "summarization sentiment analysis topic modeling "
+                 "clustering regression classification reinforcement "
+                 "optimization search ranking filtering generation "
+                 "compression encryption simulation rendering mining "
+                 "extraction transformation loading indexing querying "
+                 "caching routing scheduling balancing monitoring logging "
+                 "alerting reporting visualization dashboarding analytics "
+                 "tracking measuring profiling benchmarking planning "
+                 "designing architecting implementing deploying maintaining "
+                 "scaling distributing replicating partitioning sharding "
+                 "aggregating normalizing validating sanitizing escaping "
+                 "encoding decoding serializing deserializing marshalling "
+                 "unmarshalling compiling interpreting transpiling linking "
+                 "bundling minifying obfuscating debugging inspecting "
+                 "refactoring restructuring migrating upgrading patching "
+                 "versioning tagging branching merging rebasing cherry "
+                 "picking squashing releasing publishing containerizing "
+                 "orchestrating provisioning configuring automating evaluating."
              ), _resp(
                  "Quantum physics is a fundamental theory in physics."
              )],

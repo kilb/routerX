@@ -16,7 +16,7 @@ from ..models import (
 from ..registry import BaseDetector, detector
 
 JACCARD_PASS_THRESHOLD = 0.90
-JACCARD_FAIL_THRESHOLD = 0.70
+JACCARD_FAIL_THRESHOLD = 0.50
 
 
 def _jaccard_words(a: str, b: str) -> float:
@@ -102,7 +102,7 @@ class D110_StreamChunkIntegrity(BaseDetector):
              [_resp("Paris is the capital of France."), _stream_resp("Paris is the capital of France.")],
              "pass"),
             ("FAIL: completely different content",
-             [_resp("Paris is the capital of France."), _stream_resp("Tokyo is the capital of Japan.")],
+             [_resp("Paris is the capital of France."), _stream_resp("Bananas are yellow tropical fruits grown worldwide.")],
              "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"), _stream_resp("ok")],

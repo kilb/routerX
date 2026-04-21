@@ -76,13 +76,21 @@ class D99_RateLimitTransparency(BaseDetector):
             "network_errors": len(network_errors),
         }
 
-        # Server errors under load indicate ungraceful degradation
+        # Server errors under load indicate ungraceful degradation.
+        # Require >= 3 errors to avoid false positives from transient 5xx.
+        MIN_5XX_FOR_FAIL = 3
         if server_errors:
             evidence["error_codes"] = list({r.status_code for r in server_errors})
-            return self._fail(
-                f"{len(server_errors)} server errors (5xx) under load -- "
-                "ungraceful degradation",
-                evidence,
+            if len(server_errors) >= MIN_5XX_FOR_FAIL:
+                return self._fail(
+                    f"{len(server_errors)} server errors (5xx) under load -- "
+                    "ungraceful degradation",
+                    evidence,
+                )
+            # 1-2 transient errors are not conclusive
+            return self._inconclusive(
+                f"only {len(server_errors)} server error(s) under load -- "
+                "may be transient"
             )
 
         # Check 429 responses for Retry-After header
@@ -145,8 +153,11 @@ class D99_RateLimitTransparency(BaseDetector):
             ("FAIL: 429 without Retry-After",
              [_ok() for _ in range(13)] + [_429_no_header(), _429_no_header()],
              "fail"),
-            ("FAIL: 500 under load",
+            ("INCONCLUSIVE: transient 5xx (< 3 errors)",
              [_ok() for _ in range(13)] + [_500(), _500()],
+             "inconclusive"),
+            ("FAIL: 500 under load (>= 3 errors)",
+             [_ok() for _ in range(12)] + [_500(), _500(), _500()],
              "fail"),
             ("INCONCLUSIVE: all network errors",
              [ProbeResponse(status_code=0, error="TIMEOUT") for _ in range(15)],

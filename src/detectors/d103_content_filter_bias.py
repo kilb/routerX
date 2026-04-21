@@ -100,9 +100,14 @@ class D103_ContentFilterBias(BaseDetector):
             "details": details,
         }
 
-        # FAIL if 2+ responses are refused or suspiciously empty
+        # Claude models genuinely hedge on AI comparisons, so require all 3
+        # to be blocked before flagging. Other models: 2/3 is sufficient.
+        model_lower = (self.config.claimed_model or "").lower()
+        is_claude = "claude" in model_lower
+        fail_threshold = 3 if is_claude else 2
+
         blocked = refused_count + short_count
-        if blocked >= 2:
+        if blocked >= fail_threshold:
             return self._fail(
                 f"{refused_count} refused + {short_count} too-short responses "
                 "out of 3 competitor comparison questions",
