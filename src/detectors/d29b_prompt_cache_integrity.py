@@ -64,10 +64,15 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         # ANY provider: infer from model name. Avoids sending OpenAI-shape
         # payload (no cache_control) to a Claude router, which would
         # guarantee FAIL on a compliant router.
+        from ..models import ApiFormat
         model_lower = model.lower()
-        if provider == ProviderType.ANTHROPIC or "claude" in model_lower:
+        # Choose payload format based on WIRE FORMAT (api_format), not model
+        # name. A Claude model behind an OpenAI-format proxy needs the OpenAI
+        # payload shape — Anthropic's cache_control syntax is ignored by
+        # OpenAI-format endpoints.
+        if self.config.api_format == ApiFormat.ANTHROPIC:
             builder = _build_anthropic_payload
-        elif provider == ProviderType.OPENAI or any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-")):
+        elif self.config.api_format == ApiFormat.OPENAI or any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-")):
             builder = _build_openai_payload
         else:
             # Unknown provider — cannot pick the right cache_control shape.
