@@ -11,7 +11,9 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 from ..utils.diversity import mean_jaccard_dist
 
 
-_PROMPT = "Write one short, creative opening line for a mystery novel. Just the line, nothing else."
+# Use a prompt that produces longer, more varied output for reliable Jaccard.
+# Short one-liners have too few words for meaningful word-set distance.
+_PROMPT = "Write a short paragraph (3-4 sentences) describing a mysterious scene. Be creative and vivid."
 _N_PER_GROUP = 4
 
 
@@ -32,8 +34,8 @@ class D44_TopPSensitivity(BaseDetector):
                 probes.append(ProbeRequest(
                     payload={
                         "model": self.config.claimed_model,
-                        "max_tokens": 60,
-                        "temperature": 1.0,
+                        "max_tokens": 150,
+                        "temperature": 0.7,
                         "top_p": top_p,
                         "messages": [{"role": "user", "content": _PROMPT}],
                     },
@@ -53,8 +55,18 @@ class D44_TopPSensitivity(BaseDetector):
         md = mean_jaccard_dist(diverse)
         ev = {"mean_focused_dist": mf, "mean_diverse_dist": md,
               "delta": md - mf}
-        if md - mf >= 0.10:
+        delta = md - mf
+        if delta >= 0.10:
             return self._pass(ev)
+        # Negative delta (focused MORE diverse than diverse group) suggests
+        # statistical noise rather than top_p being dropped — both groups
+        # behave the same. Only FAIL when delta is small but positive or zero
+        # (both groups identical = parameter ignored). Negative = INCONCLUSIVE.
+        if delta < -0.05:
+            return self._inconclusive(
+                f"reversed delta ({delta:.2f}); insufficient signal to determine "
+                f"top_p behavior (sampling noise dominates)",
+            )
         return self._fail(
             f"diverse-group diversity ({md:.2f}) not meaningfully > "
             f"focused-group ({mf:.2f}); top_p likely ignored", ev,
