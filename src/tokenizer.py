@@ -46,6 +46,15 @@ class TokenCounter:
             return list(text)
         return [enc.decode([t]) for t in enc.encode(text)]
 
+    def is_exact_encoding(self, model: str) -> bool:
+        """Return True if tiktoken has a model-specific encoding (not fallback)."""
+        try:
+            import tiktoken
+            tiktoken.encoding_for_model(model)
+            return True
+        except (KeyError, Exception):
+            return False
+
     def _get(self, model: str):
         if model in self._enc:
             return self._enc[model]

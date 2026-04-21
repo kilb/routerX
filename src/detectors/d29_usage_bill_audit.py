@@ -51,8 +51,12 @@ class D29_UsageBillAuditor(BaseDetector):
         )
 
     @property
+    def _has_exact_tokenizer(self) -> bool:
+        return token_counter.is_exact_encoding(self.config.claimed_model)
+
+    @property
     def _inflation_threshold(self) -> float:
-        if self._is_openai_model:
+        if self._is_openai_model and self._has_exact_tokenizer:
             return TOKEN_INFLATION_THRESHOLD_OPENAI
         return TOKEN_INFLATION_THRESHOLD_OTHER
 

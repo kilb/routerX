@@ -49,9 +49,14 @@ class D83_CompletionTokenAudit(BaseDetector):
             any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
             and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
         )
-        if is_openai_model:
-            return INFLATION_THRESHOLD_OPENAI
-        return INFLATION_THRESHOLD_OTHER
+        if not is_openai_model:
+            return INFLATION_THRESHOLD_OTHER
+        # Even for OpenAI models, use loose threshold if tiktoken doesn't
+        # have an exact encoding (new models like gpt-5.x may use a
+        # tokenizer not yet in tiktoken).
+        if not token_counter.is_exact_encoding(self.config.claimed_model):
+            return INFLATION_THRESHOLD_OTHER
+        return INFLATION_THRESHOLD_OPENAI
 
     async def send_probes(self) -> list[ProbeResponse]:
         return [await self.client.send(ProbeRequest(
