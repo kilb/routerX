@@ -133,21 +133,24 @@ class D29b_PromptCacheIntegrity(BaseDetector):
                 "cache_read_input_tokens == 0 on second call -- cache not honored",
                 ev,
             )
-        # For OpenAI, auto-caching is not guaranteed even above the 1024-token
-        # threshold -- return INCONCLUSIVE rather than FAIL.
+        # Prompt caching is model-capability dependent:
+        # - OpenAI models: auto-caching (not guaranteed) → INCONCLUSIVE
+        # - Non-OpenAI models via OpenAI format: caching mechanism doesn't
+        #   apply to the backend model → SKIP
+        # - Anthropic native: handled above (Anthropic cache indicators)
         model = self.config.claimed_model.lower()
-        is_openai_path = (
-            self.config.claimed_provider == ProviderType.OPENAI
-            or any(k in model for k in ("gpt", "o1-", "o3-", "o4-"))
+        is_openai_model = (
+            any(k in model for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model for k in ("claude", "gemini", "llama", "qwen", "mistral"))
         )
-        if is_openai_path:
-            return self._inconclusive(
-                "no cache indicators in either response -- OpenAI auto-caching "
-                "is not guaranteed"
+        if not is_openai_model:
+            return self._skip(
+                "prompt caching not applicable for non-OpenAI backend model "
+                "via OpenAI format proxy"
             )
-        return self._fail(
-            "no cache indicators in either response -- router ignored cache_control",
-            ev,
+        return self._inconclusive(
+            "no cache indicators in either response -- OpenAI auto-caching "
+            "is not guaranteed"
         )
 
     @classmethod
