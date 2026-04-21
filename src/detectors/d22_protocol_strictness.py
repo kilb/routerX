@@ -82,36 +82,29 @@ class D22_ProtocolStrictness(BaseDetector):
                     pass
                 else:
                     subs.append(("22a_json", False, "non-JSON output despite strict:true"))
-        # 22b: Only meaningful for Anthropic; OpenAI accepts double-user messages.
-        if (self.config.claimed_provider in (ProviderType.ANTHROPIC,)
+        # 22b: Only meaningful for NATIVE Anthropic API (api_format=anthropic).
+        # OpenAI-format proxies (including OpenRouter) legitimately accept
+        # double-user messages because the OpenAI spec allows it.
+        from ..models import ApiFormat
+        is_native_anthropic = (
+            self.config.claimed_provider == ProviderType.ANTHROPIC
+            and self.config.api_format == ApiFormat.ANTHROPIC
+        )
+        if (is_native_anthropic
                 and r_b is not None and not r_b.is_network_error):
             subs.append(("22b_roles", r_b.status_code == 400, f"status={r_b.status_code}"))
-        # 22c: prefill continuation — For Anthropic, correction of obvious
-        # errors in prefill is smart behavior (Claude 4 models do this
-        # legitimately), so only FAIL if the model IGNORES the prefill
-        # entirely (no continuation at all). For other providers, correction
-        # still signals a mismatch.
-        if r_c is not None and not r_c.is_network_error:
+        # 22c: prefill continuation only meaningful on native Anthropic API.
+        # OpenAI-format proxies treat the assistant message as a normal turn,
+        # not as a prefill to continue — "no continuation" is expected.
+        # For native Anthropic: correction of obvious errors is smart behavior,
+        # so only FAIL if model IGNORES the prefill entirely (empty response).
+        if r_c is not None and not r_c.is_network_error and is_native_anthropic:
             content = r_c.content
-            corrects = bool(re.search(
-                r"1\s*\+\s*1\s*=?\s*2|not\s+3|incorrect|wrong|actually\s+2",
-                content, re.IGNORECASE,
+            has_continuation = bool(content.strip())
+            subs.append((
+                "22c_prefill", has_continuation,
+                "continued" if has_continuation else "no continuation",
             ))
-            is_anthropic = self.config.claimed_provider == ProviderType.ANTHROPIC
-            if is_anthropic:
-                # For Anthropic: correction is smart, not fraud. Only fail
-                # if there's NO continuation at all (empty or unrelated).
-                has_continuation = bool(content.strip())
-                subs.append((
-                    "22c_prefill", has_continuation,
-                    "corrected (acceptable for Anthropic)" if corrects
-                    else ("continued=PASS" if has_continuation else "no continuation"),
-                ))
-            else:
-                subs.append((
-                    "22c_prefill", not corrects,
-                    "corrected=FAIL" if corrects else "continued=PASS",
-                ))
         # 22d
         if r_d is not None and not r_d.is_network_error:
             raw = r_d.raw_text.lower()
@@ -142,8 +135,8 @@ class D22_ProtocolStrictness(BaseDetector):
             ("PASS: all checks pass", [ok_json, err400, prefill_ok, err400], "pass"),
             ("FAIL: 22a non-JSON output", [ok_text, err400, prefill_ok, err400], "fail"),
             ("PASS: 22b skipped for non-Anthropic", [ok_json, ok_200, prefill_ok, err400], "pass"),
-            ("FAIL: 22c corrected prefill (non-Anthropic provider)",
-             [ok_json, err400, prefill_bad, err400], "fail"),
+            ("PASS: 22c skipped for non-native-Anthropic (OpenAI format)",
+             [ok_json, err400, prefill_bad, err400], "pass"),
             ("FAIL: 22d gateway fingerprint", [ok_json, err400, prefill_ok,
              ProbeResponse(status_code=200, body={}, raw_text="<html>cloudflare</html>")], "fail"),
             ("INCONCLUSIVE: all network error",
