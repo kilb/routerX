@@ -67,8 +67,9 @@ class D26_SemanticCacheBuster(BaseDetector):
                 "temperature": TEMPERATURE,
                 "max_tokens": MAX_TOKENS,
                 "messages": [{"role": "user", "content": (
-                    f"Write Python quicksort. "
-                    f"Put this exact reference id in the first comment line: {nonce}"
+                    f"Write a short creative story (3-4 sentences) about a traveler "
+                    f"who discovers something unexpected. Be imaginative and original. "
+                    f"Include this reference code somewhere in your story: {nonce}"
                 )}],
             },
             endpoint_path=self.config.default_endpoint_path,
