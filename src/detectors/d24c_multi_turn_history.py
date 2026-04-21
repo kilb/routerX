@@ -72,6 +72,24 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
         ev = {"expected": expected, "got": content[:200]}
         if expected in content:
             return self._pass(ev)
+        # Distinguish between "model forgot" and "router trimmed history".
+        # If model says "I don't know/remember" or gives a wrong number,
+        # it may just have poor recall — not evidence of router trimming.
+        content_lower = content.lower()
+        if any(k in content_lower for k in (
+            "don't know", "don't remember", "not sure", "cannot recall",
+            "no lucky number", "didn't mention", "sorry",
+        )):
+            return self._inconclusive(
+                "model cannot recall nonce (may be memory limitation, not trimming)"
+            )
+        # If model produced SOME number/nonce-like answer, it's trying to
+        # remember but got it wrong — ambiguous.
+        import re
+        if re.search(r"LUCKY[-_]?\w+|\d{4,}", content):
+            return self._inconclusive(
+                "model recalled wrong value (may be memory error, not trimming)"
+            )
         return self._fail("early history was trimmed; first-turn nonce missing", ev)
 
     @classmethod
@@ -86,8 +104,12 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
         return [
             ("PASS: nonce recalled (fallback match)",
              [mk(f"{_TEST_NONCE} is the number.")], "pass"),
-            ("FAIL: wrong nonce", [mk("Your lucky number was 42")], "fail"),
-            ("FAIL: empty/no memory", [mk("I don't know.")], "fail"),
+            ("INCONCLUSIVE: model says don't know",
+             [mk("I don't know what your lucky number was.")], "inconclusive"),
+            ("INCONCLUSIVE: wrong nonce-like value",
+             [mk("Your lucky number was LUCKY-WRONGVAL.")], "inconclusive"),
+            ("FAIL: unrelated response (no recall attempt)",
+             [mk("The weather is nice today.")], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
         ]

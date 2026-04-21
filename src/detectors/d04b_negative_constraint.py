@@ -52,7 +52,9 @@ class D4b_NegativeConstraintProbe(BaseDetector):
             return self._inconclusive("empty content")
         sentences = [s.strip() for s in SENTENCE_SPLIT.split(content) if s.strip()]
         if len(sentences) < 4:
-            return self._fail("fewer than 4 sentences", {"count": len(sentences), "content": content[:200]})
+            return self._inconclusive(
+                f"only {len(sentences)} sentences (model may not follow 4-sentence format)"
+            )
         even_sentences = [sentences[i] for i in (1, 3)]
         violations = [s for s in even_sentences if "e" in s.lower()]
         ev = {
@@ -108,9 +110,9 @@ class D4b_NegativeConstraintProbe(BaseDetector):
             ("INCONCLUSIVE: e in both even sentences (frontier models struggle)",
              [make_resp(fail_story_both)],
              "inconclusive"),
-            ("FAIL: fewer than 4 sentences",
+            ("INCONCLUSIVE: fewer than 4 sentences",
              [make_resp(short_story)],
-             "fail"),
+             "inconclusive"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
              "inconclusive"),

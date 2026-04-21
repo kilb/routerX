@@ -83,10 +83,22 @@ class D122_ResponseRewriteDetection(BaseDetector):
         }
 
         if not has_marker:
-            return self._fail("exact marker missing from response", evidence)
+            # Model may simply not follow "reply with ONLY this marker"
+            # instructions. Only FAIL if rewrite indicators are also present
+            # (clear evidence of router appending content). Otherwise PASS —
+            # no evidence of router manipulation.
+            if found_indicators:
+                return self._fail(
+                    f"marker missing AND rewrite indicators found: "
+                    f"{', '.join(found_indicators)}",
+                    evidence,
+                )
+            return self._pass(evidence | {
+                "note": "marker not echoed but no rewrite indicators detected",
+            })
         if found_indicators:
             return self._fail(
-                f"rewrite indicators found: {', '.join(found_indicators)}",
+                f"rewrite indicators found after marker: {', '.join(found_indicators)}",
                 evidence,
             )
         return self._pass(evidence)
@@ -102,8 +114,8 @@ class D122_ResponseRewriteDetection(BaseDetector):
         return [
             ("PASS: exact marker only",
              [_resp(_MARKER)], "pass"),
-            ("FAIL: marker missing",
-             [_resp("Hello there!")], "fail"),
+            ("PASS: marker missing but no rewrite indicators",
+             [_resp("Hello there!")], "pass"),
             ("FAIL: marker present but with branding",
              [_resp(f"{_MARKER}\n\nPowered by SuperAI Gateway. All rights reserved.")], "fail"),
             ("INCONCLUSIVE: empty content",

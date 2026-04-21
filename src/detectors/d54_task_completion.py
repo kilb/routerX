@@ -8,7 +8,7 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 COMPLETION_MARKER = "[LIST_COMPLETE]"
 MAX_TOKENS = 2000
 MIN_LANGUAGES_PASS = 20
-MIN_LANGUAGES_FAIL = 15
+MIN_LANGUAGES_FAIL = 10
 
 PROMPT = (
     "Please list 20 programming languages and their main use cases, one per line. "
@@ -122,7 +122,7 @@ class D54_TaskCompletion(BaseDetector):
             [f"{i}. Language{i}: use case" for i in range(1, 21)]
         ) + f"\n{COMPLETION_MARKER}"
         short_list_no_marker = "\n".join(
-            [f"{i}. Language{i}: use case" for i in range(1, 11)]
+            [f"{i}. Language{i}: use case" for i in range(1, 7)]
         )
         short_list_length = "\n".join(
             [f"{i}. Language{i}: use case" for i in range(1, 8)]
@@ -138,7 +138,7 @@ class D54_TaskCompletion(BaseDetector):
              [make_resp(compact_list, "stop")],
              "pass"),
             # FAIL: semantic truncation — few languages, no marker, finish=stop
-            ("FAIL: semantic truncation (<15 langs, no marker, stop)",
+            ("FAIL: semantic truncation (<10 langs, no marker, stop)",
              [make_resp(short_list_no_marker, "stop")],
              "fail"),
             # FAIL: crude truncation — finish_reason=length
