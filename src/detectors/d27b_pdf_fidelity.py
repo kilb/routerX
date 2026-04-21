@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, Capability, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, Capability, ApiFormat, ProbeRequest, ProbeResponse, DetectorResult
 from ..assets import get_probe_pdf, to_base64
 
 _DEFAULT_NONCE = "PDF-NONCE-MID-55K"
@@ -21,10 +21,23 @@ class D27b_PDFFidelityProbe(BaseDetector):
         pdf_bytes, nonce = get_probe_pdf()
         self._nonce = nonce
         b64 = to_base64(pdf_bytes)
+        # Use the correct PDF format based on API format:
+        # - Anthropic native: type=document with source
+        # - OpenAI-compatible (OpenRouter etc.): type=file with data URL
+        if self.config.api_format == ApiFormat.ANTHROPIC:
+            pdf_part = {
+                "type": "document",
+                "source": {"type": "base64", "media_type": "application/pdf", "data": b64},
+            }
+        else:
+            pdf_part = {
+                "type": "file",
+                "file": {"filename": "probe.pdf", "file_data": f"data:application/pdf;base64,{b64}"},
+            }
         return [await self.client.send(ProbeRequest(
             payload={"model": self.config.claimed_model, "temperature": 0, "max_tokens": 40,
                      "messages": [{"role": "user", "content": [
-                         {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": b64}},
+                         pdf_part,
                          {"type": "text", "text": "Read the PDF. Output only the nonce found on page 2. Nothing else."}]}]},
             endpoint_path=self.config.default_endpoint_path, description="pdf probe"))]
 
