@@ -83,9 +83,7 @@ class D70_LogitBiasHonor(BaseDetector):
             # genuinely doesn't exist. OpenAI-format proxies should support it.
             from ..models import ApiFormat
             if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._inconclusive(
-                    "logit_bias not in Anthropic API spec"
-                )
+                return self._skip("logit_bias not in Anthropic API spec")
             return self._fail(
                 f"suppressed run still has {bias_count} 'the's "
                 f"(base={base_count}, ratio={ratio:.0%}) "

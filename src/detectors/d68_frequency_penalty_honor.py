@@ -84,9 +84,7 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
             # OpenAI-format proxies should support it regardless of backend.
             from ..models import ApiFormat
             if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._inconclusive(
-                    "frequency_penalty not in Anthropic API spec"
-                )
+                return self._skip("frequency_penalty not in Anthropic API spec")
             return self._fail(
                 f"high-penalty run repeated 'apple' at {ratio:.0%} of base rate "
                 f"with similar length -- frequency_penalty likely dropped", ev,

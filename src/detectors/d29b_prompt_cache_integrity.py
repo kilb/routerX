@@ -96,9 +96,8 @@ class D29b_PromptCacheIntegrity(BaseDetector):
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         if not responses:
-            return self._inconclusive(
-                getattr(self, "_skip_reason", "no probes sent")
-            )
+            reason = getattr(self, "_skip_reason", "no probes sent")
+            return self._skip(reason)
         r1, r2 = responses[0], responses[1]
         if r1.is_network_error or r2.is_network_error:
             err = r1.error or r2.error

@@ -72,9 +72,7 @@ class D62_LogprobsHonesty(BaseDetector):
             # format where logprobs genuinely doesn't exist in the spec.
             from ..models import ApiFormat
             if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._inconclusive(
-                    "logprobs not in Anthropic API spec"
-                )
+                return self._skip("logprobs not in Anthropic API spec")
             return self._fail("logprobs flag dropped -- no logprobs block in response", {})
         if not positions:
             return self._fail("logprobs.content is empty", {})

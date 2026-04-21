@@ -115,7 +115,11 @@ class D22_ProtocolStrictness(BaseDetector):
         if fails:
             return self._fail(f"sub-probes failed: {fails}", ev)
         if not subs:
-            return self._inconclusive("no applicable sub-probes produced results")
+            # Distinguish "not applicable" (no probes sent) from "all failed"
+            any_sent = any(r is not None for r in responses)
+            if any_sent:
+                return self._inconclusive("all sub-probes failed or returned errors")
+            return self._skip("no applicable sub-probes for this api_format/provider")
         return self._pass(ev)
 
     @classmethod
