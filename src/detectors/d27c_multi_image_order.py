@@ -40,9 +40,13 @@ class D27c_MultiImageOrderProbe(BaseDetector):
         n1 = getattr(self, "_nonce_1", _TEST_NONCE_1)
         n2 = getattr(self, "_nonce_2", _TEST_NONCE_2)
         content = r.content.strip()
-        if n2 in content:
+        # Extract the unique part of each nonce (after "P/N-" prefix)
+        # to handle OCR that drops the prefix
+        n2_core = n2.split("-", 1)[-1] if "-" in n2 else n2
+        n1_core = n1.split("-", 1)[-1] if "-" in n1 else n1
+        if n2 in content or n2_core in content:
             return self._pass({"expected": n2, "got": content})
-        if n1 in content:
+        if n1 in content or n1_core in content:
             return self._fail("returned first image nonce (order scrambled)", {"expected": n2, "got": content})
         return self._fail("neither nonce recognized", {"expected": n2, "got": content})
 
