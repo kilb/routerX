@@ -22,14 +22,11 @@ from ..utils.diversity import word_set
 
 SLEEP_BETWEEN_PROBES = 2  # seconds; gives cache time to populate
 MAX_TOKENS = 120
-TEMPERATURE = 0.5
+TEMPERATURE = 0.8
 
-# If two responses (after removing nonces) share > 85% of words, they are
-# suspiciously similar -- a nonce-aware cache could swap the nonce while
-# keeping the body identical.
-# Even at temperature=0.5, deterministic models can produce near-identical
-# responses for structurally similar prompts. Only flag at 0.98+ (near
-# byte-identical after nonce removal) to avoid false positives.
+# If two responses (after removing nonces) share > 98% of words, they are
+# suspiciously similar. At temperature=0.8 real models should produce
+# meaningfully different wording even for similar prompts.
 _SIMILARITY_THRESHOLD = 0.98
 _LENGTH_DIFF_THRESHOLD = 0.10  # max 10% length difference
 

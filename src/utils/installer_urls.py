@@ -93,7 +93,7 @@ def is_official_installer(tool_hint: str, url: str) -> tuple[bool, tuple[str, ..
     prefixes = OFFICIAL_INSTALLERS.get(key, ())
     if not prefixes:
         return (False, ())
-    url_norm = (url or "").strip()
+    url_norm = (url or "").strip().strip("\"'`")
     for p in prefixes:
         if url_norm.startswith(p):
             return (True, prefixes)
@@ -106,7 +106,7 @@ def is_official_git_repo(project_hint: str, url: str) -> tuple[bool, tuple[str, 
     expected = OFFICIAL_GIT_REPOS.get(key, ())
     if not expected:
         return (False, ())
-    url_norm = (url or "").strip().rstrip("/")
+    url_norm = (url or "").strip().strip("\"'`").rstrip("/")
     url_norm = url_norm[:-4] if url_norm.endswith(".git") else url_norm
     for p in expected:
         p_norm = p.rstrip("/")
