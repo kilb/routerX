@@ -23,26 +23,29 @@ MAX_TIMESTAMP_DRIFT_S = 3600  # 1 hour
 
 
 def _model_matches(claimed: str, returned: str) -> bool:
-    """Check if the returned model plausibly matches the claimed model.
+    """Check if models refer to the same family, ignoring word order and dates.
 
     Allow date-suffix flexibility: ``gpt-4o`` matches ``gpt-4o-2024-08-06``.
-    Reject cases where the returned model has extra qualifiers that change
-    the model family, e.g. ``gpt-4o`` must NOT match ``gpt-4o-mini``.
-
-    Strategy: after stripping a trailing date pattern (``-YYYY-MM-DD`` or
-    ``-YYYYMMDD``), the remaining base names must be equal.
+    Also handle word-order differences like ``claude-opus-4.6`` vs
+    ``claude-4.6-opus-20260205`` by keyword-set equality after stripping
+    vendor prefixes and date suffixes.
     """
     import re
 
-    c = claimed.lower().strip()
-    r = returned.lower().strip()
+    # Strip trailing date suffixes: -2024-08-06, -20240806
+    date_re = re.compile(r"(-\d{4}-\d{2}-\d{2}|-\d{8})$")
+    c = date_re.sub("", claimed).lower().strip()
+    r = date_re.sub("", returned).lower().strip()
     if c == r:
         return True
-    # Strip trailing date suffixes: -2024-08-06 or -20240806
-    date_pat = re.compile(r"(-\d{4}-\d{2}-\d{2}|-\d{8})$")
-    c_base = date_pat.sub("", c)
-    r_base = date_pat.sub("", r)
-    return c_base == r_base
+    # Keyword-set comparison: same tokens in any order → match.
+    # This handles claude-opus-4.6 vs claude-4.6-opus.
+    _VENDOR_NOISE = {"", "anthropic", "openai", "google"}
+    c_parts = set(re.split(r"[/\-.]", c)) - _VENDOR_NOISE
+    r_parts = set(re.split(r"[/\-.]", r)) - _VENDOR_NOISE
+    if c_parts and r_parts and c_parts == r_parts:
+        return True
+    return False
 
 
 @detector
@@ -165,6 +168,8 @@ class D87_ResponseModelFieldAudit(BaseDetector):
             # so this should PASS.
             ("PASS: same base model with different date suffixes",
              [r(ok_model, now), r("gpt-4o-2024-05-13", now), r(ok_model, now)], "pass"),
+            # Word-order difference: e.g. date-suffixed reorder (gpt-4o vs 4o-gpt)
+            # tested via _model_matches function directly; self_test uses gpt-4o as claimed
             # Different base models: "gpt-4o" vs "gpt-4o-mini" -- real switching
             ("FAIL: different base models across responses",
              [r(ok_model, now), r("gpt-4o-mini-2024-07-18", now), r(ok_model, now)], "fail"),

@@ -19,12 +19,15 @@ OFFICIAL_INSTALLERS: dict[str, tuple[str, ...]] = {
     "rust": (
         "https://sh.rustup.rs",
         "https://static.rust-lang.org/rustup/",
+        "https://www.rust-lang.org/",
+        "https://rustup.rs",
     ),
     "docker": (
         "https://get.docker.com",
     ),
     "homebrew": (
         "https://raw.githubusercontent.com/Homebrew/install/",
+        "https://brew.sh",
     ),
     "nvm": (
         "https://raw.githubusercontent.com/nvm-sh/nvm/",

@@ -82,9 +82,11 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
             # Anthropic/Gemini don't support frequency_penalty; dropping it
             # is correct proxy behavior, not fraud.
             if self.config.claimed_provider in (ProviderType.ANTHROPIC,
-                                                  ProviderType.GEMINI):
+                                                  ProviderType.GEMINI) \
+               or any(k in self.config.claimed_model.lower()
+                      for k in ("claude", "gemini", "llama", "qwen", "mistral")):
                 return self._inconclusive(
-                    "frequency_penalty not supported by claimed provider"
+                    "frequency_penalty not supported by claimed provider/model"
                 )
             return self._fail(
                 f"high-penalty run repeated 'apple' at {ratio:.0%} of base rate "

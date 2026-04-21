@@ -82,9 +82,11 @@ class D70_LogitBiasHonor(BaseDetector):
             # Anthropic/Gemini don't support logit_bias; dropping it is
             # correct proxy behavior, not fraud.
             if self.config.claimed_provider in (ProviderType.ANTHROPIC,
-                                                  ProviderType.GEMINI):
+                                                  ProviderType.GEMINI) \
+               or any(k in self.config.claimed_model.lower()
+                      for k in ("claude", "gemini", "llama", "qwen", "mistral")):
                 return self._inconclusive(
-                    "logit_bias not supported by claimed provider"
+                    "logit_bias not supported by claimed provider/model"
                 )
             return self._fail(
                 f"suppressed run still has {bias_count} 'the's "

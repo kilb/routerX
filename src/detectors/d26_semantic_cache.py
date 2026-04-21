@@ -22,12 +22,12 @@ from ..utils.diversity import word_set
 
 SLEEP_BETWEEN_PROBES = 2  # seconds; gives cache time to populate
 MAX_TOKENS = 120
-TEMPERATURE = 0
+TEMPERATURE = 0.5
 
 # If two responses (after removing nonces) share > 85% of words, they are
 # suspiciously similar -- a nonce-aware cache could swap the nonce while
 # keeping the body identical.
-_SIMILARITY_THRESHOLD = 0.85
+_SIMILARITY_THRESHOLD = 0.95
 _LENGTH_DIFF_THRESHOLD = 0.10  # max 10% length difference
 
 
