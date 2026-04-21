@@ -61,7 +61,14 @@ class D99_RateLimitTransparency(BaseDetector):
         if len(network_errors) == len(responses):
             return self._inconclusive("all requests failed with network errors")
 
-        successful = [r for r in responses if r.status_code == 200]
+        successful = [
+            r for r in responses
+            if r.status_code == 200 and not (r.body and "error" in r.body)
+        ]
+        error_bodies = [
+            r for r in responses
+            if r.status_code == 200 and r.body and "error" in r.body
+        ]
         rate_limited = [r for r in responses if r.status_code == 429]
         server_errors = [
             r for r in responses
@@ -71,6 +78,7 @@ class D99_RateLimitTransparency(BaseDetector):
         evidence: dict = {
             "total": len(responses),
             "ok_200": len(successful),
+            "error_body_200": len(error_bodies),
             "rate_limited_429": len(rate_limited),
             "server_errors_5xx": len(server_errors),
             "network_errors": len(network_errors),

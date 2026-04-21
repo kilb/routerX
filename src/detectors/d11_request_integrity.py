@@ -22,7 +22,7 @@ _TEST_MARKER = "CNF-TESTTEST"  # fallback for self_test (not used at runtime)
 class D11_RequestIntegrity(BaseDetector):
     detector_id = "D11"
     detector_name = "RequestIntegrity"
-    priority = Priority.P2
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 1
     description = (

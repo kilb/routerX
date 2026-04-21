@@ -49,6 +49,8 @@ class D115_RequestEchoVerification(BaseDetector):
         r = responses[0]
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
+        if r.status_code != 200:
+            return self._inconclusive(f"status {r.status_code}")
 
         content = r.content.strip()
         if not content:

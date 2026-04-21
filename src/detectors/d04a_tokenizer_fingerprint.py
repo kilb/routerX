@@ -4,7 +4,7 @@ import random
 import string
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ApiFormat, ProbeRequest, ProbeResponse, DetectorResult
 from ..tokenizer import token_counter
 from ..config import TOKENIZER_FINGERPRINTS, TOKENIZER_PROBE_STRINGS
 
@@ -65,6 +65,8 @@ class D4a_TokenizerFingerprint(BaseDetector):
         specific word ``SolidGoldMagikarp``. All words in the pool are
         equally useful for tokenizer-family discrimination.
         """
+        if self.config.api_format == ApiFormat.ANTHROPIC:
+            return [ProbeResponse(status_code=0, error="SKIP:logprobs not available in Anthropic API")]
         self._probe_word = random.choice(_make_runtime_probe_pool())
         return [await self.client.send(ProbeRequest(
             payload={

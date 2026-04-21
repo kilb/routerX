@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, ProviderType, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, ProviderType, ApiFormat, ProbeRequest, ProbeResponse, DetectorResult
 
 
 @detector
@@ -22,6 +22,8 @@ class D52_ResponseFormatJSON(BaseDetector):
     description = "Detect response_format=json_object being silently dropped."
 
     async def send_probes(self) -> list[ProbeResponse]:
+        if self.config.api_format == ApiFormat.ANTHROPIC:
+            return [ProbeResponse(status_code=0, error="SKIP:response_format not in Anthropic API spec")]
         return [await self.client.send(ProbeRequest(
             payload={
                 "model": self.config.claimed_model,
@@ -65,7 +67,7 @@ class D52_ResponseFormatJSON(BaseDetector):
             parsed = json.loads(stripped)
         except json.JSONDecodeError as exc:
             if any(k in self.config.claimed_model.lower() for k in ("claude", "gemini", "llama", "qwen", "mistral")):
-                return self._inconclusive(
+                return self._skip(
                     "response_format=json_object may not be supported by this model"
                 )
             return self._fail(

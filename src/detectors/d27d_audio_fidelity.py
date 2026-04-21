@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..registry import detector, BaseDetector
-from ..models import Priority, JudgeMode, Capability, ProbeRequest, ProbeResponse, DetectorResult
+from ..models import Priority, JudgeMode, Capability, ApiFormat, ProbeRequest, ProbeResponse, DetectorResult
 from ..assets import aget_probe_audio, to_base64
 
 _EXPECTED_WORDS = ("CRIMSON", "FORTY", "TWO")
@@ -23,11 +23,21 @@ class D27d_AudioFidelityProbe(BaseDetector):
             return [ProbeResponse(status_code=0, error="TTS_UNAVAILABLE")]
         self._expected = text
         b64 = to_base64(audio_bytes)
+        if self.config.api_format == ApiFormat.ANTHROPIC:
+            audio_part = {
+                "type": "audio",
+                "source": {"type": "base64", "media_type": "audio/wav", "data": b64},
+            }
+        else:
+            audio_part = {
+                "type": "input_audio",
+                "input_audio": {"data": b64, "format": "wav"},
+            }
         return [await self.client.send(ProbeRequest(
             payload={"model": self.config.claimed_model, "temperature": 0, "max_tokens": 12,
                      "messages": [{"role": "user", "content": [
                          {"type": "text", "text": "Output only the verification nonce spoken in the audio. Nothing else."},
-                         {"type": "input_audio", "input_audio": {"data": b64, "format": "wav"}}]}]},
+                         audio_part]}]},
             endpoint_path=self.config.default_endpoint_path, description="audio probe"))]
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
