@@ -81,9 +81,15 @@ class D70_LogitBiasHonor(BaseDetector):
         if bias_count >= 5 and ratio > 0.5:
             # Only INCONCLUSIVE for native Anthropic format where logit_bias
             # genuinely doesn't exist. OpenAI-format proxies should support it.
-            from ..models import ApiFormat
-            if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._skip("logit_bias not in Anthropic API spec")
+            # logit_bias is OpenAI-native. Non-OpenAI models don't support it
+            # natively — proxy can't translate a capability the backend lacks.
+            model_lower = self.config.claimed_model.lower()
+            is_openai_model = (
+                any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+                and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+            )
+            if not is_openai_model:
+                return self._skip("logit_bias not supported by non-OpenAI models")
             return self._fail(
                 f"suppressed run still has {bias_count} 'the's "
                 f"(base={base_count}, ratio={ratio:.0%}) "

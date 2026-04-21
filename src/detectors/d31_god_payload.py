@@ -66,8 +66,13 @@ class D31_GodPayload(BaseDetector):
         content = body.get("full_content", "") or r.content
         usage = body.get("usage")
         subs = []
-        from ..models import ApiFormat
-        _skip_oai = (self.config.api_format == ApiFormat.ANTHROPIC)
+        # strict json_schema and logit_bias are OpenAI-native capabilities.
+        # Non-OpenAI backend models don't support them.
+        model_lower = self.config.claimed_model.lower()
+        _skip_oai = (
+            not any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+            or any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
         # Check 1: JSON schema compliance (strict json_schema is OpenAI-only)
         parsed = None
         if _skip_oai:

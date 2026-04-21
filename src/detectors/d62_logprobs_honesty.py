@@ -66,13 +66,18 @@ class D62_LogprobsHonesty(BaseDetector):
             return self._inconclusive("empty body")
         positions = _extract_logprobs(r.body)
         if positions is None:
-            # If the wire format is OpenAI, logprobs SHOULD be supported
-            # regardless of backend model — the proxy chose to advertise
-            # OpenAI compatibility. Only INCONCLUSIVE for native Anthropic
-            # format where logprobs genuinely doesn't exist in the spec.
+            # logprobs is an OpenAI-native capability. Non-OpenAI models
+            # (Claude, Gemini, Llama etc.) don't support it natively, so a
+            # proxy can't translate it even if it speaks OpenAI format.
+            # Only FAIL for actual OpenAI models where logprobs is expected.
             from ..models import ApiFormat
-            if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._skip("logprobs not in Anthropic API spec")
+            model_lower = self.config.claimed_model.lower()
+            is_openai_model = (
+                any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+                and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+            )
+            if not is_openai_model:
+                return self._skip("logprobs not supported by non-OpenAI models")
             return self._fail("logprobs flag dropped -- no logprobs block in response", {})
         if not positions:
             return self._fail("logprobs.content is empty", {})

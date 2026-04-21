@@ -82,9 +82,15 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
             # Only INCONCLUSIVE for native Anthropic format where
             # frequency_penalty genuinely doesn't exist in the spec.
             # OpenAI-format proxies should support it regardless of backend.
-            from ..models import ApiFormat
-            if self.config.api_format == ApiFormat.ANTHROPIC:
-                return self._skip("frequency_penalty not in Anthropic API spec")
+            # frequency_penalty is OpenAI-native. Non-OpenAI models don't
+            # support it — proxy can't translate a capability the backend lacks.
+            model_lower = self.config.claimed_model.lower()
+            is_openai_model = (
+                any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+                and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+            )
+            if not is_openai_model:
+                return self._skip("frequency_penalty not supported by non-OpenAI models")
             return self._fail(
                 f"high-penalty run repeated 'apple' at {ratio:.0%} of base rate "
                 f"with similar length -- frequency_penalty likely dropped", ev,

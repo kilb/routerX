@@ -75,11 +75,14 @@ class D21_PhysicalParamProbe(BaseDetector):
             ratio = readable_bigram_ratio(r_a.content)
             ok = ratio < BIGRAM_THRESHOLD
             subs.append(("21a_temp", ok, f"bigram={ratio:.2f}"))
-        # 21b/21c: logit_bias and logprobs are OpenAI API parameters. Only
-        # skip on native Anthropic format where they don't exist in the spec.
-        # OpenAI-format proxies should support them regardless of backend model.
-        from ..models import ApiFormat
-        _skip_oai_params = (self.config.api_format == ApiFormat.ANTHROPIC)
+        # 21b/21c: logit_bias and logprobs are OpenAI-native capabilities.
+        # Non-OpenAI backend models don't support them — a proxy can't
+        # translate capabilities the backend model lacks.
+        model_lower = self.config.claimed_model.lower()
+        _skip_oai_params = (
+            not any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+            or any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
         if _skip_oai_params:
             subs.append(("21b_logit", None, "skipped: logit_bias not supported by provider"))
         elif r_b.is_network_error:
