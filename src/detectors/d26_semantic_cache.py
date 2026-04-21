@@ -27,7 +27,10 @@ TEMPERATURE = 0.5
 # If two responses (after removing nonces) share > 85% of words, they are
 # suspiciously similar -- a nonce-aware cache could swap the nonce while
 # keeping the body identical.
-_SIMILARITY_THRESHOLD = 0.95
+# Even at temperature=0.5, deterministic models can produce near-identical
+# responses for structurally similar prompts. Only flag at 0.98+ (near
+# byte-identical after nonce removal) to avoid false positives.
+_SIMILARITY_THRESHOLD = 0.98
 _LENGTH_DIFF_THRESHOLD = 0.10  # max 10% length difference
 
 

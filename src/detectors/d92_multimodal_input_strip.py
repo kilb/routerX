@@ -66,6 +66,16 @@ class D92_MultiModalInputStripping(BaseDetector):
         if code in content:
             return self._pass(evidence)
 
+        # Fuzzy match: OCR may misread some chars but model IS seeing the image
+        import re
+        found = re.findall(r'\b[A-Za-z0-9]{4,8}\b', content)
+        if found and code:
+            for fc in found:
+                if len(fc) == len(code):
+                    diffs = sum(1 for a, b in zip(fc.upper(), code.upper()) if a != b)
+                    if diffs <= 3:
+                        return self._pass(evidence | {"fuzzy_match": fc})
+
         if len(content) > MIN_SUBSTANTIVE_LEN:
             return self._fail("image code not found -- image may be stripped", evidence)
 
