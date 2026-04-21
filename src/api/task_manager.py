@@ -118,7 +118,7 @@ class TaskManager:
                 info.created_at = datetime.fromisoformat(raw["created_at"])
                 if raw.get("completed_at"):
                     info.completed_at = datetime.fromisoformat(raw["completed_at"])
-                if raw.get("report"):
+                if raw.get("report") and raw["report"].get("results"):
                     info.report = TestReport(**raw["report"])
                 if raw.get("benchmark_report"):
                     info.benchmark_report = raw["benchmark_report"]
