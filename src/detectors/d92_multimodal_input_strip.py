@@ -74,6 +74,19 @@ class D92_MultiModalInputStripping(BaseDetector):
                 if len(fc) == len(code):
                     return self._pass(evidence | {"ocr_read": fc})
 
+        # If model describes the image (mentions "image", "picture", "see",
+        # "white", "blank", "text", "photo" etc.), it received the image but
+        # failed OCR — not a stripping issue.
+        image_aware_keywords = (
+            "image", "picture", "photo", "see", "visual", "white",
+            "blank", "appears", "shows", "display", "text",
+        )
+        content_lower = content.lower()
+        if any(kw in content_lower for kw in image_aware_keywords):
+            return self._pass(evidence | {
+                "note": "model describes image content but failed OCR",
+            })
+
         if len(content) > MIN_SUBSTANTIVE_LEN:
             return self._fail("image code not found -- image may be stripped", evidence)
 
@@ -91,8 +104,11 @@ class D92_MultiModalInputStripping(BaseDetector):
             ("PASS: code found",
              [_resp(_TEST_CODE)],
              "pass"),
-            ("FAIL: image stripped, wrong answer",
+            ("PASS: model describes visual content (OCR failed)",
              [_resp("I can see text but no verification code.")],
+             "pass"),
+            ("FAIL: image stripped, no visual awareness",
+             [_resp("I'd be happy to help! What would you like to know?")],
              "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],

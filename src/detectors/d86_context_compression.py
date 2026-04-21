@@ -20,6 +20,7 @@ from ..models import (
     Priority,
     ProbeRequest,
     ProbeResponse,
+    Verdict,
 )
 from ..registry import BaseDetector, detector
 
@@ -200,11 +201,24 @@ class D86_ContextCompressionDetection(BaseDetector):
         if hits == 3:
             return self._pass(ev)
         if hits == 0:
-            # Zero values recalled -- strong signal of compression/truncation
-            return self._fail(
-                "0/3 values recalled -- context heavily "
-                "compressed or truncated",
-                ev,
+            # Zero values recalled -- could be compression/truncation OR
+            # model simply failing to extract precise values from long context.
+            # Without a second signal (e.g., D24a also failing), this is
+            # ambiguous and should not FAIL a legitimate router.
+            d24a_data = self.shared.get("D24a")
+            d24a_failed = (
+                d24a_data
+                and hasattr(d24a_data.get("result"), "verdict")
+                and d24a_data["result"].verdict == Verdict.FAIL
+            )
+            if d24a_failed:
+                return self._fail(
+                    "0/3 values recalled AND D24a also detected truncation",
+                    ev,
+                )
+            return self._inconclusive(
+                "0/3 values recalled (may be model memory limitation "
+                "or context compression)"
             )
         # 1-2 hits: partial recall could be model imprecision, not compression
         missing = []
@@ -251,9 +265,9 @@ class D86_ContextCompressionDetection(BaseDetector):
                 "inconclusive",
             ),
             (
-                "FAIL: 0 of 3 recalled (heavy compression)",
+                "INCONCLUSIVE: 0 of 3 recalled (ambiguous without D24a)",
                 [mk("I don't have those details available.")],
-                "fail",
+                "inconclusive",
             ),
             (
                 "INCONCLUSIVE: network error",
