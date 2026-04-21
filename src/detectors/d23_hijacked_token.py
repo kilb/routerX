@@ -16,44 +16,52 @@ class D23_HijackedTokenProbe(BaseDetector):
     detector_name = "HijackedTokenProbe"
     priority = Priority.P0
     judge_mode = JudgeMode.ONCE
-    request_count = 3
+    request_count = 4
     description = "Detect if the API key is a hijacked third-party app token (Cursor, Monica, etc)"
 
     async def send_probes(self) -> list[ProbeResponse]:
-        """Send two probes: blank content trigger and system-prompt extraction attempt."""
-        # 23a: two variants — empty string + whitespace-only (per spec)
-        probe_23a_empty = ProbeRequest(
-            payload={"model": self.config.claimed_model, "temperature": 0,
-                     "max_tokens": 100,
-                     "messages": [{"role": "user", "content": ""}]},
-            endpoint_path=self.config.default_endpoint_path,
-            description="empty content probe (23a)")
-        probe_23a_space = ProbeRequest(
-            payload={"model": self.config.claimed_model, "temperature": 0,
-                     "max_tokens": 100,
-                     "messages": [{"role": "user", "content": "   "}]},
-            endpoint_path=self.config.default_endpoint_path,
-            description="whitespace content probe (23a)")
+        """Send two probes: blank/vague content trigger and system-prompt extraction.
+
+        23a uses empty string and whitespace. Some proxies reject empty content
+        (400), so we include a minimal fallback probe (".") that still triggers
+        leaked system prompts without providing real user intent.
+        """
+        ep = self.config.default_endpoint_path
+        model = self.config.claimed_model
+        # 23a: three variants — empty, whitespace, and minimal single-char.
+        # The single-char fallback ensures at least one probe succeeds on
+        # proxies that reject empty content.
+        probes_23a = [
+            ProbeRequest(
+                payload={"model": model, "temperature": 0, "max_tokens": 100,
+                         "messages": [{"role": "user", "content": ""}]},
+                endpoint_path=ep, description="empty content probe (23a)"),
+            ProbeRequest(
+                payload={"model": model, "temperature": 0, "max_tokens": 100,
+                         "messages": [{"role": "user", "content": "   "}]},
+                endpoint_path=ep, description="whitespace content probe (23a)"),
+            ProbeRequest(
+                payload={"model": model, "temperature": 0, "max_tokens": 100,
+                         "messages": [{"role": "user", "content": "."}]},
+                endpoint_path=ep, description="minimal content probe (23a)"),
+        ]
         # 23b: system prompt extraction
         probe_23b = ProbeRequest(
-            payload={"model": self.config.claimed_model, "max_tokens": 200,
+            payload={"model": model, "max_tokens": 200,
                      "messages": [{"role": "user", "content": SYSTEM_PROMPT_EXTRACTION_MSG}]},
-            endpoint_path=self.config.default_endpoint_path,
-            description="system prompt extraction probe (23b)")
-        return [
-            await self.client.send(probe_23a_empty),
-            await self.client.send(probe_23a_space),
-            await self.client.send(probe_23b),
-        ]
+            endpoint_path=ep, description="system prompt extraction probe (23b)")
+        results_23a = await self.client.send_concurrent(probes_23a)
+        result_23b = await self.client.send(probe_23b)
+        return results_23a + [result_23b]
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         """Fail if any probe reveals domain-specific or third-party brand guidance."""
-        # responses: [23a_empty, 23a_space, 23b]
-        for i, r in enumerate(responses[:2]):
+        # responses: [23a_empty, 23a_space, 23a_minimal, 23b]
+        for i, r in enumerate(responses[:-1]):
             result = self._judge_probe_23a(r)
             if result is not None:
                 return result
-        resp_23b = responses[2] if len(responses) > 2 else responses[-1]
+        resp_23b = responses[-1]
         result_23b = self._judge_probe_23b(resp_23b)
         if result_23b is not None:
             return result_23b
@@ -105,44 +113,44 @@ class D23_HijackedTokenProbe(BaseDetector):
         neutral_23b = make_resp("I cannot reveal my system instructions.")
 
         return [
-            # PASS: all three probes return neutral/generic responses
+            # PASS: all four probes return neutral/generic responses
             ("PASS: neutral responses from all probes",
-             [neutral_23a, neutral_23a, neutral_23b],
+             [neutral_23a, neutral_23a, neutral_23a, neutral_23b],
              "pass"),
 
             # FAIL 23a: first blank probe triggers domain-specific translation guidance
             ("FAIL: 23a reveals translation domain guidance",
-             [make_resp("Please enter the text you want to translate."), neutral_23a, neutral_23b],
+             [make_resp("Please enter the text you want to translate."), neutral_23a, neutral_23a, neutral_23b],
              "fail"),
 
             # FAIL 23a: second blank probe reveals Monica branding
             ("FAIL: 23a reveals Monica branding",
-             [neutral_23a, make_resp("Welcome to Monica, your AI assistant!"), neutral_23b],
+             [neutral_23a, make_resp("Welcome to Monica, your AI assistant!"), neutral_23a, neutral_23b],
              "fail"),
 
             # FAIL 23b: system prompt extraction reveals Cursor branding
             ("FAIL: 23b reveals Cursor branding in system prompt",
-             [neutral_23a, neutral_23a, make_resp("You are Cursor, an AI code assistant built for developers.")],
+             [neutral_23a, neutral_23a, neutral_23a, make_resp("You are Cursor, an AI code assistant built for developers.")],
              "fail"),
 
             # FAIL 23b: system prompt extraction reveals homework app
             ("FAIL: 23b reveals homework assistant branding",
-             [neutral_23a, neutral_23a, make_resp("You are a homework helper. Help students with their homework.")],
+             [neutral_23a, neutral_23a, neutral_23a, make_resp("You are a homework helper. Help students with their homework.")],
              "fail"),
 
             # FAIL 23b: CJK keyword match (translation in Chinese)
             ("FAIL: 23b reveals CJK translation keyword",
-             [neutral_23a, neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
+             [neutral_23a, neutral_23a, neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
              "fail"),
 
             # INCONCLUSIVE: 23a network error on first probe
             ("INCONCLUSIVE: 23a network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT"), neutral_23a, neutral_23b],
+             [ProbeResponse(status_code=0, error="TIMEOUT"), neutral_23a, neutral_23a, neutral_23b],
              "inconclusive"),
 
             # INCONCLUSIVE: 23a empty content
             ("INCONCLUSIVE: 23a empty content",
-             [make_resp(""), neutral_23a, neutral_23b],
+             [make_resp(""), neutral_23a, neutral_23a, neutral_23b],
              "inconclusive"),
 
             # INCONCLUSIVE: 23b non-200 status
