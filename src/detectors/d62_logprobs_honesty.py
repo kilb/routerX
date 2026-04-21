@@ -66,11 +66,14 @@ class D62_LogprobsHonesty(BaseDetector):
             return self._inconclusive("empty body")
         positions = _extract_logprobs(r.body)
         if positions is None:
-            # Only FAIL for explicit OpenAI provider; many non-OpenAI
-            # providers (including ANY/unknown) don't support logprobs.
-            if self.config.claimed_provider != ProviderType.OPENAI:
+            # If the wire format is OpenAI, logprobs SHOULD be supported
+            # regardless of backend model — the proxy chose to advertise
+            # OpenAI compatibility. Only INCONCLUSIVE for native Anthropic
+            # format where logprobs genuinely doesn't exist in the spec.
+            from ..models import ApiFormat
+            if self.config.api_format == ApiFormat.ANTHROPIC:
                 return self._inconclusive(
-                    "logprobs not supported or unknown provider"
+                    "logprobs not in Anthropic API spec"
                 )
             return self._fail("logprobs flag dropped -- no logprobs block in response", {})
         if not positions:
@@ -149,7 +152,7 @@ class D62_LogprobsHonesty(BaseDetector):
         return [
             ("PASS: genuine logprobs", [mk(real)], "pass"),
             ("FAIL: flat constant logprobs", [mk(flat)], "fail"),
-            ("INCONCLUSIVE: logprobs flag dropped (non-OpenAI)", [no_lp], "inconclusive"),
+            ("FAIL: logprobs flag dropped (OpenAI format)", [no_lp], "fail"),
             ("FAIL: chosen token never in top_logprobs",
              [mk(wrong_top)], "fail"),
             ("INCONCLUSIVE: network error",

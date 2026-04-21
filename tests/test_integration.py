@@ -113,7 +113,7 @@ def test_detector_vs_mock_behavior(mock_server, behavior, detector_id, expected)
     ("inflate_completion_tokens", "D83", Verdict.FAIL),  # output token inflation
     ("fake_stream", "D32a", Verdict.FAIL),        # 2-chunk streaming
     ("chunky_stream", "D64", Verdict.FAIL),
-    ("drop_logprobs", "D62", Verdict.INCONCLUSIVE),  # default config uses ANY provider → inconclusive
+    ("drop_logprobs", "D62", Verdict.FAIL),  # OpenAI format should support logprobs
     ("drop_logit_bias", "D70", Verdict.FAIL),
     ("inject_zero_width", "D84", Verdict.FAIL),
     ("compress_context", "D86", Verdict.FAIL),

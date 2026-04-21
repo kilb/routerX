@@ -66,10 +66,8 @@ class D31_GodPayload(BaseDetector):
         content = body.get("full_content", "") or r.content
         usage = body.get("usage")
         subs = []
-        _skip_oai = (
-            self.config.claimed_provider in (ProviderType.ANTHROPIC, ProviderType.GEMINI)
-            or any(k in self.config.claimed_model.lower() for k in ("claude", "gemini", "llama", "qwen", "mistral"))
-        )
+        from ..models import ApiFormat
+        _skip_oai = (self.config.api_format == ApiFormat.ANTHROPIC)
         # Check 1: JSON schema compliance (strict json_schema is OpenAI-only)
         parsed = None
         if _skip_oai:

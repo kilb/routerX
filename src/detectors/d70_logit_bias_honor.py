@@ -79,14 +79,12 @@ class D70_LogitBiasHonor(BaseDetector):
             return self._pass(ev)
         ratio = bias_count / base_count
         if bias_count >= 5 and ratio > 0.5:
-            # Anthropic/Gemini don't support logit_bias; dropping it is
-            # correct proxy behavior, not fraud.
-            if self.config.claimed_provider in (ProviderType.ANTHROPIC,
-                                                  ProviderType.GEMINI) \
-               or any(k in self.config.claimed_model.lower()
-                      for k in ("claude", "gemini", "llama", "qwen", "mistral")):
+            # Only INCONCLUSIVE for native Anthropic format where logit_bias
+            # genuinely doesn't exist. OpenAI-format proxies should support it.
+            from ..models import ApiFormat
+            if self.config.api_format == ApiFormat.ANTHROPIC:
                 return self._inconclusive(
-                    "logit_bias not supported by claimed provider/model"
+                    "logit_bias not in Anthropic API spec"
                 )
             return self._fail(
                 f"suppressed run still has {bias_count} 'the's "

@@ -79,14 +79,13 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
             return self._pass(ev | {"ratio": ratio})
         len_delta = abs(hi_len - no_len) / max(no_len, 1)
         if ratio > 0.90 and len_delta < 0.20:
-            # Anthropic/Gemini don't support frequency_penalty; dropping it
-            # is correct proxy behavior, not fraud.
-            if self.config.claimed_provider in (ProviderType.ANTHROPIC,
-                                                  ProviderType.GEMINI) \
-               or any(k in self.config.claimed_model.lower()
-                      for k in ("claude", "gemini", "llama", "qwen", "mistral")):
+            # Only INCONCLUSIVE for native Anthropic format where
+            # frequency_penalty genuinely doesn't exist in the spec.
+            # OpenAI-format proxies should support it regardless of backend.
+            from ..models import ApiFormat
+            if self.config.api_format == ApiFormat.ANTHROPIC:
                 return self._inconclusive(
-                    "frequency_penalty not supported by claimed provider/model"
+                    "frequency_penalty not in Anthropic API spec"
                 )
             return self._fail(
                 f"high-penalty run repeated 'apple' at {ratio:.0%} of base rate "
