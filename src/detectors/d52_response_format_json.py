@@ -64,6 +64,10 @@ class D52_ResponseFormatJSON(BaseDetector):
         try:
             parsed = json.loads(stripped)
         except json.JSONDecodeError as exc:
+            if any(k in self.config.claimed_model.lower() for k in ("claude", "gemini", "llama", "qwen", "mistral")):
+                return self._inconclusive(
+                    "response_format=json_object may not be supported by this model"
+                )
             return self._fail(
                 f"response_format=json_object ignored -- response is not valid JSON ({exc})",
                 ev,

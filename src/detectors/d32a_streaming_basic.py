@@ -44,7 +44,11 @@ class D32a_StreamingBasicProbe(BaseDetector):
                 return self._fail("80%+ content in last chunk", {**ev, "last_ratio": last_len / total_len})
         # Anthropic streaming does not always include usage; skip this check
         # for Anthropic providers to avoid false positives.
-        if usage is None and self.config.claimed_provider != ProviderType.ANTHROPIC:
+        _is_anthropic = (
+            self.config.claimed_provider == ProviderType.ANTHROPIC
+            or "claude" in self.config.claimed_model.lower()
+        )
+        if usage is None and not _is_anthropic:
             return self._fail("no usage block in stream", ev)
         return self._pass(ev)
 

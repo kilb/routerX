@@ -72,6 +72,8 @@ class D104_EmbeddingDimensionVerify(BaseDetector):
 
         actual_dim = len(embedding)
         model_key = self.config.claimed_model.lower()
+        if "/" in model_key:
+            model_key = model_key.rsplit("/", 1)[-1]
         expected_dim = _KNOWN_DIMS.get(model_key)
 
         evidence = {

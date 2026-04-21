@@ -134,7 +134,7 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         model = self.config.claimed_model.lower()
         is_openai_path = (
             self.config.claimed_provider == ProviderType.OPENAI
-            or model.startswith(("gpt", "o1", "o3"))
+            or any(k in model for k in ("gpt", "o1-", "o3-", "o4-"))
         )
         if is_openai_path:
             return self._inconclusive(

@@ -62,7 +62,11 @@ class D22_ProtocolStrictness(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r_a, r_b, r_c, r_d = responses
         subs = []
-        # 22a
+        # 22a — strict json_schema is OpenAI-only; skip for non-OpenAI models
+        _is_non_openai_model = any(
+            k in self.config.claimed_model.lower()
+            for k in ("claude", "gemini", "llama", "qwen", "mistral")
+        )
         if r_a is not None and not r_a.is_network_error:
             content = r_a.content
             try:
@@ -72,6 +76,10 @@ class D22_ProtocolStrictness(BaseDetector):
             except (json.JSONDecodeError, TypeError):
                 if r_a.status_code >= 400:
                     subs.append(("22a_json", True, "error response (expected for strict)"))
+                elif _is_non_openai_model:
+                    # Non-OpenAI model via ANY provider: strict json_schema
+                    # is not supported, so non-JSON output is expected.
+                    pass
                 else:
                     subs.append(("22a_json", False, "non-JSON output despite strict:true"))
         # 22b: Only meaningful for Anthropic; OpenAI accepts double-user messages.

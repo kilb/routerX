@@ -41,8 +41,8 @@ def _model_matches(claimed: str, returned: str) -> bool:
     # Keyword-set comparison: same tokens in any order → match.
     # This handles claude-opus-4.6 vs claude-4.6-opus.
     _VENDOR_NOISE = {"", "anthropic", "openai", "google"}
-    c_parts = set(re.split(r"[/\-.]", c)) - _VENDOR_NOISE
-    r_parts = set(re.split(r"[/\-.]", r)) - _VENDOR_NOISE
+    c_parts = set(re.split(r"[/\-]", c)) - _VENDOR_NOISE
+    r_parts = set(re.split(r"[/\-]", r)) - _VENDOR_NOISE
     if c_parts and r_parts and c_parts == r_parts:
         return True
     return False

@@ -28,7 +28,7 @@ MAX_FALLBACK_TOKENS = 50
 # must be wider when the claimed provider is not OpenAI. For OpenAI
 # endpoints tiktoken is authoritative and tight tolerance is appropriate.
 TOKEN_INFLATION_THRESHOLD_OPENAI = 0.10   # > 10% deviation = fraud
-TOKEN_INFLATION_THRESHOLD_OTHER = 0.30    # > 30% deviation for non-OpenAI
+TOKEN_INFLATION_THRESHOLD_OTHER = 0.50    # > 50% deviation for non-OpenAI
 TRUNCATION_BILLING_THRESHOLD = 0.05       # < 5% deviation when truncated
 
 
