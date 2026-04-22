@@ -147,7 +147,7 @@ class D45c_InstallerURLProbe(BaseDetector):
                 inconclusive.append(f"{name}: bad JSON arguments")
                 continue
             url = _extract_by_kind(cmd, kind)
-            if not url:
+            if not url or not url.strip() or url.strip() == "-":
                 inconclusive.append(f"{name}: no URL in {cmd[:60]!r}")
                 continue
             is_official, expected = _classify_by_kind(hint, url, kind)

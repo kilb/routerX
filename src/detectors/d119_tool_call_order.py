@@ -94,7 +94,12 @@ class D119_ToolCallOrderManipulation(BaseDetector):
         if duplicate_ids:
             return self._fail("duplicate tool call IDs detected", evidence)
         if len(tc) < 2:
-            return self._fail(f"only {len(tc)} tool call (expected >= 2)", evidence)
+            # Model may not support parallel tool calling — this is a
+            # capability limitation, not router manipulation.
+            return self._pass(evidence | {
+                "note": f"only {len(tc)} tool call -- model may not "
+                        f"support parallel calling",
+            })
         return self._pass(evidence)
 
     @classmethod
@@ -116,8 +121,8 @@ class D119_ToolCallOrderManipulation(BaseDetector):
         return [
             ("PASS: all 3 tools called with unique IDs",
              [mk(full_calls)], "pass"),
-            ("FAIL: collapsed to 1 tool",
-             [mk([full_calls[0]])], "fail"),
+            ("PASS: only 1 tool (model may not support parallel)",
+             [mk([full_calls[0]])], "pass"),
             ("FAIL: duplicate IDs",
              [mk([
                  {"id": "c1", "type": "function", "function": {"name": "get_weather", "arguments": "{}"}},

@@ -32,6 +32,9 @@ def _normalize_model(name: str) -> str:
     for label in ("-preview", "-latest", "-free"):
         if s.endswith(label):
             s = s[: -len(label)]
+    # Normalize version separators: "3.7" and "3-7" should match.
+    # Replace dots between digits with hyphens for consistent comparison.
+    s = re.sub(r"(\d)\.(\d)", r"\1-\2", s)
     return s
 
 

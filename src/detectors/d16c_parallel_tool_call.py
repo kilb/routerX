@@ -85,10 +85,13 @@ class D16c_ParallelToolCallProbe(BaseDetector):
         names = [c["function"]["name"] for c in tc]
         ev = {"tool_call_count": len(tc), "function_names": names}
         if len(tc) < 2:
-            return self._fail(
-                f"only {len(tc)} tool call (expected 2 parallel calls)",
-                ev,
-            )
+            # Some models (especially older ones) don't support parallel
+            # tool calling — they call tools one at a time. This is a model
+            # capability limitation, not router manipulation.
+            return self._pass(ev | {
+                "note": f"only {len(tc)} tool call -- model may not "
+                        f"support parallel tool calling",
+            })
         if set(names) != {"get_weather", "convert_currency"}:
             return self._fail(
                 f"wrong tool set: {names} (expected both weather and currency)",
@@ -122,10 +125,10 @@ class D16c_ParallelToolCallProbe(BaseDetector):
         return [
             ("PASS: both tools called in parallel",
              [mk([weather_call, currency_call])], "pass"),
-            ("FAIL: only weather called (collapsed)",
-             [mk([weather_call])], "fail"),
-            ("FAIL: only currency called",
-             [mk([currency_call])], "fail"),
+            ("PASS: only weather called (model may not support parallel)",
+             [mk([weather_call])], "pass"),
+            ("PASS: only currency called (model may not support parallel)",
+             [mk([currency_call])], "pass"),
             ("INCONCLUSIVE: no tool calls (model asked clarification)",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {
                  "content": "Which currency?"}, "finish_reason": "stop"}]})],

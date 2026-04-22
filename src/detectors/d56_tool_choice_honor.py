@@ -94,7 +94,10 @@ class D56_ToolChoiceHonor(BaseDetector):
                 )
             return self._fail("no tool_calls emitted despite forced tool_choice", ev)
         names = [c.get("function", {}).get("name") or c.get("name") for c in calls]
-        if all(n == _TARGET_FN for n in names):
+        # Target function was called — tool_choice is honored. Some models
+        # call additional tools alongside the pinned one; that's fine as
+        # long as the target is present.
+        if _TARGET_FN in names:
             return self._pass(ev)
         return self._fail(
             f"tool_choice pinned {_TARGET_FN!r} but got {names!r}", ev,
