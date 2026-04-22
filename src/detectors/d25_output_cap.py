@@ -86,10 +86,14 @@ class D25_OutputCapProbe(BaseDetector):
             # If count is near zero, the model likely refused/ignored the
             # repetitive task rather than being truncated by the router.
             # Models often refuse to write the same word 700+ times.
-            if count < 5:
+            # Models often stop early on repetitive tasks — they write
+            # some words then decide it's enough. Only FAIL when output
+            # is substantial enough to suggest the model WAS complying
+            # but got cut off (> 15% of target).
+            if count < max(5, int(target * 0.15)):
                 return self._pass(ev | {
-                    "note": "model did not comply with repetitive task "
-                            "(likely refused, not router truncation)",
+                    "note": "model stopped early on repetitive task "
+                            "(likely chose to stop, not router truncation)",
                 })
             return self._fail("semantic truncation", ev)
         if count >= healthy and finish_reason == "stop":
@@ -112,8 +116,8 @@ class D25_OutputCapProbe(BaseDetector):
              [make_resp(" ".join([_TEST_WORD] * 800), "stop")], "pass"),
             ("PASS: short output but finish=length (model limit)",
              [make_resp(" ".join([_TEST_WORD] * 200), "length")], "pass"),
-            ("FAIL: semantic truncation (100 words, stop)",
-             [make_resp(" ".join([_TEST_WORD] * 100), "stop")], "fail"),
+            ("FAIL: semantic truncation (200 words, stop)",
+             [make_resp(" ".join([_TEST_WORD] * 200), "stop")], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
             ("INCONCLUSIVE: empty content",
