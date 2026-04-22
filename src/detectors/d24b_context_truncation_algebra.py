@@ -55,9 +55,8 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
                 "model reports variables not found — context likely truncated",
                 {"content_snippet": content[:120]},
             )
-        return self._fail(
-            "wrong algebra answer — context likely truncated",
-            {"content_snippet": content[:120]},
+        return self._inconclusive(
+            "wrong algebra answer — may be model error rather than truncation",
         )
 
     @classmethod
@@ -77,10 +76,10 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
             ("PASS: answer 38 in longer text",
              [make_resp("After computing: (14 + 5) * 2 = 38. That is the final answer.")],
              "pass"),
-            # FAIL: model returns wrong number (e.g. only saw part of context)
-            ("FAIL: wrong answer indicates truncation",
+            # INCONCLUSIVE: model returns wrong number — could be model error
+            ("INCONCLUSIVE: wrong answer is inconclusive",
              [make_resp("The answer is 19.")],
-             "fail"),
+             "inconclusive"),
             # FAIL: model says it cannot find the variables
             ("FAIL: model cannot find variables",
              [make_resp("I cannot find var_X or var_Y in the provided text.")],

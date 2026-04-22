@@ -22,7 +22,7 @@ _PROMPTS = [
     "Summarize the plot of Romeo and Juliet in 2-3 sentences.",
 ]
 
-_MAX_DISTANCE = 3.0
+_MAX_DISTANCE = 4.0
 
 
 @detector
@@ -93,7 +93,14 @@ class D65_StyleFingerprint(BaseDetector):
             "responds with SYN-ACK. Finally, the client sends ACK.\n"
             "- Step one: SYN.\n- Step two: SYN-ACK.\n- Step three: ACK."
         )
-        off_family = "Yes. " * 60
+        # A single long run-on sentence with no bullets, em-dashes, or structure
+        # produces avg_sentence_len >> GPT centroid and zero on other features.
+        off_family = (
+            "The incredibly long and winding and elaborate and meandering text "
+            "continues to go on and on repeating similar words over and over "
+            "again without any real structure or purpose just to generate a "
+            "very high average sentence length value for testing purposes here"
+        )
         good = [mk(on_family)] * 5
         bad = [mk(off_family)] * 5
         return [

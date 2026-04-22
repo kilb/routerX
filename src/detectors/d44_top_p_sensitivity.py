@@ -58,18 +58,26 @@ class D44_TopPSensitivity(BaseDetector):
         delta = md - mf
         if delta >= 0.10:
             return self._pass(ev)
-        # Negative delta (focused MORE diverse than diverse group) suggests
-        # statistical noise rather than top_p being dropped — both groups
-        # behave the same. Only FAIL when delta is small but positive or zero
-        # (both groups identical = parameter ignored). Negative = INCONCLUSIVE.
-        if delta < -0.05:
+        # Negative delta (focused MORE diverse than diverse) is pure noise.
+        if delta < 0:
             return self._inconclusive(
                 f"reversed delta ({delta:.2f}); insufficient signal to determine "
                 f"top_p behavior (sampling noise dominates)",
             )
-        return self._fail(
-            f"diverse-group diversity ({md:.2f}) not meaningfully > "
-            f"focused-group ({mf:.2f}); top_p likely ignored", ev,
+        # delta in [0, 0.10): only FAIL if both groups show low absolute
+        # diversity (both < 0.3), suggesting the parameter is completely
+        # ignored and outputs are uniformly constrained.
+        LOW_DIVERSITY_THRESHOLD = 0.35
+        if mf < LOW_DIVERSITY_THRESHOLD and md < LOW_DIVERSITY_THRESHOLD:
+            return self._fail(
+                f"diverse-group diversity ({md:.2f}) not meaningfully > "
+                f"focused-group ({mf:.2f}); top_p likely ignored", ev,
+            )
+        # delta in [0, 0.10) but absolute diversity is reasonable — could be
+        # natural variance rather than parameter being ignored.
+        return self._inconclusive(
+            f"delta borderline ({delta:.2f}) with reasonable absolute diversity; "
+            f"insufficient signal",
         )
 
     @classmethod

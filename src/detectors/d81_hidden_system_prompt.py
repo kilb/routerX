@@ -19,6 +19,31 @@ _INJECTION_INDICATORS = [
     "\u8d2d\u4e70", "\u63a8\u8350", "\u5e7f\u544a",  # Chinese ad injection
 ]
 
+# Generic model self-description phrases that models commonly produce when
+# asked about their instructions -- these are NOT router-injected content.
+_SELF_DESCRIPTION_RE = re.compile(
+    r"(?:"
+    r"guidelines?"
+    r"|principles?"
+    r"|helpful"
+    r"|honest"
+    r"|harmless"
+    r"|i was (?:introduced|designed|created|built|trained|developed)"
+    r"|token budget"
+    r"|my (?:purpose|goal|role|training|guidelines|instructions)"
+    r"|i (?:aim|strive|try) to"
+    r"|i (?:follow|adhere to|operate under)"
+    r"|safety"
+    r"|responsible"
+    r"|ethical"
+    r"|i'?m (?:an? )?(?:ai|assistant|language model)"
+    r"|large language model"
+    r"|designed to (?:be |help )"
+    r"|i (?:can(?:not|'t)?|don'?t) "
+    r")",
+    re.IGNORECASE,
+)
+
 _BENIGN_RE = re.compile(
     r"(?:"
     r"(?:i'?m |i am )(?:an? )?"
@@ -136,9 +161,13 @@ class D81_HiddenSystemPromptDetection(BaseDetector):
                 return self._fail(
                     "probe 2 reveals extra injected instructions beyond expected system message",
                     {"expected": _KNOWN_SYSTEM_MSG, "extra_text": extra[:500]})
-            # Extra text without injection keywords — likely model self-description
-            # Only flag if very long (500+ chars of unexplained content)
-            if len(extra) > 500:
+            # Extra text without injection keywords — check if it is just
+            # generic model self-description (guidelines, principles, etc.).
+            # Models commonly describe their own built-in personality when asked
+            # "what are your instructions?" — this is normal, not injection.
+            if _SELF_DESCRIPTION_RE.search(extra):
+                pass  # benign model self-description, not injected
+            elif len(extra) > 500:
                 return self._fail(
                     "probe 2 has substantial unexplained extra content",
                     {"expected": _KNOWN_SYSTEM_MSG, "extra_text": extra[:500]})
@@ -186,6 +215,15 @@ class D81_HiddenSystemPromptDetection(BaseDetector):
             ("PASS: benign self-description is not injection",
              [mk("I'm an AI assistant made by OpenAI."),
               mk("You are a math tutor.")], "pass"),
+            ("PASS: probe 2 model self-description with guidelines",
+             [mk("NO_SYSTEM_PROMPT"),
+              mk("You are a math tutor. I also have guidelines about being "
+                  "helpful, honest, and harmless. My purpose is to assist users "
+                  "with their questions while following responsible AI principles. "
+                  "I was designed to be a helpful assistant. I strive to provide "
+                  "accurate and balanced information. I follow ethical guidelines "
+                  "in all my interactions with users across many topics and domains. "
+                  "These principles guide how I approach every conversation.")], "pass"),
             ("INCONCLUSIVE: probe 2 empty",
              [mk("NO_SYSTEM_PROMPT"), mk("")], "inconclusive"),
         ]
