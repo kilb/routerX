@@ -112,9 +112,28 @@ class D59_KnowledgeCutoff(BaseDetector):
                 "note": f"{truncated_count} responses truncated (< 30 chars) "
                         f"-- model output limit prevented full answers",
             })
+        # Knowledge cutoff depends on model size and training data, not
+        # router behavior. Smaller models may genuinely lack post-2022
+        # knowledge. Only flag as FAIL if this is a model that SHOULD
+        # know these facts (large frontier models). For others, PASS.
+        model_lower = self.config.claimed_model.lower()
+        _FRONTIER_INDICATORS = (
+            "gpt-4", "gpt-5", "claude-opus", "claude-sonnet",
+            "gemini-2.5-pro", "gemini-3", "o3", "o4",
+        )
+        is_frontier = any(k in model_lower for k in _FRONTIER_INDICATORS)
+        if not is_frontier:
+            return self._pass(ev | {
+                "note": f"only {hits}/{len(_PROBES)} facts recalled but "
+                        f"model may have limited training data",
+            })
+        if hits >= 1:
+            return self._pass(ev | {
+                "note": f"{hits}/{len(_PROBES)} recalled -- partial knowledge",
+            })
         return self._fail(
-            f"only {hits}/{len(_PROBES)} well-known post-2022 facts recalled "
-            "-- suggests pre-2023 open-source substitute", ev,
+            f"0/{len(_PROBES)} well-known post-2022 facts recalled "
+            "by frontier model -- possible model substitution", ev,
         )
 
     @classmethod
@@ -133,7 +152,7 @@ class D59_KnowledgeCutoff(BaseDetector):
             ("PASS: all 3 recalled", [good1, good2, good3], "pass"),
             ("PASS: 2/3 recalled", [good1, good2, bad], "pass"),
             ("FAIL: 0/3 recalled", [bad, bad, bad], "fail"),
-            ("FAIL: 1/3 recalled", [good1, bad, bad], "fail"),
+            ("PASS: 1/3 recalled (partial knowledge)", [good1, bad, bad], "pass"),
             ("INCONCLUSIVE is n/a -- network errors count as misses",
              [ProbeResponse(status_code=0, error="TIMEOUT"), good2, good3], "pass"),
         ]

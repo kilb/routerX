@@ -99,7 +99,11 @@ class D93_ResponseTokenPadding(BaseDetector):
             # internal reasoning tokens in completion_tokens — the visible
             # output is intentionally much shorter than the reported count.
             model_lower = self.config.claimed_model.lower()
-            _REASONING_INDICATORS = ("o1", "o3", "o4", "thinking", "reasoning", "qwen3", "deepseek-r1", "grok-3-mini")
+            _REASONING_INDICATORS = (
+                "o1", "o3", "o4", "thinking", "reasoning",
+                "qwen3", "deepseek-r1", "grok-3-mini",
+                "claude-opus", "claude-sonnet",  # extended thinking capable
+            )
             if any(ind in model_lower for ind in _REASONING_INDICATORS):
                 return self._pass(evidence | {
                     "note": "high ratio expected for reasoning model "

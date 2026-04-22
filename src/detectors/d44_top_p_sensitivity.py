@@ -56,6 +56,12 @@ class D44_TopPSensitivity(BaseDetector):
         ev = {"mean_focused_dist": mf, "mean_diverse_dist": md,
               "delta": md - mf}
         delta = md - mf
+        # Reasoning models handle sampling parameters differently —
+        # they may produce deterministic output regardless of top_p.
+        model_lower = self.config.claimed_model.lower()
+        _REASONING = ("o1", "o3", "o4", "deepseek-r1")
+        if any(k in model_lower for k in _REASONING):
+            return self._skip("top_p behavior differs for reasoning models")
         if delta >= 0.10:
             return self._pass(ev)
         # Negative delta (focused MORE diverse than diverse) is pure noise.
@@ -69,9 +75,13 @@ class D44_TopPSensitivity(BaseDetector):
         # ignored and outputs are uniformly constrained.
         LOW_DIVERSITY_THRESHOLD = 0.35
         if mf < LOW_DIVERSITY_THRESHOLD and md < LOW_DIVERSITY_THRESHOLD:
-            return self._fail(
-                f"diverse-group diversity ({md:.2f}) not meaningfully > "
-                f"focused-group ({mf:.2f}); top_p likely ignored", ev,
+            # Both groups show zero/near-zero diversity. Some models are
+            # inherently deterministic at the temperature we use (0.7),
+            # especially smaller or specialized models. Cannot distinguish
+            # "parameter ignored" from "model is naturally deterministic."
+            return self._inconclusive(
+                f"both groups have very low diversity (focused={mf:.2f}, "
+                f"diverse={md:.2f}); model may be inherently deterministic"
             )
         # delta in [0, 0.10) but absolute diversity is reasonable — could be
         # natural variance rather than parameter being ignored.
@@ -100,7 +110,7 @@ class D44_TopPSensitivity(BaseDetector):
         same = focused  # no diversity in either group
         return [
             ("PASS: diverse group spreads wider", focused + diverse, "pass"),
-            ("FAIL: both groups identical", same + same, "fail"),
+            ("INCONCLUSIVE: both groups identical (may be deterministic model)", same + same, "inconclusive"),
             ("INCONCLUSIVE: network errors everywhere",
              [ProbeResponse(status_code=0, error="T") for _ in range(12)],
              "inconclusive"),
