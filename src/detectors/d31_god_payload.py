@@ -109,7 +109,14 @@ class D31_GodPayload(BaseDetector):
         subs.append(("stream_usage", usage is not None, "present" if usage else "missing"))
         fails = [n for n, p, _ in subs if p is False]
         ev = {"sub_checks": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": len(fails)}
-        if len(fails) >= 2:
+        # "algebra" and "stream_usage" are capability-dependent — many
+        # models/proxies legitimately fail these. Only FAIL when at least
+        # one SERIOUS sub-check fails (system_leak, json_schema, logit_bias).
+        _SERIOUS = {"system_leak", "json_schema", "logit_bias"}
+        serious_fails = [f for f in fails if f in _SERIOUS]
+        if serious_fails:
+            return self._fail(f"pre-screen: serious checks failed: {serious_fails}", ev)
+        if len(fails) >= 3:
             return self._fail(f"pre-screen: {len(fails)} checks failed: {fails}", ev)
         if len(fails) == 1:
             return self._pass({"note": f"1 sub-check failed ({fails[0]}) — below threshold", **ev})
@@ -121,8 +128,8 @@ class D31_GodPayload(BaseDetector):
             return {"full_content": content, "chunk_count": 10, "finish_reason": "stop", "usage": usage}
         return [
             ("PASS: all checks pass", [ProbeResponse(status_code=200, body=sb('{"code": 50}', {"total_tokens": 100}))], "pass"),
-            ("PASS: single failure (not JSON) below threshold",
-             [ProbeResponse(status_code=200, body=sb("plain text with 50", {"total_tokens": 100}))], "pass"),
+            ("FAIL: json_schema is serious check",
+             [ProbeResponse(status_code=200, body=sb("plain text with 50", {"total_tokens": 100}))], "fail"),
             ("PASS: single failure (no 50) below threshold",
              [ProbeResponse(status_code=200, body=sb('{"code": 99}', {"total_tokens": 100}))], "pass"),
             ("PASS: single failure (no usage) below threshold",
