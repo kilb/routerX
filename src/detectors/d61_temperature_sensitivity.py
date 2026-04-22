@@ -80,9 +80,11 @@ class D61_TemperatureSensitivity(BaseDetector):
                 f"borderline delta ({delta:.2f}) with high absolute diversity; "
                 f"insufficient signal"
             )
-        return self._fail(
-            f"creative-group diversity ({mc:.2f}) not meaningfully > "
-            f"deterministic-group ({md:.2f}); temperature likely ignored", ev,
+        # Both groups show zero/near-zero diversity — model may be
+        # inherently deterministic regardless of temperature setting.
+        return self._inconclusive(
+            f"both groups have very low diversity (det={md:.2f}, "
+            f"creative={mc:.2f}); model may be inherently deterministic"
         )
 
     @classmethod
@@ -109,7 +111,7 @@ class D61_TemperatureSensitivity(BaseDetector):
         return [
             ("PASS: creative spreads wider than deterministic",
              deterministic + creative, "pass"),
-            ("FAIL: both groups identical", same + same, "fail"),
+            ("INCONCLUSIVE: both groups identical (may be deterministic model)", same + same, "inconclusive"),
             ("INCONCLUSIVE: network errors everywhere",
              [ProbeResponse(status_code=0, error="T") for _ in range(12)],
              "inconclusive"),

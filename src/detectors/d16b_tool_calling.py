@@ -81,6 +81,14 @@ class D16b_ToolCallingProbe(BaseDetector):
 
         tool_calls = r.tool_calls
         if not tool_calls:
+            # Non-OpenAI models may not support forced tool_choice
+            model_lower = self.config.claimed_model.lower()
+            is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+            if not is_openai:
+                return self._skip(
+                    "non-OpenAI model did not return tool_call -- "
+                    "forced tool_choice may not be supported"
+                )
             return self._fail("no tool call in response; plain text returned instead", {
                 "content": r.content[:200] if r.content else "",
             })

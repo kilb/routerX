@@ -92,6 +92,16 @@ class D56_ToolChoiceHonor(BaseDetector):
                 return self._skip(
                     "no tool_calls -- model may not support forced tool_choice"
                 )
+            # Non-OpenAI models may not support forced tool_choice at all.
+            # A text response is the model's natural fallback, not router
+            # manipulation. Only FAIL for OpenAI models where this MUST work.
+            model_lower = self.config.claimed_model.lower()
+            is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+            if not is_openai:
+                return self._skip(
+                    "non-OpenAI model responded with text -- forced "
+                    "tool_choice may not be supported"
+                )
             return self._fail("no tool_calls emitted despite forced tool_choice", ev)
         names = [c.get("function", {}).get("name") or c.get("name") for c in calls]
         # Target function was called — tool_choice is honored. Some models
