@@ -77,6 +77,9 @@ class D59_KnowledgeCutoff(BaseDetector):
                 per_probe.append({"q": q[:60], "ok": False, "reason": "network/status"})
                 continue
             content = (r.content or "").lower()
+            if not content.strip():
+                per_probe.append({"q": q[:60], "ok": False, "reason": "empty response"})
+                continue
             ok = any(n in content for n in needles)
             # Fallback regex for the Twitter/X probe — catches "X." at
             # sentence boundaries where substring needles miss.
@@ -90,7 +93,7 @@ class D59_KnowledgeCutoff(BaseDetector):
             per_probe.append({"q": q[:60], "ok": ok, "excerpt": content[:150]})
         # Count how many probes actually got valid responses
         valid_probes = sum(
-            1 for p in per_probe if p.get("reason") != "network/status"
+            1 for p in per_probe if p.get("reason") not in ("network/status", "empty response")
         )
         ev = {"hits": hits, "per_probe": per_probe}
         if hits >= 2:

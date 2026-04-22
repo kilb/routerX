@@ -64,14 +64,17 @@ class D22_ProtocolStrictness(BaseDetector):
         subs = []
         # 22a — strict json_schema is OpenAI-only; skip for non-OpenAI models
         model_lower = self.config.claimed_model.lower()
+        # Reasoning models (o1/o3/o4) don't reliably support strict JSON
+        # schema — their output format is controlled by internal reasoning.
+        _is_reasoning = any(k in model_lower for k in ("o1-", "o3", "o4-"))
         _is_openai_model = (
-            any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+            any(k in model_lower for k in ("gpt",))
             and not any(k in model_lower for k in (
                 "claude", "gemini", "llama", "qwen", "mistral",
                 "grok", "nova", "phi", "command", "deepseek",
             ))
         )
-        _is_non_openai_model = not _is_openai_model
+        _is_non_openai_model = not _is_openai_model or _is_reasoning
         if r_a is not None and not r_a.is_network_error:
             content = r_a.content
             try:
