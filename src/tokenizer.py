@@ -48,24 +48,40 @@ class TokenCounter:
 
     def is_exact_encoding(self, model: str) -> bool:
         """Return True if tiktoken has a model-specific encoding (not fallback)."""
+        bare = self._strip_provider_prefix(model)
         try:
             import tiktoken
-            tiktoken.encoding_for_model(model)
+            tiktoken.encoding_for_model(bare)
             return True
         except (KeyError, Exception):
-            return False
+            try:
+                tiktoken.encoding_for_model(model)
+                return True
+            except (KeyError, Exception):
+                return False
+
+    @staticmethod
+    def _strip_provider_prefix(model: str) -> str:
+        """Strip provider prefix like 'openai/', 'anthropic/' from model name."""
+        if "/" in model:
+            return model.split("/", 1)[1]
+        return model
 
     def _get(self, model: str):
         if model in self._enc:
             return self._enc[model]
         enc = None
+        bare_model = self._strip_provider_prefix(model)
         try:
             import tiktoken
 
             try:
-                enc = tiktoken.encoding_for_model(model)
+                enc = tiktoken.encoding_for_model(bare_model)
             except KeyError:
-                enc = tiktoken.get_encoding("cl100k_base")
+                try:
+                    enc = tiktoken.encoding_for_model(model)
+                except KeyError:
+                    enc = tiktoken.get_encoding("cl100k_base")
         except Exception as e:  # tiktoken missing or load failed
             logger.warning("tiktoken unavailable for model %s: %s", model, e)
             enc = None

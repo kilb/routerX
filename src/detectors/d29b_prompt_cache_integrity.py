@@ -105,16 +105,16 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         u1 = r1.usage or {}
         u2 = r2.usage or {}
 
-        # Fraud catch: cache_read on FIRST call is semantically impossible —
-        # nothing could have been cached before the first request was served.
-        u1_anth_read = u1.get("cache_read_input_tokens", 0) > 0
-        u1_oai_read = (
-            (u1.get("prompt_tokens_details") or {}).get("cached_tokens", 0) > 0
-        )
-        if u1_anth_read or u1_oai_read:
+        # Fraud catch: cache_read on FIRST call. Small cached_tokens
+        # (< 100) may be legitimate proxy-level prefix caching (shared
+        # across users). Only flag large cache hits as fabricated.
+        u1_anth_read = u1.get("cache_read_input_tokens", 0)
+        u1_oai_read = (u1.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
+        u1_total_cached = u1_anth_read + u1_oai_read
+        if u1_total_cached > 100:
             return self._fail(
-                "cache_read reported on FIRST call before anything was cached "
-                "-- fabricated usage numbers",
+                f"cache_read={u1_total_cached} on FIRST call -- "
+                "fabricated usage numbers",
                 {"first_usage": u1, "second_usage": u2},
             )
 

@@ -71,6 +71,8 @@ class D21_PhysicalParamProbe(BaseDetector):
         # 21a: temp=2.0
         if r_a.is_network_error:
             subs.append(("21a_temp", None, "network error"))
+        elif not r_a.content or len(r_a.content.split()) < 5:
+            subs.append(("21a_temp", None, "response too short for bigram analysis"))
         else:
             ratio = readable_bigram_ratio(r_a.content)
             ok = ratio < BIGRAM_THRESHOLD
@@ -112,8 +114,13 @@ class D21_PhysicalParamProbe(BaseDetector):
         else:
             tok_count = len(r_d.content.split()) if r_d.content else 0
             ratio = r_d.latency_ms / max(r_base.latency_ms, 1)
-            failed = ratio > 0.8 or tok_count > 3 or r_d.finish_reason != "length"
-            subs.append(("21d_max1", not failed, f"ratio={ratio:.2f} toks={tok_count} fr={r_d.finish_reason}"))
+            # finish_reason=None or empty content means response was
+            # malformed — treat as inconclusive, not failure
+            if not r_d.content or r_d.finish_reason is None:
+                subs.append(("21d_max1", None, f"malformed response (fr={r_d.finish_reason})"))
+            else:
+                failed = ratio > 0.8 or tok_count > 3 or r_d.finish_reason != "length"
+                subs.append(("21d_max1", not failed, f"ratio={ratio:.2f} toks={tok_count} fr={r_d.finish_reason}"))
         fail_n = sum(1 for _, p, _ in subs if p is False)
         pass_n = sum(1 for _, p, _ in subs if p is True)
         ev = {"sub_probes": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": fail_n}
