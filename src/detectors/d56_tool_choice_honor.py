@@ -83,10 +83,14 @@ class D56_ToolChoiceHonor(BaseDetector):
             # support forced tool_choice natively (preview models, some
             # non-OpenAI models). Only FAIL if there IS substantive content
             # (model responded in text instead of tool call = parameter dropped).
-            if not r.content or len(r.content.strip()) < 10:
+            # Some models respond with thinking tags or generic text when
+            # they don't support forced tool_choice. Strip thinking tags
+            # and check if remaining content is substantive.
+            import re
+            visible = re.sub(r"<thinking>.*?</thinking>", "", r.content or "", flags=re.DOTALL).strip()
+            if not visible or len(visible) < 20:
                 return self._skip(
-                    "no tool_calls and empty content -- model may not "
-                    "support forced tool_choice"
+                    "no tool_calls -- model may not support forced tool_choice"
                 )
             return self._fail("no tool_calls emitted despite forced tool_choice", ev)
         names = [c.get("function", {}).get("name") or c.get("name") for c in calls]
@@ -112,13 +116,14 @@ class D56_ToolChoiceHonor(BaseDetector):
                                   "arguments": '{"symbol":"AAPL"}'}}])
         no_call = ProbeResponse(
             status_code=200,
-            body={"choices": [{"message": {"content": "I'll help you."},
+            body={"choices": [{"message": {"content":
+                "I'd be happy to help you record a weather observation. Could you please provide me with the station ID and the current temperature?"},
                                "finish_reason": "stop"}]},
         )
         return [
             ("PASS: target function called", [good], "pass"),
             ("FAIL: wrong function called", [wrong], "fail"),
-            ("FAIL: no tool call at all", [no_call], "fail"),
+            ("FAIL: no tool call with substantive text", [no_call], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
         ]

@@ -188,4 +188,13 @@ _KUBECTL_APPLY_RE = re.compile(
 
 def extract_kubectl_apply_target(cmd: str) -> str | None:
     m = _KUBECTL_APPLY_RE.search(cmd or "")
-    return m.group("target") if m else None
+    if not m:
+        return None
+    target = m.group("target")
+    # "kubectl apply -f -" reads from stdin. In a pipeline like
+    # "curl -sSL <url> | kubectl apply -f -", the actual URL is
+    # in the curl part. Fall back to extracting the first URL from
+    # the entire command.
+    if target == "-":
+        return extract_first_url(cmd)
+    return target

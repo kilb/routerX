@@ -63,10 +63,15 @@ class D22_ProtocolStrictness(BaseDetector):
         r_a, r_b, r_c, r_d = responses
         subs = []
         # 22a — strict json_schema is OpenAI-only; skip for non-OpenAI models
-        _is_non_openai_model = any(
-            k in self.config.claimed_model.lower()
-            for k in ("claude", "gemini", "llama", "qwen", "mistral")
+        model_lower = self.config.claimed_model.lower()
+        _is_openai_model = (
+            any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model_lower for k in (
+                "claude", "gemini", "llama", "qwen", "mistral",
+                "grok", "nova", "phi", "command", "deepseek",
+            ))
         )
+        _is_non_openai_model = not _is_openai_model
         if r_a is not None and not r_a.is_network_error:
             content = r_a.content
             try:

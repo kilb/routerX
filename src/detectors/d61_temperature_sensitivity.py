@@ -56,6 +56,14 @@ class D61_TemperatureSensitivity(BaseDetector):
         ev = {"mean_deterministic_dist": md, "mean_creative_dist": mc,
               "delta": mc - md}
         delta = mc - md
+        # Reasoning models (o1/o3/o4/deepseek-r1) handle temperature
+        # differently — they may produce deterministic output regardless
+        # of the temperature setting. This is model behavior, not
+        # the router ignoring the parameter.
+        model_lower = self.config.claimed_model.lower()
+        _REASONING = ("o1", "o3", "o4", "deepseek-r1")
+        if any(k in model_lower for k in _REASONING):
+            return self._skip("temperature behavior differs for reasoning models")
         if delta >= _MIN_DELTA:
             return self._pass(ev)
         # Negative delta = deterministic group more diverse than creative.
