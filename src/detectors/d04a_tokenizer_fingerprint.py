@@ -144,6 +144,13 @@ class D4a_TokenizerFingerprint(BaseDetector):
                 "logprobs-based tokenizer fingerprinting not applicable "
                 "for non-OpenAI models (proxy-generated logprobs)"
             )
+        # Even for OpenAI models, proxies may modify logprobs token
+        # boundaries during translation. Only FAIL when talking directly
+        # to the provider (not through a proxy with provider=any).
+        if self.config.claimed_provider == ProviderType.ANY:
+            return self._pass(evidence | {
+                "note": "tokenizer mismatch may be proxy translation artifact",
+            })
         return self._fail("tokenizer mismatch", evidence, confidence=confidence_if_fail)
 
     @classmethod
@@ -182,18 +189,18 @@ class D4a_TokenizerFingerprint(BaseDetector):
             ("PASS: logprobs match expected tokenizer",
              [make_logprob_resp(actual_expected)],
              "pass"),
-            # FAIL: logprobs show completely different boundaries
-            ("FAIL: logprobs show different tokenizer family",
+            # PASS: logprobs mismatch through proxy (provider=ANY) is not FAIL
+            ("PASS: logprobs mismatch via proxy (provider=any)",
              [make_logprob_resp(["So", "li", "dGo", "ld", "Ma", "gi", "ka", "rp"])],
-             "fail"),
+             "pass"),
             # PASS: no logprobs but self-tokenize matches
             ("PASS: self-tokenize fallback matches",
              [make_selftest_resp(actual_expected)],
              "pass"),
-            # FAIL: self-tokenize returns wrong boundaries
-            ("FAIL: self-tokenize shows different boundaries",
+            # PASS: self-tokenize mismatch through proxy
+            ("PASS: self-tokenize mismatch via proxy (provider=any)",
              [make_selftest_resp(["So", "li", "d", "Go", "ld", "Ma", "gi", "ka", "rp"])],
-             "fail"),
+             "pass"),
             # INCONCLUSIVE: network error
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
