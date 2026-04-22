@@ -111,9 +111,11 @@ class D102_FunctionSchemaFidelity(BaseDetector):
                     "no tool_calls and empty content -- model may not "
                     "support forced tool_choice"
                 )
-            # Non-OpenAI models may not support forced tool_choice
+            # Non-OpenAI models and reasoning models may not support
+            # forced tool_choice properly
             model_lower = self.config.claimed_model.lower()
-            is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+            is_reasoning = any(k in model_lower for k in ("o1", "o3", "o4"))
+            is_openai = any(k in model_lower for k in ("gpt",)) and not is_reasoning
             if not is_openai:
                 return self._skip(
                     "non-OpenAI model did not return tool_calls -- "

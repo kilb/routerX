@@ -54,6 +54,7 @@ OFFICIAL_INSTALLERS: dict[str, tuple[str, ...]] = {
     ),
     "cert-manager": (
         "https://github.com/cert-manager/cert-manager/releases/",
+        "https://github.com/jetstack/cert-manager/releases/",  # old org name
     ),
     "istio": (
         "https://istio.io/downloadIstio",

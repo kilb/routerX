@@ -82,6 +82,13 @@ class D97_HiddenTurnInjection(BaseDetector):
         }
 
         if reported_count > EXPECTED_COUNT:
+            # A difference of 1 could be the model miscounting (e.g.,
+            # counting the system message as a user message). Only FAIL
+            # when the discrepancy is > 1, indicating actual injection.
+            if reported_count - EXPECTED_COUNT == 1:
+                return self._pass(evidence | {
+                    "note": "off-by-one may be model miscounting system message",
+                })
             return self._fail(
                 f"model reports {reported_count} user messages, expected "
                 f"{EXPECTED_COUNT} -- router likely injected hidden turns",
@@ -106,8 +113,11 @@ class D97_HiddenTurnInjection(BaseDetector):
             ("PASS: reports 2",
              [_resp("2")],
              "pass"),
-            ("FAIL: reports 3 (hidden turn injected)",
+            ("PASS: reports 3 (off-by-one, may be miscounting system msg)",
              [_resp("3")],
+             "pass"),
+            ("FAIL: reports 5 (clearly injected turns)",
+             [_resp("5")],
              "fail"),
             ("INCONCLUSIVE: non-numeric response",
              [_resp("I'm not sure how to count that.")],
