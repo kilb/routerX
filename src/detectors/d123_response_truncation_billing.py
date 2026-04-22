@@ -93,10 +93,9 @@ class D123_ResponseTruncationBilling(BaseDetector):
         )
         if local < MIN_EXPECTED_LOCAL_TOKENS and reported > REPORTED_TOKENS_SUSPICIOUS:
             if not is_openai_exact:
-                return self._inconclusive(
-                    f"short output ({local} local tokens) with high reported "
-                    f"count ({reported}) -- tokenizer mismatch or model "
-                    f"internal processing tokens"
+                return self._skip(
+                    f"tiktoken cannot accurately count tokens for this model "
+                    f"(local={local}, reported={reported})"
                 )
             return self._fail("truncated output billed at full token count", evidence)
 

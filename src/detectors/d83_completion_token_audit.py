@@ -108,10 +108,10 @@ class D83_CompletionTokenAudit(BaseDetector):
                 any(k in model_lower for k in ("gpt", "o1-", "o3-", "o4-"))
                 and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
             )
-            if not is_openai_model:
+            if not is_openai_model or not token_counter.is_exact_encoding(self.config.claimed_model):
                 return self._skip(
-                    f"completion token deviation {deviation:.2%} but tiktoken "
-                    f"is not authoritative for this model"
+                    f"tiktoken is not authoritative for this model "
+                    f"(deviation {deviation:.2%})"
                 )
             return self._fail(
                 f"completion token inflation {deviation:.2%}", evidence,

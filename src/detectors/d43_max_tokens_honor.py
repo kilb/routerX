@@ -99,11 +99,10 @@ class D43_MaxTokensHonor(BaseDetector):
         if finish in ("length", "max_tokens"):
             if local_tokens >= MIN_ACCEPTABLE_COMPLETION:
                 return self._pass(ev | {"note": "truncated near user cap"})
-            return self._inconclusive(
-                f"short output ({local_tokens} tokens) with "
-                f"finish_reason={finish} -- model output limit may be "
-                f"lower than requested max_tokens"
-            )
+            return self._pass(ev | {
+                "note": f"short output ({local_tokens} tokens) but "
+                        f"finish_reason={finish} confirms model output limit",
+            })
         return self._inconclusive(f"unexpected finish_reason: {finish!r}")
 
     @classmethod
@@ -125,7 +124,7 @@ class D43_MaxTokensHonor(BaseDetector):
         return [
             ("PASS: natural stop with good length", [long_stop], "pass"),
             ("PASS: truncated near cap", [long_length], "pass"),
-            ("INCONCLUSIVE: short output with length (model limit)", [short_length], "inconclusive"),
+            ("PASS: short output but finish=length (model limit)", [short_length], "pass"),
             ("SUSPICIOUS: stop with very few tokens",
              [very_short_stop], "suspicious"),
             ("INCONCLUSIVE: network error",

@@ -71,9 +71,9 @@ class D52_ResponseFormatJSON(BaseDetector):
             # etc.), the model likely doesn't support this parameter natively
             # — not router manipulation.
             if stripped and stripped[0].isalpha():
-                return self._inconclusive(
-                    f"model returned prose instead of JSON -- may not "
-                    f"support response_format=json_object natively"
+                return self._skip(
+                    "model returned prose -- response_format=json_object "
+                    "may not be supported by this model"
                 )
             return self._fail(
                 f"response_format=json_object ignored -- response is not valid JSON ({exc})",
@@ -108,7 +108,7 @@ class D52_ResponseFormatJSON(BaseDetector):
         return [
             ("PASS: valid JSON", [good], "pass"),
             ("PASS: fenced JSON", [fenced], "pass"),
-            ("INCONCLUSIVE: prose instead of JSON (model may not support)", [prose], "inconclusive"),
+            ("SKIP: prose instead of JSON (model may not support)", [prose], "skip"),
             ("FAIL: malformed JSON", [malformed], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),

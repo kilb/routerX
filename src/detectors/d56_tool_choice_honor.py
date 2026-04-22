@@ -84,8 +84,8 @@ class D56_ToolChoiceHonor(BaseDetector):
             # non-OpenAI models). Only FAIL if there IS substantive content
             # (model responded in text instead of tool call = parameter dropped).
             if not r.content or len(r.content.strip()) < 10:
-                return self._inconclusive(
-                    "no tool_calls and empty/short content -- model may not "
+                return self._skip(
+                    "no tool_calls and empty content -- model may not "
                     "support forced tool_choice"
                 )
             return self._fail("no tool_calls emitted despite forced tool_choice", ev)

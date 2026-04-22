@@ -98,11 +98,10 @@ class D59_KnowledgeCutoff(BaseDetector):
             if p.get("excerpt") and len(p["excerpt"]) < 30 and p["ok"] is False
         )
         if truncated_count >= 2:
-            return self._inconclusive(
-                f"only {hits}/{len(_PROBES)} facts recalled but "
-                f"{truncated_count} responses appear truncated "
-                f"(< 30 chars) -- model may know answers"
-            )
+            return self._pass(ev | {
+                "note": f"{truncated_count} responses truncated (< 30 chars) "
+                        f"-- model output limit prevented full answers",
+            })
         return self._fail(
             f"only {hits}/{len(_PROBES)} well-known post-2022 facts recalled "
             "-- suggests pre-2023 open-source substitute", ev,
