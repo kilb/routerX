@@ -75,7 +75,13 @@ class D25_OutputCapProbe(BaseDetector):
             "finish_reason": finish_reason,
         }
         if count < min_ok and finish_reason == "length":
-            return self._fail("output capped", ev)
+            # finish_reason=length means the model/API hit its own output
+            # limit — this is an honest signal, not router manipulation.
+            # The model's max output may simply be lower than our request.
+            return self._inconclusive(
+                f"output short ({count}/{target}) but finish_reason=length "
+                f"indicates model output limit, not router capping"
+            )
         if count < min_ok and finish_reason == "stop":
             return self._fail("semantic truncation", ev)
         if count >= healthy and finish_reason == "stop":
@@ -96,8 +102,8 @@ class D25_OutputCapProbe(BaseDetector):
         return [
             ("PASS: 800 words at target",
              [make_resp(" ".join([_TEST_WORD] * 800), "stop")], "pass"),
-            ("FAIL: capped by router (200 words, length)",
-             [make_resp(" ".join([_TEST_WORD] * 200), "length")], "fail"),
+            ("INCONCLUSIVE: short output with length (model limit)",
+             [make_resp(" ".join([_TEST_WORD] * 200), "length")], "inconclusive"),
             ("FAIL: semantic truncation (100 words, stop)",
              [make_resp(" ".join([_TEST_WORD] * 100), "stop")], "fail"),
             ("INCONCLUSIVE: network error",

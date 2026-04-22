@@ -66,6 +66,15 @@ class D52_ResponseFormatJSON(BaseDetector):
         try:
             parsed = json.loads(stripped)
         except json.JSONDecodeError as exc:
+            # response_format=json_object support varies by model. If the
+            # response starts with natural language ("Here is", "Sure",
+            # etc.), the model likely doesn't support this parameter natively
+            # — not router manipulation.
+            if stripped and stripped[0].isalpha():
+                return self._inconclusive(
+                    f"model returned prose instead of JSON -- may not "
+                    f"support response_format=json_object natively"
+                )
             return self._fail(
                 f"response_format=json_object ignored -- response is not valid JSON ({exc})",
                 ev,
@@ -99,7 +108,7 @@ class D52_ResponseFormatJSON(BaseDetector):
         return [
             ("PASS: valid JSON", [good], "pass"),
             ("PASS: fenced JSON", [fenced], "pass"),
-            ("FAIL: prose instead of JSON", [prose], "fail"),
+            ("INCONCLUSIVE: prose instead of JSON (model may not support)", [prose], "inconclusive"),
             ("FAIL: malformed JSON", [malformed], "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),

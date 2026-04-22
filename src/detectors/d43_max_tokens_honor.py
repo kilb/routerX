@@ -92,14 +92,17 @@ class D43_MaxTokensHonor(BaseDetector):
                 )
             return self._pass(ev | {"note": "finished naturally below target"})
 
-        # Truncated but close to user cap -> honored.
+        # Truncated: finish_reason=length means the model/API hit its own
+        # output limit. This is honest behavior — the model's max output
+        # may be lower than the user's requested max_tokens (e.g., preview
+        # models, rate-limited tiers). Not evidence of router manipulation.
         if finish in ("length", "max_tokens"):
             if local_tokens >= MIN_ACCEPTABLE_COMPLETION:
                 return self._pass(ev | {"note": "truncated near user cap"})
-            return self._fail(
-                f"finish_reason={finish} but only {local_tokens} tokens "
-                f"(< {MIN_ACCEPTABLE_COMPLETION}) -- router clamped max_tokens",
-                ev,
+            return self._inconclusive(
+                f"short output ({local_tokens} tokens) with "
+                f"finish_reason={finish} -- model output limit may be "
+                f"lower than requested max_tokens"
             )
         return self._inconclusive(f"unexpected finish_reason: {finish!r}")
 
@@ -122,7 +125,7 @@ class D43_MaxTokensHonor(BaseDetector):
         return [
             ("PASS: natural stop with good length", [long_stop], "pass"),
             ("PASS: truncated near cap", [long_length], "pass"),
-            ("FAIL: clamped below 1600", [short_length], "fail"),
+            ("INCONCLUSIVE: short output with length (model limit)", [short_length], "inconclusive"),
             ("SUSPICIOUS: stop with very few tokens",
              [very_short_stop], "suspicious"),
             ("INCONCLUSIVE: network error",

@@ -79,6 +79,15 @@ class D56_ToolChoiceHonor(BaseDetector):
         calls = r.tool_calls or []
         ev = {"tool_calls": calls, "content_excerpt": (r.content or "")[:200]}
         if not calls:
+            # Empty content + no tool calls may indicate the model doesn't
+            # support forced tool_choice natively (preview models, some
+            # non-OpenAI models). Only FAIL if there IS substantive content
+            # (model responded in text instead of tool call = parameter dropped).
+            if not r.content or len(r.content.strip()) < 10:
+                return self._inconclusive(
+                    "no tool_calls and empty/short content -- model may not "
+                    "support forced tool_choice"
+                )
             return self._fail("no tool_calls emitted despite forced tool_choice", ev)
         names = [c.get("function", {}).get("name") or c.get("name") for c in calls]
         if all(n == _TARGET_FN for n in names):

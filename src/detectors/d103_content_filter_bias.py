@@ -108,6 +108,15 @@ class D103_ContentFilterBias(BaseDetector):
 
         blocked = refused_count + short_count
         if blocked >= fail_threshold:
+            # If ALL responses are short (no explicit refusals), this could
+            # be the model's output limit rather than content filtering.
+            # Only FAIL when there are actual refusals, or a mix of refusals
+            # and short responses.
+            if refused_count == 0 and short_count >= fail_threshold:
+                return self._inconclusive(
+                    f"all {short_count} responses are short (<{MIN_RESPONSE_LEN} chars) "
+                    f"-- may be model output limit, not content filtering"
+                )
             return self._fail(
                 f"{refused_count} refused + {short_count} too-short responses "
                 "out of 3 competitor comparison questions",

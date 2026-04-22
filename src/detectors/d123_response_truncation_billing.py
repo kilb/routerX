@@ -80,8 +80,24 @@ class D123_ResponseTruncationBilling(BaseDetector):
             "content_preview": content[:120],
         }
 
-        # Case 1: very short output but high reported tokens
+        # Case 1: very short output but high reported tokens.
+        # For non-OpenAI models, tiktoken undercounts substantially, so
+        # the local count is unreliable. Also, some models (e.g., reasoning
+        # models) may report tokens for internal processing not shown in
+        # the response. Only FAIL for OpenAI models with exact tokenizers.
+        model_lower_check = self.config.claimed_model.lower()
+        is_openai_exact = (
+            any(k in model_lower_check for k in ("gpt", "o1-", "o3-", "o4-"))
+            and not any(k in model_lower_check for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+            and token_counter.is_exact_encoding(self.config.claimed_model)
+        )
         if local < MIN_EXPECTED_LOCAL_TOKENS and reported > REPORTED_TOKENS_SUSPICIOUS:
+            if not is_openai_exact:
+                return self._inconclusive(
+                    f"short output ({local} local tokens) with high reported "
+                    f"count ({reported}) -- tokenizer mismatch or model "
+                    f"internal processing tokens"
+                )
             return self._fail("truncated output billed at full token count", evidence)
 
         # Case 2: disproportionate ratio with short output

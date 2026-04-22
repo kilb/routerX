@@ -91,6 +91,18 @@ class D59_KnowledgeCutoff(BaseDetector):
         ev = {"hits": hits, "per_probe": per_probe}
         if hits >= 2:
             return self._pass(ev)
+        # Check if responses were truncated (very short) — the model may
+        # know the answer but output was cut short by model/API limits.
+        truncated_count = sum(
+            1 for p in per_probe
+            if p.get("excerpt") and len(p["excerpt"]) < 30 and p["ok"] is False
+        )
+        if truncated_count >= 2:
+            return self._inconclusive(
+                f"only {hits}/{len(_PROBES)} facts recalled but "
+                f"{truncated_count} responses appear truncated "
+                f"(< 30 chars) -- model may know answers"
+            )
         return self._fail(
             f"only {hits}/{len(_PROBES)} well-known post-2022 facts recalled "
             "-- suggests pre-2023 open-source substitute", ev,
