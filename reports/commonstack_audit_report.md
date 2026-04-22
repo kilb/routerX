@@ -13,6 +13,35 @@
 | TIER_2 | 11 | Minor issues, generally usable |
 | BLACKLIST | 18 | Significant parameter forwarding or security issues |
 
+**Total non-pass detections: 60 across 21 detectors.**
+
+## Provider-Level Analysis
+
+| Provider | Models | Clean | Fails | Key Issues |
+|----------|--------|-------|-------|------------|
+| **anthropic** | 6 | 6 | 0 | All TIER_1. Best forwarding quality. |
+| **minimax** | 4 | 4 | 0 | All TIER_1. No issues. |
+| **moonshotai** | 4 | 3 | 1 | 1 json_object issue (kimi-k2-0905). |
+| **openai** | 10 | 0 | 30 | **Worst affected.** Systematic logprobs, stop, frequency_penalty, logit_bias forwarding failures across ALL OpenAI models. |
+| **google** | 8 | 1 | 11 | Stop sequence failures on all Flash models; context truncation on Pro preview. |
+| **deepseek** | 3 | 1 | 5 | Safety refusal bypass; domain guidance leakage; address tampering. |
+| **x-ai** | 3 | 1 | 2 | Hidden safety policy system prompt injection. |
+| **zai-org** | 5 | 2 | 6 | Mixed: billing mismatch, system prompt injection, latency issues. |
+| **xiaomi** | 2 | 0 | 3 | Context truncation on both models. |
+| **qwen** | 3 | 1 | 2 | Domain guidance leakage; style mismatch. |
+
+### Systemic Issues by Scope
+
+**Cross-provider** (Commonstack infrastructure-level):
+- D24a context truncation (4 providers) — affects google, openai, xiaomi, zai-org
+- D51 stop sequences ignored (2 providers) — affects google, openai
+- D52 json_object not honored (3 providers) — affects google, moonshotai, zai-org
+
+**Provider-specific** (model/routing-level):
+- D62/D21/D68/D70 parameter forwarding — **OpenAI-only** (all 10 models affected)
+- D81 system prompt injection — **x-ai + zai-org only** (3 models)
+- D40/D45 safety issues — **DeepSeek-only** (2 models)
+
 ---
 
 ## 1. Parameter Forwarding Issues
@@ -275,3 +304,33 @@ The following 19 models passed all detectors with no real issues:
 | minimax/minimax-m2.7 | TIER_1* |
 
 \* These models had false-positive FAILs that have been fixed in the latest code. Retesting will confirm TIER_1 status.
+
+---
+
+## Conclusions and Recommendations
+
+### Critical Findings
+
+1. **OpenAI Parameter Forwarding is Fundamentally Broken.** All 10 OpenAI models fail D62 (logprobs), and most also fail D51 (stop), D68 (frequency_penalty), D70 (logit_bias). This is a systemic infrastructure issue — Commonstack's OpenAI routing pipeline appears to strip or not forward these standard API parameters. **Recommendation:** Audit the OpenAI request forwarding path; ensure all standard `chat/completions` parameters are passed through to the upstream API.
+
+2. **Hidden System Prompt Injection on Grok and GLM-4.6.** Commonstack injects a `<policy>` safety system prompt into requests for x-ai/grok and zai-org/glm-4.6 models without user knowledge. While the safety intent may be legitimate, this violates transparency — users should be informed when their requests are modified. **Recommendation:** Either disclose the injected safety layer in API documentation, or make it opt-in/opt-out.
+
+3. **DeepSeek Safety Guardrails Compromised.** DeepSeek v3.1 and v3.2 comply with 2/3 universally-refused harmful prompts (CSAM-adjacent, targeted malware). Combined with D45 address tampering on v3.1, the DeepSeek models on Commonstack present elevated safety risk. **Recommendation:** Investigate whether the DeepSeek models have modified safety settings; consider adding safety layers for these models.
+
+4. **Cross-Provider Context Truncation.** 5 models across 4 providers (Google, OpenAI, Xiaomi, Zai-org) show context truncation (D24a). This suggests Commonstack may have a global context length limit lower than what individual models support. **Recommendation:** Verify per-model context limits match upstream provider specifications.
+
+### Positive Findings
+
+- **Anthropic models have perfect scores** — all 6 Claude models are TIER_1 with zero issues. The Anthropic routing pipeline is the gold standard.
+- **Minimax models are clean** — all 4 models pass with no issues.
+- **Non-parameter-dependent detectors (security, integrity) work well** — address verification, tool call integrity, session isolation, and other core security checks pass on most models.
+
+### Severity Distribution
+
+| Level | Count | % of Total |
+|-------|-------|-----------|
+| S0 (Critical — financial/security) | 1 | 2% |
+| P0 (High — API contract violation) | 21 | 35% |
+| P1 (Medium — feature limitation) | 38 | 63% |
+
+The majority of issues are P0/P1 parameter forwarding problems that can be resolved by ensuring the proxy faithfully forwards all standard OpenAI API parameters to upstream providers.
