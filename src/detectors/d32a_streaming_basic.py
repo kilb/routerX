@@ -34,6 +34,10 @@ class D32a_StreamingBasicProbe(BaseDetector):
         finish = body.get("finish_reason")
         timing = analyze_chunks(r.chunk_timestamps)
         ev = {"chunk_count": chunk_count, "has_usage": usage is not None, "finish_reason": finish, "timing": timing}
+        if chunk_count == 0:
+            # Zero chunks may indicate SSE parsing failure (non-standard
+            # format), not fake streaming. Cannot determine.
+            return self._inconclusive("0 chunks received -- may be SSE parsing issue")
         if chunk_count <= 2:
             return self._fail(f"only {chunk_count} chunks: likely fake streaming", ev)
         # Check content distribution
