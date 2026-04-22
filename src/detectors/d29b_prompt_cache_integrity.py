@@ -105,18 +105,10 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         u1 = r1.usage or {}
         u2 = r2.usage or {}
 
-        # Fraud catch: cache_read on FIRST call. Small cached_tokens
-        # (< 100) may be legitimate proxy-level prefix caching (shared
-        # across users). Only flag large cache hits as fabricated.
-        u1_anth_read = u1.get("cache_read_input_tokens", 0)
-        u1_oai_read = (u1.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
-        u1_total_cached = u1_anth_read + u1_oai_read
-        if u1_total_cached > 100:
-            return self._fail(
-                f"cache_read={u1_total_cached} on FIRST call -- "
-                "fabricated usage numbers",
-                {"first_usage": u1, "second_usage": u2},
-            )
+        # cache_read on FIRST call is normal for proxies with global
+        # caching (shared across users). High-traffic proxies like
+        # OpenRouter and Commonstack cache prompt prefixes aggressively.
+        # This is a legitimate optimization, not fabricated usage.
 
         anthropic_hit = u2.get("cache_read_input_tokens", 0) > 0
         anthropic_creation = u1.get("cache_creation_input_tokens", 0) > 0
@@ -189,10 +181,10 @@ class D29b_PromptCacheIntegrity(BaseDetector):
             # INCONCLUSIVE when no cache indicators found (not guaranteed)
             ("INCONCLUSIVE: no caching (OpenAI path)", [noop, noop], "inconclusive"),
             ("FAIL: creation but no hit", [a1, noop], "fail"),
-            ("FAIL: fabricated cache_read on first call (Anthropic)",
-             [fab_anth, a2], "fail"),
-            ("FAIL: fabricated cached_tokens on first call (OpenAI)",
-             [fab_oai, o2], "fail"),
+            ("PASS: cache_read on first call (proxy global cache)",
+             [fab_anth, a2], "pass"),
+            ("PASS: cached_tokens on first call (proxy global cache)",
+             [fab_oai, o2], "pass"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"), noop],
              "inconclusive"),
