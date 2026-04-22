@@ -27,7 +27,7 @@ ABSOLUTE_CAP = 100
 ABSOLUTE_CAP_REASONING_MODEL = 500
 
 # Substrings in model names that indicate a reasoning-specialized model.
-_REASONING_MODEL_INDICATORS = ("o1", "o3", "o4", "thinking", "reasoning", "qwen3", "deepseek-r1", "grok-3-mini")
+_REASONING_MODEL_INDICATORS = ("o1", "o3", "o4", "thinking", "reasoning", "qwen3", "deepseek-r1", "grok-3-mini", "grok-code")
 
 
 @detector
