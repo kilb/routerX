@@ -20,8 +20,11 @@ from ..models import (
 )
 from ..registry import BaseDetector, detector
 
-TTFT_RATIO_THRESHOLD = 1.5
-TTFT_ABS_THRESHOLD_MS = 2000.0
+# Thresholds must be generous: TTFT varies widely due to network
+# conditions, server load, cold starts, and queueing. Only flag
+# extreme cases where the short request is clearly padded.
+TTFT_RATIO_THRESHOLD = 2.0    # was 1.5 — too tight for proxy scenarios
+TTFT_ABS_THRESHOLD_MS = 3000.0  # was 2000 — many APIs have 2s+ baseline
 
 
 @detector

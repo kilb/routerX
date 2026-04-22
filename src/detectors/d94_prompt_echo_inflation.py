@@ -77,7 +77,14 @@ class D94_PromptEchoInflation(BaseDetector):
             "echo_ratio": f"{echo_ratio:.2%}",
         }
 
+        # Very short responses (< 5 words) can have high echo ratios by
+        # chance (e.g., "The capital" matches "The capital of Japan").
+        # Require minimum response length for meaningful detection.
         if echo_ratio > ECHO_THRESHOLD:
+            if len(response_words) < 5:
+                return self._pass(evidence | {
+                    "note": "response too short for reliable echo detection",
+                })
             return self._fail(
                 f"prompt echo detected: {prefix_match} of "
                 f"{len(response_words)} response words match prompt prefix "

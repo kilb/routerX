@@ -48,6 +48,8 @@ class D52_ResponseFormatJSON(BaseDetector):
         if r.status_code != 200:
             return self._inconclusive(f"status {r.status_code}")
         content = (r.content or "").strip()
+        if not content:
+            return self._inconclusive("empty response content")
         ev = {"content_excerpt": content[:300]}
 
         # Strip common markdown fencing first (some providers add it even with

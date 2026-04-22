@@ -69,8 +69,12 @@ class D31_GodPayload(BaseDetector):
         # strict json_schema and logit_bias are OpenAI-native capabilities.
         # Non-OpenAI backend models don't support them.
         model_lower = self.config.claimed_model.lower()
+        # Reasoning models (o1/o3/o4) have different output format behavior —
+        # strict json_schema may not be honored the same way.
+        _is_reasoning = any(k in model_lower for k in ("o1", "o3", "o4"))
         _skip_oai = (
-            not any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+            _is_reasoning
+            or not any(k in model_lower for k in ("gpt",))
             or any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
         )
         # Check 1: JSON schema compliance (strict json_schema is OpenAI-only)
