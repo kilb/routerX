@@ -69,7 +69,17 @@ class D110_StreamChunkIntegrity(BaseDetector):
         if not c_ns or not c_s:
             return self._inconclusive("empty content in one or both responses")
 
-        jaccard = _jaccard_words(c_ns, c_s)
+        # Strip thinking/reasoning tags before comparison — thinking models
+        # produce different reasoning traces even with identical parameters.
+        import re
+        c_ns_clean = re.sub(r"<think>.*?</think>", "", c_ns, flags=re.DOTALL).strip()
+        c_s_clean = re.sub(r"<think>.*?</think>", "", c_s, flags=re.DOTALL).strip()
+        # If all content was inside thinking tags, use originals
+        if not c_ns_clean or not c_s_clean:
+            c_ns_clean = c_ns
+            c_s_clean = c_s
+
+        jaccard = _jaccard_words(c_ns_clean, c_s_clean)
         evidence = {
             "non_stream_preview": c_ns[:120],
             "stream_preview": c_s[:120],

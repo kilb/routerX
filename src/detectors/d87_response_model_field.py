@@ -179,7 +179,12 @@ class D87_ResponseModelFieldAudit(BaseDetector):
             )
 
         # Check 3: fabricated/stale timestamp
+        # Skip clearly invalid timestamps (epoch 0, negative, or year < 2020).
+        # Some APIs return 0 or Go's zero-time when timestamp is not set.
+        MIN_VALID_TS = 1577836800  # 2020-01-01
         for ts in timestamps:
+            if ts < MIN_VALID_TS:
+                continue  # invalid/unset timestamp, not fabrication
             drift = abs(now - ts)
             if drift > MAX_TIMESTAMP_DRIFT_S:
                 ev["bad_timestamp"] = ts
