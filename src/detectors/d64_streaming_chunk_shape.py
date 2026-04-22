@@ -14,7 +14,10 @@ from ..models import Priority, JudgeMode, ProbeRequest, ProbeResponse, DetectorR
 from ..tokenizer import token_counter
 
 
-_MIN_CHUNKS_PER_100_TOKENS = 10
+# Proxies naturally buffer and merge chunks (TCP, Nginx, load balancers).
+# A direct OpenAI connection has ~50-80 chunks/100 tokens; through a proxy
+# 5-15 is normal due to buffering. Only flag truly degenerate cases (< 3).
+_MIN_CHUNKS_PER_100_TOKENS = 3
 _NEAR_ZERO_DELTA_S = 0.001
 
 

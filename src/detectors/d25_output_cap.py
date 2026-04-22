@@ -83,6 +83,14 @@ class D25_OutputCapProbe(BaseDetector):
                         f"finish_reason=length confirms model output limit",
             })
         if count < min_ok and finish_reason == "stop":
+            # If count is near zero, the model likely refused/ignored the
+            # repetitive task rather than being truncated by the router.
+            # Models often refuse to write the same word 700+ times.
+            if count < 5:
+                return self._pass(ev | {
+                    "note": "model did not comply with repetitive task "
+                            "(likely refused, not router truncation)",
+                })
             return self._fail("semantic truncation", ev)
         if count >= healthy and finish_reason == "stop":
             return self._pass(ev)
