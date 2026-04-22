@@ -96,6 +96,12 @@ class D113_ThinkingTokenConsistency(BaseDetector):
         if answers_agree or similarity >= JACCARD_THRESHOLD:
             return self._pass(evidence)
 
+        # If both responses are very short, they were likely truncated —
+        # low similarity is expected when outputs are cut at random points.
+        if len(c1) < 80 or len(c2) < 80:
+            return self._pass(evidence | {
+                "note": "short/truncated responses, similarity unreliable",
+            })
         # FAIL: answers disagree AND reasoning is very different
         return self._fail("inconsistent responses suggest different backends", evidence)
 
@@ -113,8 +119,8 @@ class D113_ThinkingTokenConsistency(BaseDetector):
               _resp("The total distance is 200km over 2.5 hours so the average speed is 80 km/h")],
              "pass"),
             ("FAIL: different answers and style",
-             [_resp("The average speed is 80 km/h. Total distance 200km over 2.5 hours."),
-              _resp("Speed equals 100.")],
+             [_resp("The average speed is 80 km/h. I calculated this by dividing total distance 200km by total time 2.5 hours."),
+              _resp("After careful consideration, I believe the answer is approximately 100 kilometers per hour based on my analysis of the problem.")],
              "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"),

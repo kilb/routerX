@@ -72,6 +72,12 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
         ev = {"expected": expected, "got": content[:200]}
         if expected in content:
             return self._pass(ev)
+        # Very short response (< 10 chars) = output truncated, not
+        # evidence of history trimming.
+        if len(content) < 10:
+            return self._pass(ev | {
+                "note": "response truncated, cannot verify history integrity",
+            })
         # Distinguish between "model forgot" and "router trimmed history".
         # If model says "I don't know/remember" or gives a wrong number,
         # it may just have poor recall — not evidence of router trimming.

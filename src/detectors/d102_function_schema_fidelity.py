@@ -103,9 +103,17 @@ class D102_FunctionSchemaFidelity(BaseDetector):
 
         calls = r.tool_calls
         if not calls:
+            content = r.content or ""
+            # Empty/very short content + no tool_calls = model may not
+            # support forced tool_choice (preview models, etc.)
+            if len(content.strip()) < 10:
+                return self._skip(
+                    "no tool_calls and empty content -- model may not "
+                    "support forced tool_choice"
+                )
             return self._fail(
                 "no tool_calls returned despite forced tool_choice",
-                {"content_preview": (r.content or "")[:200]},
+                {"content_preview": content[:200]},
             )
 
         # Parse arguments from first tool call

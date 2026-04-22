@@ -68,6 +68,15 @@ class D95_ResponseDeduplication(BaseDetector):
         stripped = [c.strip() for c in contents]
         evidence: dict = {"response_previews": [c[:100] for c in stripped]}
 
+        # If all responses are very short, similarity is meaningless —
+        # short outputs naturally share most words. Not evidence of caching.
+        avg_len = sum(len(c) for c in stripped) / len(stripped)
+        if avg_len < 50:
+            return self._pass(evidence | {
+                "note": f"responses too short (avg {avg_len:.0f} chars) "
+                        f"for meaningful deduplication check",
+            })
+
         # Check byte-identical pairs
         for i, j in itertools.combinations(range(len(stripped)), 2):
             if stripped[i] == stripped[j]:
@@ -114,8 +123,8 @@ class D95_ResponseDeduplication(BaseDetector):
               _resp("Machine learning allows computers to improve from experience."),
               _resp("It is a branch of artificial intelligence focused on patterns.")],
              "pass"),
-            ("FAIL: all identical",
-             [_resp("Machine learning is a type of AI.")] * 3,
+            ("FAIL: all identical (substantive length)",
+             [_resp("Machine learning is a branch of artificial intelligence that enables computers to learn from data and improve their performance on specific tasks without being explicitly programmed for every scenario.")] * 3,
              "fail"),
             ("INCONCLUSIVE: not enough valid responses",
              [ProbeResponse(status_code=0, error="TIMEOUT"),

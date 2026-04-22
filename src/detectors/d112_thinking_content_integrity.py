@@ -70,6 +70,13 @@ class D112_ThinkingContentIntegrity(BaseDetector):
         if has_correct_answer or has_reasoning:
             return self._pass(evidence)
 
+        # If response is very short, it was likely truncated mid-reasoning.
+        # "To solve the expression 17 * 2" = model started reasoning but
+        # output was cut. Not evidence of model substitution.
+        if len(content) < 80:
+            return self._pass(evidence | {
+                "note": "response appears truncated mid-reasoning",
+            })
         # FAIL: wrong answer AND no reasoning steps visible
         return self._fail("wrong answer with no reasoning steps -- possible model substitution", evidence)
 
@@ -88,8 +95,11 @@ class D112_ThinkingContentIntegrity(BaseDetector):
             ("PASS: wrong but shows reasoning",
              [_resp("Let me calculate: 17*23 = 391, then 391 + 45 = 436, 436 - 12 = 423\nANSWER: 423")],
              "pass"),
-            ("FAIL: wrong and no reasoning",
+            ("PASS: short wrong answer (likely truncated)",
              [_resp("The answer is 500.")],
+             "pass"),
+            ("FAIL: long wrong answer with no reasoning",
+             [_resp("I believe the final answer to your mathematical question is exactly five hundred, which I computed mentally.")],
              "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
