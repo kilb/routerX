@@ -109,15 +109,14 @@ class D31_GodPayload(BaseDetector):
         subs.append(("stream_usage", usage is not None, "present" if usage else "missing"))
         fails = [n for n, p, _ in subs if p is False]
         ev = {"sub_checks": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": len(fails)}
-        # "algebra" and "stream_usage" are capability-dependent — many
-        # models/proxies legitimately fail these. Only FAIL when at least
-        # one SERIOUS sub-check fails (system_leak, json_schema, logit_bias).
-        _SERIOUS = {"system_leak", "json_schema", "logit_bias"}
-        serious_fails = [f for f in fails if f in _SERIOUS]
-        if serious_fails:
-            return self._fail(f"pre-screen: serious checks failed: {serious_fails}", ev)
-        if len(fails) >= 3:
-            return self._fail(f"pre-screen: {len(fails)} checks failed: {fails}", ev)
+        # "algebra", "stream_usage", and "json_schema" are capability-
+        # dependent — many proxies don't support strict json_schema, and
+        # stream_options/algebra fail on many models. Only system_leak
+        # (injected content) is a definitive router-manipulation signal.
+        if "system_leak" in fails:
+            return self._fail(f"pre-screen: system prompt leak detected", ev)
+        if len(fails) >= 4:
+            return self._fail(f"pre-screen: {len(fails)}/5 checks failed: {fails}", ev)
         if len(fails) == 1:
             return self._pass({"note": f"1 sub-check failed ({fails[0]}) — below threshold", **ev})
         return self._pass(ev)
@@ -128,14 +127,14 @@ class D31_GodPayload(BaseDetector):
             return {"full_content": content, "chunk_count": 10, "finish_reason": "stop", "usage": usage}
         return [
             ("PASS: all checks pass", [ProbeResponse(status_code=200, body=sb('{"code": 50}', {"total_tokens": 100}))], "pass"),
-            ("FAIL: json_schema is serious check",
-             [ProbeResponse(status_code=200, body=sb("plain text with 50", {"total_tokens": 100}))], "fail"),
+            ("PASS: json_schema fail alone (proxy limitation)",
+             [ProbeResponse(status_code=200, body=sb("plain text with 50", {"total_tokens": 100}))], "pass"),
             ("PASS: single failure (no 50) below threshold",
              [ProbeResponse(status_code=200, body=sb('{"code": 99}', {"total_tokens": 100}))], "pass"),
             ("PASS: single failure (no usage) below threshold",
              [ProbeResponse(status_code=200, body=sb('{"code": 50}', None))], "pass"),
-            ("FAIL: 2 checks failed (no JSON + no 50)",
-             [ProbeResponse(status_code=200, body=sb("plain text no answer", {"total_tokens": 100}))], "fail"),
+            ("PASS: 2 non-serious checks failed (below 4 threshold)",
+             [ProbeResponse(status_code=200, body=sb("plain text no answer", {"total_tokens": 100}))], "pass"),
             ("FAIL: system leak + algebra both fail",
              [ProbeResponse(status_code=200, body=sb('{"code": 99} cursor', {"total_tokens": 100}))], "fail"),
             ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="T")], "inconclusive"),
