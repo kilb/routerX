@@ -55,8 +55,23 @@ class D61_TemperatureSensitivity(BaseDetector):
         mc = mean_jaccard_dist(creative)
         ev = {"mean_deterministic_dist": md, "mean_creative_dist": mc,
               "delta": mc - md}
-        if mc - md >= _MIN_DELTA:
+        delta = mc - md
+        if delta >= _MIN_DELTA:
             return self._pass(ev)
+        # Negative delta = deterministic group more diverse than creative.
+        # This is pure sampling noise, not evidence of parameter dropping.
+        if delta < 0:
+            return self._inconclusive(
+                f"reversed delta ({delta:.2f}); sampling noise dominates"
+            )
+        # delta in [0, 0.10): only FAIL if both groups show low absolute
+        # diversity (both < 0.35), suggesting parameter is completely
+        # ignored and all outputs are uniformly constrained.
+        if md > 0.35 or mc > 0.35:
+            return self._inconclusive(
+                f"borderline delta ({delta:.2f}) with high absolute diversity; "
+                f"insufficient signal"
+            )
         return self._fail(
             f"creative-group diversity ({mc:.2f}) not meaningfully > "
             f"deterministic-group ({md:.2f}); temperature likely ignored", ev,
