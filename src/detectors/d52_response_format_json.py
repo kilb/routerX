@@ -55,7 +55,11 @@ class D52_ResponseFormatJSON(BaseDetector):
         # Strip common markdown fencing first (some providers add it even with
         # json_object -- debatable but we allow it since the core obligation is
         # well-formed JSON, not text/plain wire format).
-        stripped = content
+        # Strip thinking tags from reasoning models (deepseek-r1, etc.)
+        import re
+        stripped = re.sub(r"<think>.*?</think>\s*", "", content, flags=re.DOTALL).strip()
+        if not stripped:
+            stripped = content  # fallback if all content was in thinking tags
         had_fences = False
         if stripped.startswith("```"):
             had_fences = True
@@ -77,6 +81,12 @@ class D52_ResponseFormatJSON(BaseDetector):
                     "model returned prose -- response_format=json_object "
                     "may not be supported by this model"
                 )
+            # Truncated JSON (starts with { or [ but too short/incomplete)
+            # is likely model output limit, not response_format being dropped.
+            if stripped and stripped[0] in ('{', '[') and len(stripped) < 15:
+                return self._pass(ev | {
+                    "note": "JSON appears truncated by output limit",
+                })
             return self._fail(
                 f"response_format=json_object ignored -- response is not valid JSON ({exc})",
                 ev,
