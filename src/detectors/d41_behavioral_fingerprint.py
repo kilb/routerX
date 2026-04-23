@@ -66,7 +66,7 @@ class D41_BehavioralFingerprint(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         stats = digit_stats(r.content)
         chi_square = chi_square_uniform(stats["counts"])
         ev = {"stats": stats, "chi_square": chi_square, "sample": r.content[:200]}

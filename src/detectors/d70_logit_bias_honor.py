@@ -66,7 +66,7 @@ class D70_LogitBiasHonor(BaseDetector):
             if r.is_network_error:
                 return self._inconclusive(r.error or "network error")
             if r.status_code != 200:
-                return self._inconclusive(f"status {r.status_code}")
+                return self._inconclusive(r.error_detail)
         base_count = _count_the(base.content or "")
         bias_count = _count_the(biased.content or "")
         ev = {"base_the_count": base_count, "bias_the_count": bias_count}

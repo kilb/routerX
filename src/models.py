@@ -97,6 +97,37 @@ class ProbeResponse(BaseModel):
         return self.status_code == 0
 
     @property
+    def error_detail(self) -> str:
+        """Human-readable error from HTTP error responses.
+
+        Extracts the message from common error formats (OpenAI, Anthropic,
+        generic) and falls back to raw_text truncation.
+        """
+        if self.status_code == 0:
+            return self.error or "network error"
+        if 200 <= self.status_code < 300:
+            return ""
+        # Try common error body formats
+        if self.body:
+            # OpenAI: {"error": {"message": "...", "type": "..."}}
+            err = self.body.get("error")
+            if isinstance(err, dict):
+                msg = err.get("message", "")
+                if msg:
+                    return f"{self.status_code}: {msg[:200]}"
+            # Simple: {"error": "string"}
+            if isinstance(err, str):
+                return f"{self.status_code}: {err[:200]}"
+            # {"message": "..."}
+            msg = self.body.get("message") or self.body.get("detail")
+            if msg:
+                return f"{self.status_code}: {str(msg)[:200]}"
+        # Fallback to raw text
+        if self.raw_text:
+            return f"{self.status_code}: {self.raw_text[:200]}"
+        return f"HTTP {self.status_code}"
+
+    @property
     def content(self) -> str:
         """Extract text content across OpenAI / Anthropic / Gemini / stream formats.
 

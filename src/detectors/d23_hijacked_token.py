@@ -87,7 +87,7 @@ class D23_HijackedTokenProbe(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(f"23b network error: {r.error}")
         if r.status_code != 200:
-            return self._inconclusive(f"23b status {r.status_code}")
+            return self._inconclusive(f"23b {r.error_detail}")
         content = r.content
         if not content:
             return self._inconclusive("23b empty content")

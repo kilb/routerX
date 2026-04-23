@@ -55,7 +55,7 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
             if r.is_network_error:
                 return self._inconclusive(r.error or "network error")
             if r.status_code != 200:
-                return self._inconclusive(f"status {r.status_code}")
+                return self._inconclusive(r.error_detail)
         no_text = r_no.content or ""
         hi_text = r_hi.content or ""
         no_count = _count_word(no_text, _WORD)

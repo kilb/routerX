@@ -54,7 +54,7 @@ class D11_RequestIntegrity(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         marker = getattr(self, "_marker", _TEST_MARKER)
         content = r.content
         ev = {"marker": marker, "content_excerpt": content[:200]}

@@ -80,7 +80,7 @@ class D53_MetadataCompleteness(BaseDetector):
         if router_resp.is_network_error:
             return self._inconclusive(router_resp.error or "network error")
         if router_resp.status_code != 200:
-            return self._inconclusive(f"unexpected status {router_resp.status_code}")
+            return self._inconclusive(router_resp.error_detail)
 
         router_usage = router_resp.usage
 

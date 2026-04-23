@@ -86,9 +86,9 @@ class D42_ContextWindowHonesty(BaseDetector):
                     "note": "legitimate 4xx refusal",
                     "status": r.status_code,
                 })
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
 
         content = r.content or ""
         usage = r.usage or {}

@@ -61,7 +61,7 @@ class D62_LogprobsHonesty(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         if not r.body:
             return self._inconclusive("empty body")
         positions = _extract_logprobs(r.body)

@@ -89,7 +89,7 @@ class D4a_TokenizerFingerprint(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
 
         # Primary path: logprobs present in body
         if r.body:

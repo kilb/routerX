@@ -51,7 +51,7 @@ class D64_StreamingChunkShape(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         timestamps = r.chunk_timestamps or []
         content = r.content or ""
         tokens = token_counter.count(content, model=self.config.claimed_model)

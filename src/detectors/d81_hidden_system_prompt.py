@@ -125,7 +125,7 @@ class D81_HiddenSystemPromptDetection(BaseDetector):
         if r1.is_network_error:
             return self._inconclusive(f"probe 1 network error: {r1.error}")
         if r1.status_code != 200:
-            return self._inconclusive(f"probe 1 status {r1.status_code}")
+            return self._inconclusive(f"probe 1 {r1.error_detail}")
         content1 = r1.content
         if not content1:
             return self._inconclusive("probe 1 empty response")
@@ -146,7 +146,7 @@ class D81_HiddenSystemPromptDetection(BaseDetector):
         if r2.is_network_error:
             return self._inconclusive(f"probe 2 network error: {r2.error}")
         if r2.status_code != 200:
-            return self._inconclusive(f"probe 2 status {r2.status_code}")
+            return self._inconclusive(f"probe 2 {r2.error_detail}")
         content2 = r2.content
         if not content2:
             return self._inconclusive("probe 2 empty response")

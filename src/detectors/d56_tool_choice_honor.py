@@ -75,7 +75,7 @@ class D56_ToolChoiceHonor(BaseDetector):
         if r.is_network_error:
             return self._inconclusive(r.error or "network error")
         if r.status_code != 200:
-            return self._inconclusive(f"status {r.status_code}")
+            return self._inconclusive(r.error_detail)
         calls = r.tool_calls or []
         ev = {"tool_calls": calls, "content_excerpt": (r.content or "")[:200]}
         if not calls:
