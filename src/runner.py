@@ -521,6 +521,25 @@ class TestRunner:
         else:
             overall, tier = Verdict.PASS, "TIER_1"
 
+        total_latency = sum(r.latency_ms for r in self.results)
+        total_reqs = sum(
+            r.request_count for r in self.results
+            if r.verdict != Verdict.SKIP
+        )
+
+        # Token totals from client
+        client = getattr(self, "_client", None)
+        input_tok = client.cumulative_tokens["prompt"] if client else 0
+        output_tok = client.cumulative_tokens["completion"] if client else 0
+
+        # Average latency per detector (excluding skips)
+        active = [r for r in self.results if r.verdict != Verdict.SKIP]
+        avg_lat = (sum(r.latency_ms for r in active) / len(active)) if active else 0.0
+
+        # Average throughput: output tokens / total active time (seconds)
+        total_active_s = sum(r.latency_ms for r in active) / 1000.0
+        avg_tps = output_tok / total_active_s if total_active_s > 0 else 0.0
+
         return TestReport(
             router_endpoint=self.config.router_endpoint,
             test_timestamp=datetime.now(timezone.utc).isoformat(),
@@ -528,14 +547,15 @@ class TestRunner:
             tier_assignment=tier,
             total_detectors=len(self.results),
             passed=p, failed=f, suspicious=s, skipped=k,
-            total_requests=sum(
-                r.request_count for r in self.results
-                if r.verdict != Verdict.SKIP
-            ),
-            total_latency_ms=sum(r.latency_ms for r in self.results),
+            total_requests=total_reqs,
+            total_latency_ms=total_latency,
             estimated_cost_usd=self._compute_cost(),
             results=self.results,
             evidence_notes=self._detect_contradictions(),
+            avg_latency_ms=round(avg_lat, 1),
+            avg_tps=round(avg_tps, 2),
+            total_input_tokens=input_tok,
+            total_output_tokens=output_tok,
         )
 
     def _compute_cost(self) -> float:

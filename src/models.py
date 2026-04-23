@@ -362,5 +362,11 @@ class TestReport(BaseModel):
     # Preflight error: if the endpoint is unreachable or returns an error
     # on the very first probe, all detectors are skipped and these fields
     # carry the upstream error details for frontend display.
+    # Aggregate metrics
+    avg_latency_ms: float = 0.0
+    avg_tps: float = 0.0        # average tokens per second
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    # Preflight error
     error_code: int | None = None
     error_msg: str | None = None
