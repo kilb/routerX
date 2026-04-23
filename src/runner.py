@@ -196,15 +196,26 @@ class TestRunner:
     async def _preflight_check(
         self, client: RouterClient,
     ) -> tuple[int, str] | None:
-        """Send one minimal request to verify connectivity and auth.
+        """Verify endpoint is reachable and authenticated before running tests.
 
-        Returns ``(error_code, error_msg)`` on failure, ``None`` on success.
-        Non-fatal HTTP errors (e.g. 400 for bad model) are considered
-        success — the endpoint is reachable and authenticated, individual
-        detectors will handle model-specific errors. Only truly fatal
-        errors (network failure, 401/403 auth errors) abort the run.
+        Sends up to 3 probes with increasing backoff to distinguish transient
+        failures from truly unavailable endpoints. Returns ``(error_code,
+        error_msg)`` on confirmed failure, ``None`` on success.
+
+        Fatal errors (abort immediately, no retry):
+        - 401/403: auth failure (API key invalid)
+
+        Retryable errors (confirm with 3 consecutive failures):
+        - Network errors: timeout, connection refused, DNS failure
+        - 402: payment required / no credits
+        - 429: rate limited (with backoff)
+        - 5xx: server errors
         """
+        import asyncio
         from .models import ProbeRequest
+
+        _MAX_PREFLIGHT_ATTEMPTS = 3
+        _BACKOFF_SECONDS = [1.0, 2.0, 4.0]
 
         probe = ProbeRequest(
             payload={
@@ -215,19 +226,46 @@ class TestRunner:
             endpoint_path=self.config.default_endpoint_path,
             description="preflight connectivity check",
         )
-        resp = await client.send(probe)
 
-        # Network-level failure: endpoint unreachable
-        if resp.is_network_error:
-            return (0, resp.error or "endpoint unreachable")
+        last_code = 0
+        last_msg = "endpoint unreachable"
 
-        # Auth failure: API key invalid
-        if resp.status_code in (401, 403):
-            return (resp.status_code, resp.error_detail)
+        for attempt in range(_MAX_PREFLIGHT_ATTEMPTS):
+            resp = await client.send(probe)
 
-        # Any other response (200, 400, 404, 500) means the endpoint is
-        # reachable — let detectors handle the rest.
-        return None
+            # Auth failure: no point retrying
+            if resp.status_code in (401, 403):
+                return (resp.status_code, resp.error_detail)
+
+            # Success: endpoint works
+            if not resp.is_network_error and resp.status_code not in (402, 429, 500, 502, 503, 504):
+                return None
+
+            # Record error for potential final report
+            if resp.is_network_error:
+                last_code = 0
+                last_msg = resp.error or "endpoint unreachable"
+            elif resp.status_code == 402:
+                last_code = 402
+                last_msg = resp.error_detail or "payment required / no credits"
+            elif resp.status_code == 429:
+                last_code = 429
+                last_msg = resp.error_detail or "rate limited"
+            else:
+                last_code = resp.status_code
+                last_msg = resp.error_detail or f"server error {resp.status_code}"
+
+            # Not the last attempt: wait and retry
+            if attempt < _MAX_PREFLIGHT_ATTEMPTS - 1:
+                wait = _BACKOFF_SECONDS[attempt]
+                logger.warning(
+                    "Preflight attempt %d/%d failed (%s), retrying in %.0fs",
+                    attempt + 1, _MAX_PREFLIGHT_ATTEMPTS, last_msg, wait,
+                )
+                await asyncio.sleep(wait)
+
+        # All attempts failed
+        return (last_code, last_msg)
 
     async def run_all(self) -> TestReport:
         self._install_signal_handler()
