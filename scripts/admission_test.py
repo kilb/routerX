@@ -18,6 +18,7 @@ from src.models import (
     AuthMethod,
     Capability,
     ProviderType,
+    ScanMode,
     TestConfig,
 )
 from src.reporter import print_cli_report, write_junit_xml
@@ -48,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeout", type=float, default=30.0)
     p.add_argument("--log-level", default="INFO",
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    p.add_argument("--scan-mode", default="full",
+                   choices=["full", "essential"],
+                   help="full: all 85 detectors; essential: ~45 high-confidence only")
     p.add_argument("--only", nargs="+",
                    help="Run only these detector IDs (e.g. D25 D28)")
     return p
@@ -90,6 +94,7 @@ def main() -> int:
             AuthMethod(args.direct_auth_method)
             if args.direct_auth_method else None
         ),
+        scan_mode=ScanMode(args.scan_mode),
         timeout=args.timeout,
     )
 
