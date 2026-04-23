@@ -39,6 +39,10 @@ class CreateTestRequest(BaseModel):
     )
     second_api_key: str | None = None
     task_model_config: dict[str, Any] | None = None
+    scan_mode: str = Field(
+        default="full", pattern="^(full|essential)$",
+        description="full: all 85 detectors; essential: ~40 high-confidence detectors only",
+    )
     timeout: float = Field(default=30.0, ge=5.0, le=120.0)
     concurrency: int = Field(default=3, ge=1, le=10)
     only: list[str] | None = None

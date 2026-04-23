@@ -20,6 +20,11 @@ class Priority(str, Enum):
     P2 = "P2"
 
 
+class ScanMode(str, Enum):
+    FULL = "full"          # all 85 detectors
+    ESSENTIAL = "essential"  # high-confidence detectors only (~30)
+
+
 class Verdict(str, Enum):
     PASS = "pass"
     FAIL = "fail"
@@ -242,6 +247,9 @@ class TestConfig(BaseModel):
 
     # Async task model (D55)
     task_model_config: TaskModelConfig | None = None
+
+    # Scan mode
+    scan_mode: ScanMode = ScanMode.FULL
 
     # Runtime parameters
     timeout: float = 30.0

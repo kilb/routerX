@@ -22,6 +22,7 @@ from .events import Event, EventBus, EventType
 from .models import (
     DetectorResult,
     Priority,
+    ScanMode,
     TestConfig,
     TestReport,
     Verdict,
@@ -50,6 +51,43 @@ STAGES: list[dict[str, Any]] = [
 # Default 3 is conservative — some providers (e.g. OpenRouter) return
 # 401 under concurrent load instead of standard 429.
 DETECTOR_CONCURRENCY = 3
+
+# Essential mode: only detectors with clear, unambiguous signals.
+# Excluded: statistical/sampling-dependent (D44/D61/D65/D60/D85/D91/D41),
+# model-capability-dependent (D4a/D4b/D54/D59/D96/D101/D103/D112/D113),
+# format-compliance-dependent (D52/D94/D95/D82/D93/D122/D115),
+# noisy parameter probes (D25/D43/D37).
+# Kept: security (D28/D45/D47/D48/D81/D84/D116/D117/D118/D23/D40),
+# parameter forwarding with hard signals (D51/D62/D68/D70/D21/D22),
+# context/billing (D24a/D24c/D29/D123/D29b/D83),
+# streaming (D32a/D64/D110/D111), identity (D87/D57/D30),
+# tool calling (D16b/D16c/D119/D56), misc (D11/D15/D26/D53/D97/D99).
+ESSENTIAL_DETECTORS: set[str] = {
+    # S0: financial/supply-chain security — always run
+    "D28", "D45", "D45b", "D45c", "D47", "D48",
+    "D84", "D100", "D116", "D117", "D118",
+    # P0: security & integrity
+    "D23", "D40", "D81", "D114", "D97",
+    "D24a", "D22",
+    # P0: physical parameter forwarding (hard signals)
+    "D21",
+    # P1: parameter forwarding with clear evidence
+    "D51", "D62", "D68", "D70",
+    # P1: billing & usage
+    "D29", "D29b", "D83", "D123", "D53",
+    # P1: streaming
+    "D32a", "D110", "D111",
+    # P1: tool calling
+    "D16b", "D16c", "D56",
+    # P1: identity & consistency
+    "D87", "D57", "D30",
+    # P1: context
+    "D24b", "D24c", "D42",
+    # P1: other clear signals
+    "D26", "D11", "D15", "D99",
+    # PRE_SCREEN
+    "D31",
+}
 
 # Per-model pricing in USD per 1M tokens (prompt_rate, completion_rate).
 # Rough 2025 list prices; ``_fuzzy_rate`` picks the longest-prefix match so
@@ -141,6 +179,16 @@ class TestRunner:
                     unknown, known,
                 )
             all_cls = {k: v for k, v in all_cls.items() if k in wanted}
+        # Essential mode: only high-confidence detectors
+        if self.config.scan_mode == ScanMode.ESSENTIAL:
+            all_cls = {
+                k: v for k, v in all_cls.items()
+                if k in ESSENTIAL_DETECTORS
+            }
+            logger.info(
+                "Essential mode: running %d/%d detectors",
+                len(all_cls), len(get_all_detectors()),
+            )
         return all_cls
 
     async def run_all(self) -> TestReport:
