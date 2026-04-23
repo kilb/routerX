@@ -72,7 +72,9 @@ ESSENTIAL_DETECTORS: set[str] = {
     # P0: physical parameter forwarding (hard signals)
     "D21",
     # P1: parameter forwarding with clear evidence
-    "D51", "D62", "D68", "D70",
+    # D68 (frequency_penalty) and D70 (logit_bias) excluded: OpenAI-only
+    # params that SKIP on non-OpenAI models; D21 already covers them.
+    "D51", "D62",
     # P1: billing & usage
     "D29", "D29b", "D83", "D123", "D53",
     # P1: streaming
