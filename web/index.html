@@ -959,6 +959,26 @@ function renderBatchSummary(results,ep){
 /* ======== REPORT ======== */
 function renderReport(r,taskId){
   const area=document.getElementById('results-area');
+
+  // Preflight error — show prominent error banner and stop
+  if(r.error_code!==undefined && r.error_code!==null){
+    area.innerHTML=`
+      <div class="r-banner fail" style="text-align:center;padding:3rem">
+        <div style="font-size:3rem;margin-bottom:1rem">&#x26A0;</div>
+        <h2 style="font-size:1.4rem;margin-bottom:0.5rem">Endpoint Error</h2>
+        <div style="font-family:var(--mono);font-size:1.1rem;color:var(--red);margin-bottom:1rem">
+          ${r.error_code===0?'Network Error':'HTTP '+r.error_code}
+        </div>
+        <div style="color:var(--t2);max-width:600px;margin:0 auto;word-break:break-word">
+          ${esc(r.error_msg||'Unknown error')}
+        </div>
+        <div style="margin-top:1.5rem;color:var(--t3);font-size:0.85rem">
+          All detectors were skipped. Please check the endpoint URL and API key.
+        </div>
+      </div>`;
+    return;
+  }
+
   const isFail=r.overall_verdict!=='pass';
   const sec=(r.total_latency_ms/1000).toFixed(1);
   const cost=r.estimated_cost_usd?.toFixed(2)||'0.00';

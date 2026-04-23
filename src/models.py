@@ -359,3 +359,8 @@ class TestReport(BaseModel):
     estimated_cost_usd: float
     results: list[DetectorResult]
     evidence_notes: list[str] = Field(default_factory=list)
+    # Preflight error: if the endpoint is unreachable or returns an error
+    # on the very first probe, all detectors are skipped and these fields
+    # carry the upstream error details for frontend display.
+    error_code: int | None = None
+    error_msg: str | None = None

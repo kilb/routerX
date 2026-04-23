@@ -193,6 +193,42 @@ class TestRunner:
             )
         return all_cls
 
+    async def _preflight_check(
+        self, client: RouterClient,
+    ) -> tuple[int, str] | None:
+        """Send one minimal request to verify connectivity and auth.
+
+        Returns ``(error_code, error_msg)`` on failure, ``None`` on success.
+        Non-fatal HTTP errors (e.g. 400 for bad model) are considered
+        success — the endpoint is reachable and authenticated, individual
+        detectors will handle model-specific errors. Only truly fatal
+        errors (network failure, 401/403 auth errors) abort the run.
+        """
+        from .models import ProbeRequest
+
+        probe = ProbeRequest(
+            payload={
+                "model": self.config.claimed_model,
+                "max_tokens": 1,
+                "messages": [{"role": "user", "content": "hi"}],
+            },
+            endpoint_path=self.config.default_endpoint_path,
+            description="preflight connectivity check",
+        )
+        resp = await client.send(probe)
+
+        # Network-level failure: endpoint unreachable
+        if resp.is_network_error:
+            return (0, resp.error or "endpoint unreachable")
+
+        # Auth failure: API key invalid
+        if resp.status_code in (401, 403):
+            return (resp.status_code, resp.error_detail)
+
+        # Any other response (200, 400, 404, 500) means the endpoint is
+        # reachable — let detectors handle the rest.
+        return None
+
     async def run_all(self) -> TestReport:
         self._install_signal_handler()
         try:
@@ -228,6 +264,27 @@ class TestRunner:
             event_bus=self.events,
         ) as client:
             self._client = client  # exposed to _build_report for token totals
+
+            # ---- Preflight check ----
+            # Send one simple request to verify the endpoint is reachable
+            # and the API key is valid. If this fails, abort all detectors
+            # and surface the error directly.
+            preflight_err = await self._preflight_check(client)
+            if preflight_err:
+                code, msg = preflight_err
+                logger.error("Preflight failed: %d %s", code, msg)
+                for cls in all_cls.values():
+                    self.results.append(self._make_skip(cls, f"preflight: {msg}"))
+                report = self._build_report()
+                report.error_code = code
+                report.error_msg = msg
+                self.events.emit(Event(EventType.TEST_END, {
+                    "verdict": report.overall_verdict.value,
+                    "tier": report.tier_assignment,
+                    "error": msg,
+                }))
+                return report
+
             for stage in STAGES:
                 stage_cls = {
                     k: v for k, v in all_cls.items()
