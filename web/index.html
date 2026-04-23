@@ -10,7 +10,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#07080c;--bg2:#0b0c12;
+  --bg:#040508;--bg2:#080a10;
   --card:#0f1118;--card2:#14161f;--card3:#1a1c28;
   --border:#1e2030;--border2:#2a2c44;
   --t1:#eeeef4;--t2:#a8a8c0;--t3:#727298;--t4:#505070;
@@ -22,16 +22,16 @@
   --purple:#8b5cf6;--purple-soft:#8b5cf60a;
   --mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--display:'Geist',system-ui,sans-serif;
   --r:10px;--r-sm:7px;--r-xs:4px;
-  --glass:rgba(12,14,22,0.55);--glass-border:rgba(255,255,255,0.08);
+  --glass:rgba(14,16,26,0.62);--glass-border:rgba(255,255,255,0.10);
 }
 html{scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--t1);font-family:var(--sans);
   line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em;
   background-image:
-    radial-gradient(ellipse 80% 60% at 15% -5%,#1e2460,transparent 55%),
-    radial-gradient(ellipse 70% 50% at 90% 85%,#2a1650,transparent 50%),
-    radial-gradient(ellipse 60% 40% at 50% 40%,#141830,transparent 55%);
+    radial-gradient(ellipse 80% 60% at 15% -5%,#141a45,transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 85%,#1e1040,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 40%,#0c1025,transparent 55%);
   background-attachment:fixed;
 }
 
@@ -62,7 +62,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
   padding:0 2rem;height:60px;
-  background:rgba(7,8,12,0.55);backdrop-filter:blur(24px) saturate(1.5);
+  background:rgba(6,7,11,0.6);backdrop-filter:blur(24px) saturate(1.5);
   border-bottom:1px solid rgba(255,255,255,0.06);
 }
 .nav-brand{display:flex;align-items:center;gap:0.6rem;cursor:pointer;text-decoration:none}
