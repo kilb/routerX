@@ -200,6 +200,14 @@ class BaseDetector(ABC):
             return False
         return all(r.is_network_error for r in actual)
 
+    @staticmethod
+    def _all_http_errors(responses: list) -> bool:
+        """True if every non-None response is a network error OR HTTP 4xx/5xx."""
+        actual = [r for r in responses if r is not None]
+        if not actual:
+            return False
+        return all(r.is_network_error or r.status_code >= 400 for r in actual)
+
     async def _execute(self) -> DetectorResult:
         if self.judge_mode == JudgeMode.MAJORITY_2_OF_2:
             return await self._run_majority()
@@ -215,6 +223,14 @@ class BaseDetector(ABC):
                     f"(all requests failed)"
                 )
             return self._inconclusive(f"all probes failed: {first.error}")
+        # All responses are HTTP errors (400/500 etc.) — the endpoint
+        # rejected all our requests. This is not a detector finding,
+        # it's an endpoint compatibility issue.
+        if self._all_http_errors(responses):
+            first = next(r for r in responses if r is not None)
+            return self._inconclusive(
+                f"all probes returned errors: {first.error_detail}"
+            )
         return self.judge(responses)
 
     async def _run_majority(self) -> DetectorResult:
@@ -222,10 +238,8 @@ class BaseDetector(ABC):
         net_failures = 0
         for _ in range(2):
             responses = await self.send_probes()
-            if self._all_network_errors(responses):
+            if self._all_network_errors(responses) or self._all_http_errors(responses):
                 net_failures += 1
-                # Record the error as INCONCLUSIVE so the second iteration
-                # can decide whether BOTH runs are unusable.
                 continue
             results.append(self.judge(responses))
         # If every attempt died on the network, check whether the detector

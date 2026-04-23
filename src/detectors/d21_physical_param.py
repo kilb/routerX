@@ -69,8 +69,8 @@ class D21_PhysicalParamProbe(BaseDetector):
         ban = token_counter.find_single_token(LOGIT_BIAS_CANDIDATES, self.config.claimed_model)
         ban_word = ban[0].strip() if ban else ""
         # 21a: temp=2.0
-        if r_a.is_network_error:
-            subs.append(("21a_temp", None, "network error"))
+        if r_a.is_network_error or r_a.status_code != 200:
+            subs.append(("21a_temp", None, r_a.error_detail if r_a.status_code != 200 else "network error"))
         elif not r_a.content or len(r_a.content.split()) < 5:
             subs.append(("21a_temp", None, "response too short for bigram analysis"))
         else:
@@ -87,8 +87,8 @@ class D21_PhysicalParamProbe(BaseDetector):
         )
         if _skip_oai_params:
             subs.append(("21b_logit", None, "skipped: logit_bias not supported by provider"))
-        elif r_b.is_network_error:
-            subs.append(("21b_logit", None, r_b.error or "error"))
+        elif r_b.is_network_error or r_b.status_code != 200:
+            subs.append(("21b_logit", None, r_b.error_detail if r_b.status_code != 200 else (r_b.error or "error")))
         elif ban_word:
             found = ban_word.lower() in r_b.content.lower()
             subs.append(("21b_logit", not found, f"banned '{ban_word}' {'found' if found else 'absent'}"))
@@ -97,8 +97,8 @@ class D21_PhysicalParamProbe(BaseDetector):
         # 21c: logprobs (OpenAI-only; skip for Anthropic/Gemini)
         if _skip_oai_params:
             subs.append(("21c_logprobs", None, "skipped: logprobs not supported by provider"))
-        elif r_c.is_network_error:
-            subs.append(("21c_logprobs", None, "network error"))
+        elif r_c.is_network_error or r_c.status_code != 200:
+            subs.append(("21c_logprobs", None, r_c.error_detail if r_c.status_code != 200 else "network error"))
         elif r_c.body:
             lp = None
             try:
@@ -109,8 +109,9 @@ class D21_PhysicalParamProbe(BaseDetector):
         else:
             subs.append(("21c_logprobs", False, "no body"))
         # 21d: max_tokens=1
-        if r_d.is_network_error or r_base.is_network_error:
-            subs.append(("21d_max1", None, "network error"))
+        if r_d.is_network_error or r_base.is_network_error or r_d.status_code != 200 or r_base.status_code != 200:
+            detail = next((r.error_detail for r in (r_d, r_base) if r.status_code != 200), "network error")
+            subs.append(("21d_max1", None, detail))
         else:
             tok_count = len(r_d.content.split()) if r_d.content else 0
             ratio = r_d.latency_ms / max(r_base.latency_ms, 1)
