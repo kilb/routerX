@@ -22,7 +22,7 @@
   --purple:#8b5cf6;--purple-soft:#8b5cf60a;
   --mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--display:'Geist',system-ui,sans-serif;
   --r:10px;--r-sm:7px;--r-xs:4px;
-  --glass:rgba(14,16,26,0.62);--glass-border:rgba(255,255,255,0.10);
+  --glass:rgba(16,18,30,0.52);--glass-border:rgba(255,255,255,0.15);
 }
 html{scroll-behavior:smooth}
 body{
@@ -63,7 +63,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   display:flex;align-items:center;justify-content:space-between;
   padding:0 2rem;height:60px;
   background:rgba(6,7,11,0.6);backdrop-filter:blur(24px) saturate(1.5);
-  border-bottom:1px solid rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.10);
 }
 .nav-brand{display:flex;align-items:center;gap:0.6rem;cursor:pointer;text-decoration:none}
 .nav-brand .icon{
@@ -89,7 +89,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 /* ---- Shared ---- */
-.card{background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--glass-border);border-radius:var(--r);padding:1.75rem;box-shadow:0 4px 30px rgba(0,0,0,0.2)}
+.card{background:var(--glass);backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--glass-border);border-radius:var(--r);padding:1.75rem;box-shadow:0 4px 30px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04)}
 .card-label{font-size:0.8rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
