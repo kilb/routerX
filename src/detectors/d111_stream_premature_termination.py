@@ -63,6 +63,13 @@ class D111_StreamPrematureTermination(BaseDetector):
         }
 
         if not finish_reason and word_count < MIN_CONTENT_TOKENS:
+            # Reasoning models (o1/o3/o4) may produce zero visible words
+            # when all output is in internal thinking tokens.
+            model_lower = self.config.claimed_model.lower()
+            if any(k in model_lower for k in ("o1", "o3", "o4", "deepseek-r1", "thinking")):
+                return self._pass(evidence | {
+                    "note": "reasoning model may have all output in thinking tokens",
+                })
             return self._fail(
                 f"stream terminated without finish_reason, only {word_count} words",
                 evidence,

@@ -60,6 +60,7 @@ class D23_HijackedTokenProbe(BaseDetector):
         # 23a: check all probes; FAIL immediately if any reveals keywords,
         # but skip non-200 / empty / error probes and continue to the next.
         any_23a_checked = False
+        matched_probes: list[tuple[str, str]] = []  # (keyword, excerpt)
         for r in responses[:-1]:
             if r.is_network_error or r.status_code != 200:
                 continue
@@ -69,9 +70,25 @@ class D23_HijackedTokenProbe(BaseDetector):
             any_23a_checked = True
             matched = _find_hijack_keyword(content)
             if matched:
+                matched_probes.append((matched, content[:200]))
+        # Require 2+ probes to match — a single probe mentioning
+        # "translate" in a capability listing is not hijacking.
+        if len(matched_probes) >= 2:
+            return self._fail(
+                "blank probe reveals domain-specific guidance",
+                {"matched_keyword": matched_probes[0][0],
+                 "response_excerpt": matched_probes[0][1],
+                 "matching_probes": len(matched_probes)},
+            )
+        # Single match — could be model naturally listing capabilities
+        if len(matched_probes) == 1:
+            kw, excerpt = matched_probes[0]
+            # Strong indicators (brand names) still FAIL on single match
+            _STRONG_KEYWORDS = {"monica", "cursor", "poe", "deepl", "notion"}
+            if kw.lower() in _STRONG_KEYWORDS:
                 return self._fail(
-                    "blank probe reveals domain-specific guidance",
-                    {"matched_keyword": matched, "response_excerpt": content[:200]},
+                    "blank probe reveals third-party brand",
+                    {"matched_keyword": kw, "response_excerpt": excerpt},
                 )
         # 23b: system prompt extraction
         resp_23b = responses[-1]
@@ -116,12 +133,14 @@ class D23_HijackedTokenProbe(BaseDetector):
              [neutral_23a, neutral_23a, neutral_23a, neutral_23b],
              "pass"),
 
-            # FAIL 23a: first blank probe triggers domain-specific translation guidance
-            ("FAIL: 23a reveals translation domain guidance",
-             [make_resp("Please enter the text you want to translate."), neutral_23a, neutral_23a, neutral_23b],
+            # FAIL 23a: 2+ probes reveal translation domain guidance
+            ("FAIL: 23a reveals translation domain guidance (2 probes)",
+             [make_resp("Please enter the text you want to translate."),
+              make_resp("I can translate any text for you."),
+              neutral_23a, neutral_23b],
              "fail"),
 
-            # FAIL 23a: second blank probe reveals Monica branding
+            # FAIL 23a: Monica is a strong brand keyword — single match enough
             ("FAIL: 23a reveals Monica branding",
              [neutral_23a, make_resp("Welcome to Monica, your AI assistant!"), neutral_23a, neutral_23b],
              "fail"),
