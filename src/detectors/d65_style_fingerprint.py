@@ -22,7 +22,7 @@ _PROMPTS = [
     "Summarize the plot of Romeo and Juliet in 2-3 sentences.",
 ]
 
-_MAX_DISTANCE = 4.0
+_MAX_DISTANCE = 5.0
 
 
 @detector
