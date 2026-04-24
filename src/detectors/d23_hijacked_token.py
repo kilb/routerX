@@ -134,11 +134,11 @@ class D23_HijackedTokenProbe(BaseDetector):
              "pass"),
 
             # FAIL 23a: 2+ probes reveal translation domain guidance
-            ("FAIL: 23a reveals translation domain guidance (2 probes)",
+            ("PASS: 23a translate is generic (removed from keywords)",
              [make_resp("Please enter the text you want to translate."),
               make_resp("I can translate any text for you."),
               neutral_23a, neutral_23b],
-             "fail"),
+             "pass"),
 
             # FAIL 23a: Monica is a strong brand keyword — single match enough
             ("FAIL: 23a reveals Monica branding",
@@ -156,9 +156,9 @@ class D23_HijackedTokenProbe(BaseDetector):
              "fail"),
 
             # FAIL 23b: CJK keyword match (translation in Chinese)
-            ("FAIL: 23b reveals CJK translation keyword",
+            ("PASS: 23b CJK translate is generic (removed from keywords)",
              [neutral_23a, neutral_23a, neutral_23a, make_resp("Hello! I am a \u7ffb\u8bd1 assistant. Please enter text to translate.")],
-             "fail"),
+             "pass"),
 
             # PASS: first 23a probe fails (400) but others are neutral
             ("PASS: 23a first probe 400, others neutral",

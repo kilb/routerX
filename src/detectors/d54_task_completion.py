@@ -85,10 +85,13 @@ class D54_TaskCompletion(BaseDetector):
             })
 
         if fr == "length":
-            return self._fail("crude truncation: finish_reason=length", {
+            # finish_reason=length is honest — the model/API hit its own
+            # output limit. This is a model limitation, not router truncation.
+            return self._pass({
                 "language_count": language_count,
                 "has_marker": has_marker,
                 "finish_reason": raw_finish,
+                "note": "output limited by model (finish_reason=length)",
             })
 
         if language_count < MIN_LANGUAGES_FAIL and not has_marker and is_natural_stop:
@@ -142,9 +145,9 @@ class D54_TaskCompletion(BaseDetector):
              [make_resp(short_list_no_marker, "stop")],
              "fail"),
             # FAIL: crude truncation — finish_reason=length
-            ("FAIL: crude truncation (finish_reason=length)",
+            ("PASS: finish_reason=length (model output limit)",
              [make_resp(short_list_length, "length")],
-             "fail"),
+             "pass"),
             # INCONCLUSIVE: network error
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],

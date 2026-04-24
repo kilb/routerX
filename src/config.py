@@ -75,19 +75,17 @@ HIJACKED_KEYWORDS: list[str] = [
     # Code assistants
     "cursor", "copilot", "codeium", "tabnine", "continue.dev",
     # Translation apps
-    "monica", "translate", "translation", "deepl", "google translate",
+    "monica", "deepl", "google translate",
     # Productivity
     "notion", "obsidian",
     # Search / research
     "perplexity", "phind",
     # Chat apps
     "poe", "you.com",
-    # Generic
-    "homework", "code assistant", "assistant of",
-    # CJK
-    "\u7ffb\u8bd1",   # fan-yi (translate)
-    "\u4f5c\u4e1a",   # zuo-ye (homework)
-    "\u52a9\u624b",   # zhu-shou (assistant)
+    # Generic — only specific app/brand terms, not generic model capabilities.
+    # Removed: "translate", "translation", "assistant of", "助手", "翻译", "作业"
+    # — these are natural model self-descriptions, not hijacking indicators.
+    "homework", "code assistant",
 ]
 
 # Standard provider response headers (D30).
