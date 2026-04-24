@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
 
@@ -51,7 +52,9 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     p.add_argument("--scan-mode", default="full",
                    choices=["full", "essential"],
-                   help="full: all 85 detectors; essential: ~45 high-confidence only")
+                   help="full: all 85 detectors; essential: ~43 high-confidence only")
+    p.add_argument("--routing", type=str, default=None,
+                   help='JSON routing config, e.g. \'{"strategy":"balanced","allowed_providers":["anthropic"]}\'')
     p.add_argument("--only", nargs="+",
                    help="Run only these detector IDs (e.g. D25 D28)")
     return p
@@ -94,6 +97,7 @@ def main() -> int:
             AuthMethod(args.direct_auth_method)
             if args.direct_auth_method else None
         ),
+        routing=json.loads(args.routing) if args.routing else None,
         scan_mode=ScanMode(args.scan_mode),
         timeout=args.timeout,
     )
