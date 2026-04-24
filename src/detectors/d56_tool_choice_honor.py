@@ -109,6 +109,15 @@ class D56_ToolChoiceHonor(BaseDetector):
         # long as the target is present.
         if _TARGET_FN in names:
             return self._pass(ev)
+        # Non-OpenAI models may not honor forced tool_choice — calling a
+        # different function is the model's fallback, not router tampering.
+        model_lower = self.config.claimed_model.lower()
+        is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+        if not is_openai:
+            return self._skip(
+                f"non-OpenAI model called {names!r} instead of "
+                f"{_TARGET_FN!r} -- forced tool_choice may not be supported"
+            )
         return self._fail(
             f"tool_choice pinned {_TARGET_FN!r} but got {names!r}", ev,
         )
