@@ -139,10 +139,9 @@ _DETECTOR_FAMILIES: dict[str, tuple[str, ...]] = {
 # Contradiction rules: (PASS_id_or_family, FAIL_id_or_family, note_template).
 # If either side is a family key, it expands to the family's members.
 # The rule fires when any PASS-side member is PASS AND any FAIL-side is FAIL.
+# D31 removed: its threshold is intentionally loose (only system_leak
+# or 4+ failures), so D31 PASS + D21/D22/D23 FAIL is expected by design.
 _CONTRADICTIONS: list[tuple[str, str, str]] = [
-    ("D31", "D21", "D31 PASS but {fail} FAIL"),
-    ("D31", "D22", "D31 PASS but {fail} FAIL"),
-    ("D31", "D23", "D31 PASS but {fail} FAIL"),
     ("D24a", "D29", "D24a PASS but D29 FAIL: billing inflated"),
     ("D25", "D54", "D25 PASS but D54 FAIL: semantic truncation"),
 ]
