@@ -76,20 +76,25 @@ class D22_ProtocolStrictness(BaseDetector):
         )
         _is_non_openai_model = not _is_openai_model or _is_reasoning
         if r_a is not None and not r_a.is_network_error:
-            content = r_a.content
-            try:
-                parsed = json.loads(content)
-                is_int = isinstance(parsed.get("age"), int)
-                subs.append(("22a_json", is_int, "strict JSON produced integer" if is_int else "non-integer age"))
-            except (json.JSONDecodeError, TypeError):
-                if r_a.status_code >= 400:
-                    subs.append(("22a_json", True, "error response (expected for strict)"))
-                elif _is_non_openai_model:
-                    # Non-OpenAI model via ANY provider: strict json_schema
-                    # is not supported, so non-JSON output is expected.
-                    pass
-                else:
-                    subs.append(("22a_json", False, "non-JSON output despite strict:true"))
+            if r_a.status_code >= 400:
+                # Error response — endpoint rejected the request, not a
+                # protocol violation. Treat as neutral.
+                subs.append(("22a_json", None, f"error response: {r_a.error_detail}"))
+            elif r_a.status_code == 200:
+                content = r_a.content
+                try:
+                    parsed = json.loads(content)
+                    if not isinstance(parsed, dict):
+                        subs.append(("22a_json", False, f"JSON parsed but not an object ({type(parsed).__name__})"))
+                    else:
+                        is_int = isinstance(parsed.get("age"), int)
+                        subs.append(("22a_json", is_int, "strict JSON produced integer" if is_int else "non-integer age"))
+                except (json.JSONDecodeError, TypeError):
+                    if _is_non_openai_model:
+                        # Non-OpenAI model: strict json_schema not supported
+                        pass
+                    else:
+                        subs.append(("22a_json", False, "non-JSON output despite strict:true"))
         # 22b: Only meaningful for NATIVE Anthropic API (api_format=anthropic).
         # OpenAI-format proxies (including OpenRouter) legitimately accept
         # double-user messages because the OpenAI spec allows it.
