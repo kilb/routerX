@@ -87,6 +87,12 @@ class D60_LatencyFingerprint(BaseDetector):
         )
         tps = local_tokens / duration if duration > 0 else 0.0
 
+        # TPS is unreliable with very few tokens — proxy overhead dominates.
+        if local_tokens < 20:
+            return self._inconclusive(
+                f"only {local_tokens} tokens -- too few for reliable tps measurement"
+            )
+
         widened = {
             "ttft": (min_ttft / _TOLERANCE, max_ttft * _TOLERANCE),
             "tps": (min_tps / _TOLERANCE, max_tps * _TOLERANCE),
@@ -145,7 +151,7 @@ class D60_LatencyFingerprint(BaseDetector):
             [0.3, 0.5, 0.8, 1.2, 1.8, 3.0],
             "The history of distributed systems " * 40,
         )
-        slow = mk([15.0, 15.1, 15.2], "short")
+        slow = mk([15.0, 15.1, 15.2, 15.3, 15.4], "The quick brown fox jumps over the lazy dog " * 10)
         net = ProbeResponse(status_code=0, error="TIMEOUT")
         too_few = mk([0.3], "")
         return [

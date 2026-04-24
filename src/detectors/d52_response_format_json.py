@@ -92,6 +92,10 @@ class D52_ResponseFormatJSON(BaseDetector):
                 ev,
             )
         if not isinstance(parsed, dict):
+            # JSON array containing objects is a valid JSON response —
+            # the model returned structured data, just wrapped in an array.
+            if isinstance(parsed, list) and parsed and isinstance(parsed[0], dict):
+                return self._pass(ev | {"note": "valid JSON array of objects"})
             return self._fail("JSON parsed but not an object", ev | {"parsed": parsed})
         result_ev = ev | {"parsed_keys": list(parsed.keys())}
         # OpenAI json_object mode never wraps output in markdown fences;

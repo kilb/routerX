@@ -120,7 +120,13 @@ class D21_PhysicalParamProbe(BaseDetector):
             if not r_d.content or r_d.finish_reason is None:
                 subs.append(("21d_max1", None, f"malformed response (fr={r_d.finish_reason})"))
             else:
-                failed = ratio > 0.8 or tok_count > 3 or r_d.finish_reason != "length"
+                # max_tokens=1 is honored if: output is short AND finish_reason=length.
+                # Latency ratio alone is unreliable — proxy overhead dominates
+                # when the actual generation is just 1 token.
+                if tok_count <= 3 and r_d.finish_reason == "length":
+                    failed = False  # max_tokens clearly honored
+                else:
+                    failed = tok_count > 3 or r_d.finish_reason != "length"
                 subs.append(("21d_max1", not failed, f"ratio={ratio:.2f} toks={tok_count} fr={r_d.finish_reason}"))
         fail_n = sum(1 for _, p, _ in subs if p is False)
         pass_n = sum(1 for _, p, _ in subs if p is True)
@@ -141,12 +147,13 @@ class D21_PhysicalParamProbe(BaseDetector):
         # Very fluent text (high bigram ratio = many adjacent common-word pairs) - FAIL for 21a
         fluent = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "I have the is a to the of and this is the of in the is the to for the of it is that the"}, "finish_reason": "stop"}]})
         fast = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "Q"}, "finish_reason": "length"}]}, latency_ms=50)
-        slow = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "Q"}, "finish_reason": "length"}]}, latency_ms=500)
+        # 21d fail: too many tokens (max_tokens=1 not honored) + wrong finish_reason
+        d_bad = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "Here is a long answer"}, "finish_reason": "stop"}]}, latency_ms=500)
         base = ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "joke"}, "finish_reason": "stop"}]}, latency_ms=500)
         return [
             ("PASS: all sub-probes pass", [chaotic, ok, lp_ok, base, fast], "pass"),
             ("FAIL: 21a fluent + 21c no logprobs", [fluent, ok, lp_miss, base, fast], "fail"),
-            ("FAIL: 21a fluent + 21d slow", [fluent, ok, lp_ok, base, slow], "fail"),
+            ("FAIL: 21a fluent + 21d too many tokens", [fluent, ok, lp_ok, base, d_bad], "fail"),
             ("INCONCLUSIVE: all network error", [ProbeResponse(status_code=0, error="T")] * 5, "inconclusive"),
         ]
 
