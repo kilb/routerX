@@ -279,6 +279,10 @@ class TestConfig(BaseModel):
     # Async task model (D55)
     task_model_config: TaskModelConfig | None = None
 
+    # Routing: injected into every request payload for routers that support
+    # provider pinning (e.g. Commonstack routing.allowed_providers).
+    routing: dict[str, Any] | None = None
+
     # Scan mode
     scan_mode: ScanMode = ScanMode.FULL
 

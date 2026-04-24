@@ -54,6 +54,7 @@ class RouterClient:
         max_concurrent: int = 5,
         min_interval: float = 0.1,
         event_bus: EventBus | None = None,
+        routing: dict | None = None,
     ):
         self.endpoint = endpoint.rstrip("/")
         self.api_key = api_key
@@ -61,6 +62,7 @@ class RouterClient:
         self.extra_headers = extra_headers or {}
         self.timeout = timeout
         self.events = event_bus
+        self.routing = routing
         # Aggregate token usage across all successful responses. The runner
         # reads this to compute a realistic cost estimate.
         self.cumulative_tokens: dict[str, int] = {
@@ -147,6 +149,15 @@ class RouterClient:
 
     # ---------- public API ----------
 
+    def _inject_routing(self, payload: dict) -> dict:
+        """Inject routing config into the request payload if configured."""
+        if not self.routing:
+            return payload
+        # Don't overwrite if probe already has routing
+        if "routing" in payload:
+            return payload
+        return {**payload, "routing": self.routing}
+
     async def send(self, probe: ProbeRequest) -> ProbeResponse:
         self._require_entered()
         probe_id = str(uuid.uuid4())[:8]
@@ -166,7 +177,7 @@ class RouterClient:
                 try:
                     resp = await self._client.post(
                         self._url(probe.endpoint_path),
-                        json=probe.payload,
+                        json=self._inject_routing(probe.payload),
                         headers=self._headers(probe_id),
                         params=self._query_params(),
                     )
@@ -356,7 +367,7 @@ class RouterClient:
         content = ""
         usage_block: dict | None = None
         finish_reason: str | None = None
-        payload = {**probe.payload, "stream": True}
+        payload = self._inject_routing({**probe.payload, "stream": True})
         async with aconnect_sse(
             self._client,
             "POST",

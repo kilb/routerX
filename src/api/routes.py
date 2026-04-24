@@ -158,6 +158,7 @@ async def create_test(req: CreateTestRequest):
         ),
         second_api_key=req.second_api_key,
         task_model_config=task_cfg,
+        routing=req.routing,
         scan_mode=ScanMode(req.scan_mode),
         timeout=req.timeout,
         detector_concurrency=req.concurrency,

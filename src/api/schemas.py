@@ -39,6 +39,10 @@ class CreateTestRequest(BaseModel):
     )
     second_api_key: str | None = None
     task_model_config: dict[str, Any] | None = None
+    routing: dict[str, Any] | None = Field(
+        default=None,
+        description="Routing config injected into every request payload",
+    )
     scan_mode: str = Field(
         default="full", pattern="^(full|essential)$",
         description="full: all 85 detectors; essential: ~40 high-confidence detectors only",
