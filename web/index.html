@@ -532,8 +532,11 @@ table.rt{width:100%;border-collapse:separate;border-spacing:0}
         <button class="lb-sort active" data-sort="rate" onclick="setLbSort('rate',this)">Pass Rate</button>
         <button class="lb-sort" data-sort="time" onclick="setLbSort('time',this)">Newest</button>
         <button class="lb-sort" data-sort="fails" onclick="setLbSort('fails',this)">Most Fails</button>
+        <span style="border-left:1px solid var(--border);height:20px;margin:0 0.3rem"></span>
+        <button class="lb-sort" data-sort="domain" onclick="setLbSort('domain',this)">By Domain</button>
         <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.35rem 0.8rem;margin-left:auto" onclick="refreshLeaderboard()">Refresh</button>
       </div>
+      <div id="lb-domain-summary" style="display:none"></div>
       <div id="lb-list"></div>
     </div>
 
@@ -1388,15 +1391,25 @@ function setLbSort(s,btn){
   renderLeaderboard();
 }
 
+function _getDomain(ep){return ep.replace(/https?:\/\//,'').split('/')[0]}
+
 function renderLeaderboard(){
   const el=document.getElementById('lb-list');
+  const sumEl=document.getElementById('lb-domain-summary');
   const q=(document.getElementById('lb-search')?.value||'').toLowerCase();
 
-  // Filter to completed tasks only
   let items=lbData.filter(t=>t.status==='completed'&&t.overall_verdict);
   if(q)items=items.filter(t=>t.claimed_model.toLowerCase().includes(q)||t.router_endpoint.toLowerCase().includes(q));
 
-  // Sort
+  // Domain view
+  if(lbSort==='domain'){
+    sumEl.style.display='block';
+    _renderDomainView(items,el,sumEl);
+    return;
+  }
+  sumEl.style.display='none';
+
+  // Standard sort
   if(lbSort==='rate')items.sort((a,b)=>{
     const ra=a.total_detectors?(a.passed||0)/a.total_detectors:0;
     const rb=b.total_detectors?(b.passed||0)/b.total_detectors:0;
@@ -1405,10 +1418,7 @@ function renderLeaderboard(){
   else if(lbSort==='time')items.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   else if(lbSort==='fails')items.sort((a,b)=>(b.failed||0)-(a.failed||0));
 
-  if(!items.length){
-    el.innerHTML='<div class="lb-empty">No completed audits found.</div>';
-    return;
-  }
+  if(!items.length){el.innerHTML='<div class="lb-empty">No completed audits found.</div>';return}
 
   el.innerHTML=items.map((t,i)=>{
     const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
@@ -1416,7 +1426,7 @@ function renderLeaderboard(){
     const isFail=t.overall_verdict!=='pass';
     const tierCls=isFail?'badge-fail':'badge-pass';
     const barColor=rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
-    const host=t.router_endpoint.replace(/https?:\/\//,'').split('/')[0];
+    const host=_getDomain(t.router_endpoint);
     const time=t.completed_at?new Date(t.completed_at).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
     const rankCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
     return `<div class="lb-item" onclick="navigateToTask('${t.task_id}')">
@@ -1435,6 +1445,90 @@ function renderLeaderboard(){
         <div class="lb-pct" style="color:${barColor}">${rate}%</div>
       </div>
       <div class="lb-tier"><span class="badge ${tierCls}">${t.tier_assignment||'—'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function _renderDomainView(items,listEl,sumEl){
+  // Group by domain
+  const domains={};
+  items.forEach(t=>{
+    const d=_getDomain(t.router_endpoint);
+    if(!domains[d])domains[d]={items:[],totalPass:0,totalFail:0,totalDet:0,tiers:{}};
+    const g=domains[d];
+    g.items.push(t);
+    g.totalPass+=(t.passed||0);
+    g.totalFail+=(t.failed||0);
+    g.totalDet+=(t.total_detectors||85);
+    const tier=t.tier_assignment||'UNKNOWN';
+    g.tiers[tier]=(g.tiers[tier]||0)+1;
+  });
+
+  // Compute domain scores and sort by average pass rate
+  const ranked=Object.entries(domains).map(([domain,g])=>{
+    const avgRate=g.totalDet?Math.round(g.totalPass/g.totalDet*100):0;
+    const t1=(g.tiers['TIER_1']||0);
+    const t2=(g.tiers['TIER_2']||0);
+    const bl=(g.tiers['BLACKLIST']||0);
+    return {domain,avgRate,total:g.items.length,t1,t2,bl,totalPass:g.totalPass,totalFail:g.totalFail,items:g.items};
+  }).sort((a,b)=>b.avgRate-a.avgRate);
+
+  // Domain summary cards
+  sumEl.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;margin-bottom:1.5rem">
+      ${ranked.map((d,i)=>{
+        const barColor=d.avgRate>=80?'var(--green)':d.avgRate>=50?'var(--yellow)':'var(--red)';
+        const rankCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+        return `<div class="card" style="padding:1.2rem;border-color:${barColor}22">
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem">
+            <div class="lb-rank ${rankCls}" style="font-size:0.9rem;width:28px;height:28px">${i+1}</div>
+            <div style="font-weight:700;font-size:1rem">${esc(d.domain)}</div>
+            <div style="margin-left:auto;font-size:1.3rem;font-weight:800;color:${barColor}">${d.avgRate}%</div>
+          </div>
+          <div class="lb-bar" style="margin-bottom:0.5rem"><div class="lb-bar-fill" style="width:${d.avgRate}%;background:${barColor}"></div></div>
+          <div style="display:flex;gap:0.8rem;font-size:0.8rem;color:var(--t3)">
+            <span>${d.total} models</span>
+            <span style="color:var(--green)">${d.t1} TIER_1</span>
+            <span style="color:var(--yellow)">${d.t2} TIER_2</span>
+            <span style="color:var(--red)">${d.bl} BLACKLIST</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--t4);margin-top:0.3rem">
+            ${d.totalPass} pass / ${d.totalFail} fail
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Per-domain model list
+  listEl.innerHTML=ranked.map(d=>{
+    const barColor=d.avgRate>=80?'var(--green)':d.avgRate>=50?'var(--yellow)':'var(--red)';
+    const modelRows=d.items.sort((a,b)=>{
+      const ra=a.total_detectors?(a.passed||0)/a.total_detectors:0;
+      const rb=b.total_detectors?(b.passed||0)/b.total_detectors:0;
+      return rb-ra;
+    }).map(t=>{
+      const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
+      const rate=tot?Math.round(p/tot*100):0;
+      const rc=rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
+      const isFail=t.overall_verdict!=='pass';
+      return `<div class="lb-item" onclick="navigateToTask('${t.task_id}')" style="padding:0.6rem 1rem">
+        <div class="lb-info" style="flex:1">
+          <div class="lb-model" style="font-size:0.88rem">${esc(t.claimed_model)}</div>
+        </div>
+        <div class="lb-stats" style="width:120px">
+          <div class="lb-bar"><div class="lb-bar-fill" style="width:${rate}%;background:${rc}"></div></div>
+          <div class="lb-pct" style="color:${rc};font-size:0.8rem">${rate}%</div>
+        </div>
+        <div class="lb-tier"><span class="badge ${isFail?'badge-fail':'badge-pass'}" style="font-size:0.7rem">${t.tier_assignment||'—'}</span></div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;padding:0 0.5rem">
+        <span style="font-weight:700;font-size:1.05rem">${esc(d.domain)}</span>
+        <span style="font-size:0.85rem;color:${barColor};font-weight:700">${d.avgRate}%</span>
+        <span style="font-size:0.8rem;color:var(--t3)">${d.total} models</span>
+      </div>
+      ${modelRows}
     </div>`;
   }).join('');
 }
