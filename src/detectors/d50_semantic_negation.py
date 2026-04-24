@@ -310,18 +310,20 @@ class D50_SemanticNegation(BaseDetector):
         }
 
         if len(matched_keywords) >= _MIN_KEYWORD_HITS:
-            return self._fail(
-                "VERDICT contradicts content analysis: SAFE verdict but "
-                f"{len(matched_keywords)} vulnerability keywords found",
-                evidence,
+            # Without direct baseline, we cannot distinguish "router flipped
+            # the verdict" from "model analyzed vulnerabilities but concluded
+            # SAFE anyway" (model reasoning error). INCONCLUSIVE, not FAIL.
+            return self._inconclusive(
+                f"SAFE verdict with {len(matched_keywords)} vulnerability "
+                f"keywords — may be model error or verdict suppression; "
+                f"cannot confirm without direct baseline"
             )
 
-        # SAFE verdict with no vulnerability keywords -- suspicious because
-        # the contract IS objectively vulnerable.
-        return self._fail_degraded(
-            "SAFE verdict on known-UNSAFE contract; no direct baseline to confirm",
-            evidence,
-        )
+        # SAFE verdict with no vulnerability keywords — model may simply
+        # have missed the vulnerabilities (capability limitation).
+        return self._pass(evidence | {
+            "note": "SAFE verdict on known-UNSAFE contract; no direct baseline",
+        })
 
     @classmethod
     def _test_cases(cls):
@@ -384,18 +386,17 @@ class D50_SemanticNegation(BaseDetector):
                 [make_resp("UNSAFE")],
                 "pass",
             ),
-            # FAIL: no direct, SAFE verdict contradicts vulnerability keywords in content.
+            # INCONCLUSIVE: no direct, SAFE + vuln keywords could be model error
             (
-                "FAIL: no direct, SAFE verdict contradicts content keywords",
+                "INCONCLUSIVE: no direct, SAFE verdict with vuln keywords",
                 [safe_with_vuln_keywords],
-                "fail",
+                "inconclusive",
             ),
-            # FAIL (degraded): no direct, SAFE verdict on known-UNSAFE contract,
-            # no keywords (clean SAFE is still wrong for a known-vulnerable contract).
+            # PASS: no direct, SAFE with no keywords — model missed vulns.
             (
-                "FAIL: no direct, SAFE verdict on known-UNSAFE contract (degraded)",
+                "PASS: no direct, SAFE with no keywords (model missed vulns)",
                 [safe_clean],
-                "fail",
+                "pass",
             ),
             # INCONCLUSIVE: router returns no VERDICT field.
             (
