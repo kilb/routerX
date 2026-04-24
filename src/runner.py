@@ -195,7 +195,7 @@ class TestRunner:
     async def _preflight_check(
         self, client: RouterClient,
     ) -> tuple[int, str] | None:
-        """Verify endpoint is reachable and authenticated before running tests.
+        """Verify endpoint is reachable, authenticated, and model is valid.
 
         Sends up to 3 probes with increasing backoff to distinguish transient
         failures from truly unavailable endpoints. Returns ``(error_code,
@@ -203,6 +203,8 @@ class TestRunner:
 
         Fatal errors (abort immediately, no retry):
         - 401/403: auth failure (API key invalid)
+        - 404: model not found
+        - 400 with model-related error keywords
 
         Retryable errors (confirm with 3 consecutive failures):
         - Network errors: timeout, connection refused, DNS failure
@@ -215,6 +217,13 @@ class TestRunner:
 
         _MAX_PREFLIGHT_ATTEMPTS = 3
         _BACKOFF_SECONDS = [1.0, 2.0, 4.0]
+        # Error keywords that indicate the model ID is wrong or inaccessible
+        _MODEL_ERROR_KEYWORDS = (
+            "model not found", "model_not_found", "invalid model",
+            "does not exist", "no such model", "unknown model",
+            "not available", "not supported", "no endpoints found",
+            "model is not available",
+        )
 
         probe = ProbeRequest(
             payload={
@@ -232,15 +241,29 @@ class TestRunner:
         for attempt in range(_MAX_PREFLIGHT_ATTEMPTS):
             resp = await client.send(probe)
 
-            # Auth failure: no point retrying
+            # --- Fatal: abort immediately, no retry ---
+
+            # Auth failure
             if resp.status_code in (401, 403):
                 return (resp.status_code, resp.error_detail)
 
-            # Success: endpoint works
+            # Model not found
+            if resp.status_code == 404:
+                return (404, resp.error_detail or f"model '{self.config.claimed_model}' not found")
+
+            # 400 with model-related error message
+            if resp.status_code == 400:
+                detail = (resp.error_detail or "").lower()
+                if any(kw in detail for kw in _MODEL_ERROR_KEYWORDS):
+                    return (400, resp.error_detail)
+                # 400 for other reasons (bad params) = endpoint is reachable
+                return None
+
+            # --- Success: endpoint works ---
             if not resp.is_network_error and resp.status_code not in (402, 429, 500, 502, 503, 504):
                 return None
 
-            # Record error for potential final report
+            # --- Retryable errors ---
             if resp.is_network_error:
                 last_code = 0
                 last_msg = resp.error or "endpoint unreachable"
@@ -254,7 +277,6 @@ class TestRunner:
                 last_code = resp.status_code
                 last_msg = resp.error_detail or f"server error {resp.status_code}"
 
-            # Not the last attempt: wait and retry
             if attempt < _MAX_PREFLIGHT_ATTEMPTS - 1:
                 wait = _BACKOFF_SECONDS[attempt]
                 logger.warning(
