@@ -73,7 +73,7 @@ class D103_ContentFilterBias(BaseDetector):
         details: list[dict] = []
 
         for i, r in enumerate(responses):
-            if r.is_network_error:
+            if r.is_network_error or r.status_code >= 400:
                 details.append({"index": i, "status": "network_error"})
                 continue
 

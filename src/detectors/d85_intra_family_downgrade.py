@@ -83,9 +83,9 @@ class D85_IntraFamilyDowngrade(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r_easy, r_hard = responses[0], responses[1]
 
-        if r_easy.is_network_error:
+        if r_easy.is_network_error or r_easy.status_code >= 400:
             return self._inconclusive(r_easy.error or "easy probe network error")
-        if r_hard.is_network_error:
+        if r_hard.is_network_error or r_hard.status_code >= 400:
             return self._inconclusive(r_hard.error or "hard probe network error")
 
         content_easy = r_easy.content or ""

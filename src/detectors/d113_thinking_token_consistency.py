@@ -70,7 +70,7 @@ class D113_ThinkingTokenConsistency(BaseDetector):
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r1, r2 = responses[0], responses[1]
-        if r1.is_network_error or r2.is_network_error:
+        if r1.is_network_error or r2.is_network_error or r1.status_code >= 400 or r2.status_code >= 400:
             return self._inconclusive("network error on one or both requests")
 
         c1 = r1.content.strip()

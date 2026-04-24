@@ -80,7 +80,7 @@ class D26_SemanticCacheBuster(BaseDetector):
         """Determine whether response B reflects the correct nonce B."""
         resp_a, resp_b = responses[0], responses[1]
 
-        if resp_b.is_network_error:
+        if resp_b.is_network_error or resp_b.status_code >= 400:
             return self._inconclusive(resp_b.error or "network error on probe B")
 
         content_b = resp_b.content

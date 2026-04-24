@@ -59,9 +59,9 @@ class D110_StreamChunkIntegrity(BaseDetector):
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         non_stream, stream = responses[0], responses[1]
-        if non_stream.is_network_error:
+        if non_stream.is_network_error or non_stream.status_code >= 400:
             return self._inconclusive(non_stream.error or "non-stream network error")
-        if stream.is_network_error:
+        if stream.is_network_error or stream.status_code >= 400:
             return self._inconclusive(stream.error or "stream network error")
 
         c_ns = non_stream.content
