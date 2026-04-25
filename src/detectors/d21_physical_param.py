@@ -14,7 +14,7 @@ MIN_FAIL_COUNT = 2
 class D21_PhysicalParamProbe(BaseDetector):
     detector_id = "D21"
     detector_name = "PhysicalParamProbe"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 5
     description = "Detect web reverse proxy by checking physical parameter blindspots"

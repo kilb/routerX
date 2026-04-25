@@ -12,7 +12,7 @@ from ..config import PROVIDER_PARAM_LIMITS, KNOWN_FAKE_PATTERNS
 class D22_ProtocolStrictness(BaseDetector):
     detector_id = "D22"
     detector_name = "ProtocolStrictness"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 4
     description = "Detect protocol strictness violations via provider-specific sub-probes"
