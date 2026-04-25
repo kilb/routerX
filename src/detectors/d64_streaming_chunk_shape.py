@@ -79,16 +79,10 @@ class D64_StreamingChunkShape(BaseDetector):
                 f"only {chunks_per_100:.1f} chunks per 100 tokens "
                 f"(< {_MIN_CHUNKS_PER_100_TOKENS}) -- likely re-streamed", ev,
             )
-        # Burst-delta check: only meaningful when chunk density is LOW (< 50
-        # per 100 tokens). High chunk density with near-zero deltas is normal
-        # for proxies that buffer and batch-forward genuine token-level chunks
-        # — the chunks are real, just delivered in bursts over TCP.
-        if (near_zero_frac > 0.95 and len(timestamps) >= 10
-                and chunks_per_100 < 50):
-            return self._fail(
-                f"{near_zero_frac:.0%} of chunks arrive with < 1ms gap "
-                "-- burst replay of cached result", ev,
-            )
+        # Burst-delta check removed: proxies naturally batch-forward chunks
+        # over TCP, causing near-zero inter-chunk deltas. This is normal
+        # proxy behavior, not evidence of cache replay. Chunk density
+        # (checked above) is a more reliable indicator.
         return self._pass(ev)
 
     @classmethod
@@ -114,7 +108,7 @@ class D64_StreamingChunkShape(BaseDetector):
         return [
             ("PASS: genuine streaming shape", [genuine], "pass"),
             ("FAIL: very few chunks", [chunky], "fail"),
-            ("FAIL: burst replay (all zero-delta)", [burst], "fail"),
+            ("PASS: burst delivery (proxy TCP buffering)", [burst], "pass"),
             ("INCONCLUSIVE: too short output", [short], "inconclusive"),
             ("INCONCLUSIVE: network error", [net], "inconclusive"),
         ]

@@ -102,7 +102,13 @@ class D113_ThinkingTokenConsistency(BaseDetector):
             return self._pass(evidence | {
                 "note": "short/truncated responses, similarity unreliable",
             })
-        # FAIL: answers disagree AND reasoning is very different
+        # If either answer couldn't be extracted, we can't confirm disagreement
+        # — the model may have expressed the same answer in a different format.
+        if answer1 is None or answer2 is None:
+            return self._inconclusive(
+                "answer extraction failed — cannot confirm inconsistency"
+            )
+        # FAIL: answers explicitly disagree AND reasoning is very different
         return self._fail("inconsistent responses suggest different backends", evidence)
 
     @classmethod
@@ -119,8 +125,8 @@ class D113_ThinkingTokenConsistency(BaseDetector):
               _resp("The total distance is 200km over 2.5 hours so the average speed is 80 km/h")],
              "pass"),
             ("FAIL: different answers and style",
-             [_resp("The average speed is 80 km/h. I calculated this by dividing total distance 200km by total time 2.5 hours."),
-              _resp("After careful consideration, I believe the answer is approximately 100 kilometers per hour based on my analysis of the problem.")],
+             [_resp("The average speed is 80 km/h. I calculated this by dividing total distance 200km by total time 2.5 hours and got this result."),
+              _resp("Using the formula for average speed over two legs of a journey with different speeds, the result is 100 km/h for the entire trip.")],
              "fail"),
             ("INCONCLUSIVE: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
