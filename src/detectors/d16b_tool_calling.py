@@ -106,6 +106,13 @@ class D16b_ToolCallingProbe(BaseDetector):
         try:
             args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
         except json.JSONDecodeError:
+            # Non-OpenAI models may produce non-standard tool_call formats
+            model_lower = self.config.claimed_model.lower()
+            is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+            if not is_openai:
+                return self._skip(
+                    "non-OpenAI model returned non-JSON tool_call arguments"
+                )
             return self._fail("tool call arguments are not valid JSON", {
                 "raw_arguments": raw_args,
             })
