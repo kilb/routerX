@@ -33,7 +33,7 @@ MAX_CHI_SQUARE = 30.0
 class D41_BehavioralFingerprint(BaseDetector):
     detector_id = "D41"
     detector_name = "BehavioralFingerprint"
-    priority = Priority.P0
+    priority = Priority.P1
     # MAJORITY_2_OF_2: temperature=1.0 makes this stochastic. One unlucky
     # sample should not fail the detector — require 2/2 runs to agree.
     judge_mode = JudgeMode.MAJORITY_2_OF_2

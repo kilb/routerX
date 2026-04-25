@@ -53,7 +53,7 @@ def _parse_selftest_tokens(content: str) -> list[str]:
 class D4a_TokenizerFingerprint(BaseDetector):
     detector_id = "D4a"
     detector_name = "TokenizerFingerprint"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 1
     description = "Detect model family substitution via tokenizer boundary fingerprinting"

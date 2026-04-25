@@ -19,7 +19,7 @@ SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 class D4b_NegativeConstraintProbe(BaseDetector):
     detector_id = "D4b"
     detector_name = "NegativeConstraintProbe"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.MAJORITY_2_OF_2
     request_count = 1
     description = "Detect model substitution via negative letter constraint compliance"

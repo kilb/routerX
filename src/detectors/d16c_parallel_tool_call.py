@@ -46,7 +46,7 @@ _CURRENCY_TOOL = {
 class D16c_ParallelToolCallProbe(BaseDetector):
     detector_id = "D16c"
     detector_name = "ParallelToolCallProbe"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 1
     detector_timeout = 45.0

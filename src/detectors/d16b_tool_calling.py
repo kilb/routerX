@@ -17,7 +17,7 @@ _TEST_MODE = "alpha"
 class D16b_ToolCallingProbe(BaseDetector):
     detector_id = "D16b"
     detector_name = "ToolCallingProbe"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 1
     description = "Detect tool calling downgraded to plain text or schema corrupted"

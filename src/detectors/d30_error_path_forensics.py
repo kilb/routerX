@@ -67,7 +67,7 @@ def _is_standard_error_body(body: dict | None) -> bool:
 class D30_ErrorPathForensics(BaseDetector):
     detector_id = "D30"
     detector_name = "ErrorPathForensics"
-    priority = Priority.P0
+    priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 3
     description = "Detect web-gateway fingerprints in error-path responses"
