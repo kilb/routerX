@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<title>Router Auditor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#030406;--bg2:#070910;
+  --card:#0c0e16;--card2:#11131c;--card3:#171a25;
+  --border:#1a1d2e;--border2:#282c44;
+  --t1:#f0f0f8;--t2:#a4a4be;--t3:#6e6e90;--t4:#4a4a68;
+  --blue:#6070ff;--blue2:#4d5ce8;--blue-g:linear-gradient(135deg,#6070ff 0%,#a855f6 50%,#ec4899 100%);
+  --blue-soft:#6070ff08;--blue-border:#6070ff20;
+  --red:#f43f5e;--red-soft:#f43f5e08;--red-border:#f43f5e1a;
+  --green:#10b981;--green-soft:#10b98108;--green-border:#10b9811a;
+  --yellow:#f59e0b;--yellow-soft:#f59e0b08;--yellow-border:#f59e0b1a;
+  --purple:#a855f6;--purple-soft:#a855f608;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;--display:'DM Sans',system-ui,sans-serif;
+  --r:12px;--r-sm:8px;--r-xs:5px;
+  --glass:rgba(10,12,22,0.58);--glass-border:rgba(255,255,255,0.08);
+  --glow-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--t1);font-family:var(--sans);
+  line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 10% -10%,#0e1340,transparent 50%),
+    radial-gradient(ellipse 80% 60% at 95% 90%,#1a0c35,transparent 45%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,#080c20,transparent 50%);
+  background-attachment:fixed;
+}
+
+/* Mesh grid overlay */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(100,112,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(100,112,255,0.03) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+/* Noise texture */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+  opacity:0.6;
+}
+
+/* Ambient glow orbs */
+.glow{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(140px);opacity:0.18;animation:glowDrift 20s ease-in-out infinite alternate}
+.glow-1{width:1000px;height:1000px;background:linear-gradient(135deg,#4060e0,#6040c0);top:-350px;right:-200px}
+.glow-2{width:700px;height:700px;background:linear-gradient(135deg,#6030a0,#3020a0);bottom:-200px;left:-200px;animation-delay:-7s}
+.glow-3{width:500px;height:500px;background:linear-gradient(135deg,#3050c0,#2040a0);top:40%;left:50%;transform:translate(-50%,-50%);animation-delay:-14s}
+@keyframes glowDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.05)}100%{transform:translate(-20px,30px) scale(0.95)}}
+.glow-3{animation-name:glowDrift3}
+@keyframes glowDrift3{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-48%,-52%) scale(1.08)}100%{transform:translate(-52%,-48%) scale(0.95)}}
+
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ---- NAV ---- */
+.nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:56px;
+  background:rgba(3,4,6,0.65);backdrop-filter:blur(24px) saturate(1.6);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nav-brand{display:flex;align-items:center;gap:0.6rem;cursor:pointer;text-decoration:none}
+.nav-brand .icon{
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+}
+.nav-brand .icon svg{width:28px;height:28px}
+.nav-brand span{font-family:var(--display);font-weight:700;font-size:0.95rem;color:var(--t1);letter-spacing:-0.03em}
+.nav-links{display:flex;gap:0.3rem;align-items:center}
+.nav-links a{
+  padding:0.4rem 0.9rem;border-radius:var(--r-xs);
+  font-size:0.85rem;font-weight:500;color:var(--t3);
+  text-decoration:none;transition:all 0.2s;cursor:pointer;
+  position:relative;
+}
+.nav-links a:hover{color:var(--t1);background:rgba(255,255,255,0.04)}
+.nav-links a.active{color:var(--t1);background:rgba(96,112,255,0.08)}
+.nav-links a.active::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:16px;height:2px;background:var(--blue);border-radius:1px}
+.nav-sep{width:1px;height:20px;background:var(--border);margin:0 0.25rem}
+
+.main{flex:1;max-width:1340px;width:100%;margin:0 auto;padding:2.5rem 2.5rem}
+
+/* ---- Pages ---- */
+.page{display:none;animation:pageIn 0.5s cubic-bezier(0.22,1,0.36,1)}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ---- Shared ---- */
+.card{
+  background:var(--glass);backdrop-filter:blur(24px) saturate(1.5);
+  border:1px solid var(--glass-border);border-radius:var(--r);padding:1.75rem;
+  box-shadow:var(--glow-shadow);
+  transition:border-color 0.3s,box-shadow 0.3s;
+}
+.card:hover{border-color:rgba(255,255,255,0.10)}
+.card-label{font-size:0.75rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  padding:0.7rem 1.5rem;border-radius:var(--r-sm);font-size:0.92rem;font-weight:600;
+  font-family:var(--sans);border:none;cursor:pointer;transition:all 0.25s;
+  position:relative;overflow:hidden;
+}
+.btn-primary{background:var(--blue-g);color:#fff;box-shadow:0 2px 12px rgba(96,112,255,0.2)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(96,112,255,0.3)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--border2);background:rgba(255,255,255,0.06)}
+.badge{
+  display:inline-flex;align-items:center;padding:0.2rem 0.6rem;border-radius:20px;
+  font-size:0.78rem;font-weight:600;font-family:var(--mono);line-height:1.4;
+}
+.badge-fail{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
+.badge-pass{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.badge-warn{background:var(--yellow-soft);color:var(--yellow);border:1px solid var(--yellow-border)}
+.badge-skip{background:#71717a12;color:var(--t4);border:1px solid #71717a30}
+.badge-sus{background:var(--purple-soft);color:var(--purple);border:1px solid #a855f730}
+
+/* ======== SCAN PAGE ======== */
+.hero{text-align:center;padding:5rem 0 3.5rem;animation:heroIn 0.8s ease-out}
+@keyframes heroIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.hero h1{font-family:var(--display);font-size:3.4rem;font-weight:800;letter-spacing:-0.045em;line-height:1.08;margin-bottom:0.85rem}
+.hero h1 .grad{background:var(--blue-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:brightness(1.15)}
+.hero h1 em{font-family:'Fraunces',serif;font-style:italic;font-weight:400;letter-spacing:0}
+.hero p{color:var(--t3);font-size:1.05rem;max-width:520px;margin:0 auto;line-height:1.7}
+.hero .tag-row{display:flex;justify-content:center;gap:0.5rem;margin-top:1.4rem;flex-wrap:wrap}
+.hero .tag{
+  padding:0.3rem 0.8rem;border-radius:20px;font-size:0.75rem;font-weight:500;
+  background:rgba(96,112,255,0.06);border:1px solid rgba(96,112,255,0.12);color:var(--blue);
+  transition:all 0.2s;
+}
+.hero .tag:hover{background:rgba(96,112,255,0.1);border-color:rgba(96,112,255,0.2)}
+
+.scan-form{max-width:580px;margin:0 auto}
+.scan-form .card{padding:2rem 2rem 1.75rem}
+.field{margin-bottom:1.2rem}
+.field label{display:block;font-size:0.85rem;font-weight:600;color:var(--t2);margin-bottom:0.45rem}
+.field input,.field select{
+  width:100%;padding:0.7rem 1rem;
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--t1);font-family:var(--mono);font-size:0.88rem;
+  transition:all 0.25s;outline:none;
+}
+.field input::placeholder{color:var(--t4)}
+.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,112,255,0.08),0 0 20px rgba(96,112,255,0.04);background:rgba(0,0,0,0.4)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.8rem center}
+.field .hint{font-size:0.78rem;color:var(--t4);margin-top:0.35rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.caps-row{display:flex;flex-wrap:wrap;gap:0.4rem;padding-top:0.3rem}
+.caps-row label{
+  display:flex;align-items:center;gap:0.35rem;padding:0.3rem 0.7rem;border-radius:var(--r-xs);
+  font-size:0.82rem;color:var(--t3);background:var(--bg2);border:1px solid var(--border);
+  cursor:pointer;transition:all 0.15s;user-select:none;
+}
+.caps-row label:has(input:checked){background:var(--blue-soft);border-color:var(--blue-border);color:var(--blue)}
+.caps-row input{display:none}
+/* Model list */
+.model-grid{display:flex;flex-wrap:wrap;gap:6px}
+.model-chip{
+  display:flex;align-items:center;gap:0.35rem;padding:0.35rem 0.75rem;
+  border-radius:var(--r-xs);font-family:var(--mono);font-size:0.82rem;
+  background:var(--bg2);border:1px solid var(--border);color:var(--t3);
+  cursor:pointer;transition:all 0.15s;user-select:none;
+}
+.model-chip:hover{border-color:var(--border2);color:var(--t2)}
+.model-chip.selected{background:var(--blue-soft);border-color:var(--blue-border);color:var(--blue)}
+.model-chip .check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
+.model-chip.selected .check{background:var(--blue);border-color:var(--blue)}
+.model-chip.selected .check svg{opacity:1}
+.model-chip .check svg{opacity:0;width:10px;height:10px;color:#fff}
+.model-owner{font-size:0.7rem;color:var(--t4);margin-left:0.2rem}
+
+.adv-toggle{
+  display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.6rem 0;
+  font-size:0.85rem;font-weight:500;color:var(--t4);user-select:none;
+}
+.adv-toggle svg{transition:transform 0.2s;width:16px;height:16px}
+.adv-toggle.open svg{transform:rotate(90deg)}
+.adv-body{display:none;padding-top:0.25rem}.adv-body.open{display:block}
+
+/* ======== RESULTS PAGE ======== */
+
+/* Progress state */
+.progress-page{max-width:640px;margin:0 auto;padding-top:2rem}
+.progress-hero{text-align:center;margin-bottom:2rem}
+.progress-hero h2{font-size:1.6rem;font-weight:700;margin-bottom:0.3rem}
+.progress-hero p{font-family:var(--mono);font-size:0.85rem;color:var(--t4)}
+.orbit-wrap{width:120px;height:120px;margin:0 auto 1.5rem;position:relative}
+.orbit{
+  width:120px;height:120px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--blue);
+  animation:spin 1.2s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orbit-num{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:1.5rem;color:var(--t1);
+}
+.orbit-num small{font-size:0.7rem;font-weight:500;color:var(--t4)}
+.pbar-wrap{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.pbar{height:100%;background:var(--blue-g);border-radius:3px;transition:width 0.5s ease-out;width:0%}
+.plog{
+  max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--card);font-family:var(--mono);font-size:0.8rem;line-height:2;
+}
+.plog .ev{display:flex;padding:0 1rem;border-bottom:1px solid #ffffff04}
+.plog .ev:hover{background:var(--card2)}
+.plog .ev-time{color:var(--t4);width:52px;flex-shrink:0}
+.plog .ev-id{color:var(--t2);width:52px;flex-shrink:0;font-weight:600}
+.plog .ev-v{font-weight:600;flex:1}
+.plog .ev-v.pass{color:var(--green)}.plog .ev-v.fail{color:var(--red)}
+.plog .ev-v.inconclusive{color:var(--yellow)}.plog .ev-v.skip{color:var(--t4)}
+
+/* Report state */
+.r-banner{
+  position:relative;padding:2.5rem;border-radius:var(--r);margin-bottom:2rem;overflow:hidden;
+  animation:bannerIn 0.6s ease-out;
+}
+@keyframes bannerIn{from{opacity:0;transform:translateY(16px) scale(0.98)}to{opacity:1;transform:none}}
+.r-banner.fail{
+  background:linear-gradient(135deg,rgba(244,63,94,0.08) 0%,rgba(20,8,16,0.7) 100%);
+  backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid rgba(244,63,94,0.12);
+  box-shadow:0 8px 40px rgba(244,63,94,0.06),inset 0 1px 0 rgba(244,63,94,0.05);
+}
+.r-banner.pass{
+  background:linear-gradient(135deg,rgba(16,185,129,0.08) 0%,rgba(8,20,14,0.7) 100%);
+  backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid rgba(16,185,129,0.12);
+  box-shadow:0 8px 40px rgba(16,185,129,0.06),inset 0 1px 0 rgba(16,185,129,0.05);
+}
+.r-banner-inner{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.r-verdict h2{font-family:var(--display);font-size:2.5rem;font-weight:800;letter-spacing:-0.04em;line-height:1.05}
+.r-banner.fail .r-verdict h2{color:var(--red)}
+.r-banner.pass .r-verdict h2{color:var(--green)}
+.r-verdict p{font-family:var(--mono);font-size:0.88rem;color:var(--t3);margin-top:0.3rem}
+.r-meta{text-align:right}
+.r-meta .endpoint{font-family:var(--mono);font-size:0.82rem;color:var(--t3);word-break:break-all}
+.r-meta .cost{font-size:0.85rem;color:var(--t4);margin-top:0.3rem}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.75rem;margin-bottom:2rem}
+.metric{padding:1.25rem;background:var(--glass);backdrop-filter:blur(18px) saturate(1.3);border:1px solid var(--glass-border);border-radius:var(--r-sm);text-align:center}
+.metric .num{font-size:2rem;font-weight:800;font-family:var(--mono);line-height:1.1}
+.metric .lbl{font-size:0.78rem;color:var(--t4);margin-top:0.3rem;font-weight:500}
+
+/* Donut chart */
+.donut-section{display:flex;align-items:center;gap:2rem;margin-bottom:2rem;flex-wrap:wrap}
+.donut-wrap{position:relative;width:200px;height:200px;flex-shrink:0}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-center .big{font-size:2.5rem;font-weight:800;font-family:var(--mono);line-height:1}
+.donut-center .sub{font-size:0.8rem;color:var(--t4);margin-top:0.2rem}
+.donut-legend{display:flex;flex-direction:column;gap:0.6rem}
+.donut-legend .item{display:flex;align-items:center;gap:0.6rem;font-size:0.9rem}
+.donut-legend .dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.donut-legend .item .n{font-family:var(--mono);font-weight:700;min-width:24px}
+
+/* Pipeline */
+.pipeline{margin-bottom:2rem}
+.pipeline .card{padding:1.75rem}
+.stage{display:flex;align-items:center;margin-bottom:8px}
+.stage-lbl{width:48px;flex-shrink:0;font-family:var(--mono);font-size:0.78rem;font-weight:700;color:var(--t4)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{
+  height:30px;min-width:50px;padding:0 9px;border-radius:var(--r-xs);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:0.75rem;font-weight:600;
+  transition:all 0.2s;cursor:default;
+}
+.chip.pass{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.chip.fail{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
+.chip.inconclusive{background:var(--yellow-soft);color:var(--yellow);border:1px solid var(--yellow-border)}
+.chip.skip{background:#71717a0a;color:var(--t4);border:1px solid #71717a18}
+.chip.suspicious{background:var(--purple-soft);color:var(--purple);border:1px solid #a855f730}
+
+/* Result table */
+table.rt{width:100%;border-collapse:separate;border-spacing:0}
+.rt th{
+  text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.06em;color:var(--t4);padding:0.65rem 1rem;
+  border-bottom:1px solid var(--border);background:var(--card);
+}
+.rt td{padding:0.65rem 1rem;font-size:0.9rem;border-bottom:1px solid #ffffff05;vertical-align:top}
+.rt tr.dr{cursor:pointer;transition:background 0.15s}
+.rt tr.dr:hover{background:var(--card2)}
+.rt .cid{font-family:var(--mono);font-weight:700;width:60px;font-size:0.85rem}
+.rt .cname{font-weight:500;color:var(--t2)}
+.rt .cpri{font-family:var(--mono);font-size:0.78rem;color:var(--t4);width:80px}
+.rt .ctime{font-family:var(--mono);font-size:0.82rem;color:var(--t4);text-align:right;width:75px}
+.ev-tr td{padding:0.5rem 1rem 1.25rem;border-bottom:1px solid var(--border)}
+.ev-box{
+  background:var(--bg);border-radius:var(--r-sm);padding:1rem 1.25rem;
+  font-family:var(--mono);font-size:0.78rem;line-height:1.8;color:var(--t3);
+  max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;
+}
+.contradiction{
+  display:flex;align-items:center;gap:0.5rem;padding:0.8rem 1.2rem;border-radius:var(--r-sm);
+  background:var(--yellow-soft);border:1px solid var(--yellow-border);
+  font-size:0.88rem;color:var(--yellow);margin-bottom:1.5rem;
+}
+
+/* ======== REFERENCE PAGE ======== */
+.ref-hero{padding:2.5rem 0 1.5rem}
+.ref-hero h1{font-family:var(--display);font-size:2.2rem;font-weight:800;letter-spacing:-0.04em}
+.ref-hero p{color:var(--t3);font-size:1rem;margin-top:0.3rem}
+.ref-bar{display:flex;gap:0.4rem;margin-bottom:1.75rem;flex-wrap:wrap}
+.fbtn{
+  padding:0.4rem 0.9rem;border-radius:20px;font-size:0.82rem;font-weight:600;
+  border:1px solid var(--border);background:transparent;color:var(--t3);
+  cursor:pointer;transition:all 0.2s;font-family:var(--sans);
+}
+.fbtn:hover{border-color:var(--border2);color:var(--t2)}
+.fbtn.active{background:var(--blue-soft);color:var(--blue);border-color:var(--blue-border)}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0.75rem}
+.rc{
+  padding:1.4rem 1.6rem;background:var(--glass);backdrop-filter:blur(18px) saturate(1.3);
+  border:1px solid var(--glass-border);border-radius:var(--r);transition:all 0.3s;
+}
+.rc:hover{border-color:rgba(96,112,255,0.12);transform:translateY(-4px);box-shadow:0 20px 60px rgba(10,10,40,0.35),0 0 0 1px rgba(96,112,255,0.06)}
+.rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
+.rc-id{font-family:var(--mono);font-weight:800;font-size:0.95rem}
+.rc-pri{font-family:var(--mono);font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:4px}
+.rc-pri.pre_screen,.rc-pri.S0{background:var(--red-soft);color:var(--red)}
+.rc-pri.P0{background:#f8717118;color:#f87171}
+.rc-pri.P1{background:var(--yellow-soft);color:var(--yellow)}
+.rc-pri.P2{background:#71717a12;color:var(--t4)}
+.rc-name{font-weight:600;font-size:0.95rem;color:var(--t1);margin-bottom:0.5rem}
+.rc-desc{font-size:0.85rem;color:var(--t3);line-height:1.55}
+.rc-foot{display:flex;gap:1rem;margin-top:0.8rem;font-size:0.75rem;color:var(--t4);font-family:var(--mono)}
+
+/* Animated spinner for running detectors */
+.spin-icon{display:inline-block;width:18px;height:18px;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pulse-icon{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* ======== BENCHMARK PAGE ======== */
+.grade-card{
+  background:var(--glass);backdrop-filter:blur(18px) saturate(1.3);border:1px solid var(--glass-border);
+  border-radius:var(--r);padding:1.5rem;text-align:center;transition:all 0.3s;
+}
+.grade-card:hover{border-color:rgba(92,108,255,0.12);transform:translateY(-2px);box-shadow:0 8px 32px rgba(20,20,60,0.2)}
+.grade-letter{
+  font-size:3.2rem;font-weight:800;font-family:var(--display);line-height:1;
+  margin-bottom:0.3rem;letter-spacing:-0.04em;
+}
+.grade-letter.A{color:var(--green)}.grade-letter.B{color:#4ade80}
+.grade-letter.C{color:var(--yellow)}.grade-letter.D{color:#f97316}
+.grade-letter.F{color:var(--red)}
+.grade-name{font-size:0.95rem;font-weight:600;margin-bottom:0.3rem}
+.grade-cat{font-size:0.72rem;color:var(--t4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem}
+.grade-metrics{text-align:left;font-family:var(--mono);font-size:0.78rem;color:var(--t3);line-height:1.8}
+.grade-metrics .row{display:flex;justify-content:space-between}
+.grade-metrics .val{color:var(--t1);font-weight:600}
+.bench-overall{
+  text-align:center;padding:2rem;margin-bottom:2rem;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+}
+.bench-overall .big{font-size:5rem;font-weight:800;font-family:var(--display);line-height:1;letter-spacing:-0.05em}
+.bench-overall .sub{font-size:1rem;color:var(--t3);margin-top:0.3rem}
+.bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;margin-bottom:2rem}
+
+/* ======== LEADERBOARD PAGE ======== */
+.lb-hero{padding:2.5rem 0 1.5rem}
+.lb-hero h1{font-family:var(--display);font-size:2.2rem;font-weight:800;letter-spacing:-0.04em}
+.lb-hero p{color:var(--t3);font-size:1rem;margin-top:0.3rem}
+.lb-controls{display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+.lb-controls input{
+  padding:0.45rem 0.9rem;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--t1);font-family:var(--mono);font-size:0.85rem;
+  outline:none;width:260px;
+}
+.lb-controls input:focus{border-color:var(--blue)}
+.lb-sort{
+  padding:0.4rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:600;
+  border:1px solid var(--border);background:transparent;color:var(--t3);
+  cursor:pointer;transition:all 0.2s;font-family:var(--sans);
+}
+.lb-sort:hover{border-color:var(--border2);color:var(--t2)}
+.lb-sort.active{background:var(--blue-soft);color:var(--blue);border-color:var(--blue-border)}
+.lb-empty{text-align:center;padding:4rem 0;color:var(--t4)}
+.lb-list{display:flex;flex-direction:column;gap:0.5rem}
+.lb-item{
+  display:flex;align-items:center;gap:1.25rem;padding:1rem 1.5rem;
+  background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--glass-border);
+  border-radius:var(--r);cursor:pointer;transition:all 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+.lb-item:hover{border-color:rgba(96,112,255,0.15);transform:translateX(6px);box-shadow:0 8px 32px rgba(96,112,255,0.06),0 0 0 1px rgba(96,112,255,0.05)}
+.lb-rank{
+  font-family:var(--mono);font-weight:800;font-size:1.4rem;min-width:32px;
+  text-align:center;color:var(--t4);
+}
+.lb-rank.top1{color:var(--green)}
+.lb-rank.top2{color:var(--blue)}
+.lb-rank.top3{color:var(--yellow)}
+.lb-info{flex:1;min-width:0}
+.lb-model{font-family:var(--mono);font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-meta{display:flex;gap:1rem;font-size:0.78rem;color:var(--t3);flex-wrap:wrap}
+.lb-meta span{white-space:nowrap}
+.lb-stats{display:flex;gap:0.6rem;align-items:center;flex-shrink:0}
+.lb-bar{width:120px;height:6px;background:var(--card3);border-radius:3px;overflow:hidden}
+.lb-bar-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.lb-pct{font-family:var(--mono);font-weight:700;font-size:0.9rem;min-width:45px;text-align:right}
+.lb-tier{min-width:90px;text-align:right}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:700px){
+  .main{padding:1.5rem 1rem}
+  .field-row{grid-template-columns:1fr}
+  .hero h1{font-size:2rem}
+  .r-banner-inner{flex-direction:column;text-align:center}
+  .r-meta{text-align:center}
+  .ref-grid{grid-template-columns:1fr}
+  .donut-section{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div><div class="glow glow-2"></div><div class="glow glow-3"></div>
+<div class="app">
+  <nav class="nav">
+    <a class="nav-brand" onclick="showPage('scan')">
+      <div class="icon"><svg viewBox="15 48 170 104" fill="none"><path d="M30 60L80 100L30 140" stroke="var(--t3)" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/><path d="M75 60L125 100L75 140" stroke="var(--t2)" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/><path d="M120 60L170 100L120 140" stroke="var(--blue)" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+      <span>Router Auditor</span>
+    </a>
+    <div class="nav-links">
+      <a onclick="showPage('scan')" id="nav-scan" class="active">Scan</a>
+      <a onclick="showPage('results')" id="nav-results">Results</a>
+      <a onclick="showPage('reference')" id="nav-reference">Reference</a>
+      <a onclick="showPage('benchmark')" id="nav-benchmark">Performance</a>
+      <a onclick="showPage('leaderboard')" id="nav-leaderboard">Leaderboard</a>
+      <div class="nav-sep"></div>
+      <a href="/docs">API Docs</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- ======== SCAN ======== -->
+    <div class="page active" id="page-scan">
+      <div class="hero">
+        <h1>Audit <em>Your</em><br><span class="grad">LLM Router</span></h1>
+        <p>85 security detectors probing for model substitution, billing fraud, parameter manipulation, and supply-chain attacks.</p>
+        <div class="tag-row">
+          <span class="tag">Model Identity</span><span class="tag">Token Billing</span>
+          <span class="tag">Parameter Honoring</span><span class="tag">Supply Chain</span>
+          <span class="tag">Content Integrity</span>
+        </div>
+      </div>
+      <div class="scan-form">
+        <div class="card">
+          <div class="field">
+            <label>Router Endpoint</label>
+            <input type="text" id="f-endpoint" placeholder="https://api.example.com/v1/chat/completions" spellcheck="false">
+            <div class="hint">Full URL or base URL &mdash; path is auto-normalized</div>
+          </div>
+          <div class="field">
+            <label>Router API Key</label>
+            <input type="password" id="f-apikey" placeholder="sk-..." spellcheck="false">
+          </div>
+          <div class="field">
+            <label>Models</label>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+              <input type="text" id="f-model-input" placeholder="Type to filter or enter model name..." spellcheck="false" style="flex:1" oninput="onModelFilter()">
+              <button class="btn btn-ghost" style="white-space:nowrap;flex-shrink:0;font-size:0.85rem" id="btn-fetch" onclick="fetchModels()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.22-8.56"/><path d="M21 3v5h-5"/></svg>
+                Fetch Models
+              </button>
+            </div>
+            <div id="model-list" style="display:none"></div>
+            <div class="hint">Click "Fetch Models" to auto-detect available models, or type manually. Select multiple models to batch scan.</div>
+          </div>
+          <div class="field">
+            <label>Provider</label>
+            <select id="f-provider">
+              <option value="any">Any / Unknown</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="gemini">Gemini</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Capabilities</label>
+            <div class="caps-row">
+              <label><input type="checkbox" value="text" checked>Text</label>
+              <label><input type="checkbox" value="vision">Vision</label>
+              <label><input type="checkbox" value="tool_calling">Tool Calling</label>
+              <label><input type="checkbox" value="pdf">PDF</label>
+              <label><input type="checkbox" value="audio">Audio</label>
+            </div>
+          </div>
+
+          <div class="adv-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            Advanced Options
+          </div>
+          <div class="adv-body">
+            <div class="field-row">
+              <div class="field"><label>Auth Method</label><select id="f-auth"><option value="bearer">Bearer Token</option><option value="x-api-key">X-API-Key</option><option value="query">Query Param</option></select></div>
+              <div class="field"><label>API Format</label><select id="f-format"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="auto">Auto</option></select></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Timeout (seconds)</label><input type="number" id="f-timeout" value="60" min="5" max="120"></div>
+              <div class="field"><label>Concurrency</label><input type="number" id="f-concurrency" value="3" min="1" max="10"><div class="hint">Parallel detectors. Lower for rate-limited APIs.</div></div>
+            </div>
+            <div style="margin-top:0.5rem;padding:0.8rem 1rem;border-radius:var(--r-sm);background:var(--blue-soft);border:1px solid var(--blue-border);margin-bottom:1rem">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem">Second Router API Key (Optional)</div>
+              <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">A different API key for the <strong style="color:var(--t2)">same router</strong>. Enables <strong style="color:var(--t2)">D100</strong> cross-key isolation test (checks if data leaks between different keys).</div>
+              <div class="field" style="margin-bottom:0"><label>Second API Key</label><input type="password" id="f-second-key" placeholder="sk-... (different key, same router)" spellcheck="false"></div>
+            </div>
+            <div style="padding:0.8rem 1rem;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);margin-bottom:1rem">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--t2);margin-bottom:0.3rem">Direct Provider Baseline (Optional)</div>
+              <div style="font-size:0.78rem;color:var(--t3);line-height:1.5;margin-bottom:0.75rem">The real provider endpoint (e.g. OpenAI / Anthropic direct). Enables <strong style="color:var(--t2)">D48</strong> amount precision baseline and <strong style="color:var(--t2)">D50</strong> semantic negation comparison.</div>
+              <div class="field" style="margin-bottom:0.75rem"><label>Direct Provider Endpoint</label><input type="text" id="f-direct-ep" placeholder="https://api.openai.com" spellcheck="false"></div>
+              <div class="field" style="margin-bottom:0"><label>Direct Provider API Key</label><input type="password" id="f-direct-key" placeholder="sk-..." spellcheck="false"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.75rem;margin-top:1.25rem">
+            <button class="btn btn-primary" style="flex:1;height:52px;font-size:1rem" id="btn-scan" onclick="startScan()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Security Audit
+            </button>
+            <button class="btn btn-ghost" style="flex:1;height:52px;font-size:1rem" id="btn-bench" onclick="startBenchmark()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Performance Test
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== RESULTS ======== -->
+    <div class="page" id="page-results"><div id="results-area"></div></div>
+
+    <!-- ======== BENCHMARK ======== -->
+    <div class="page" id="page-benchmark"><div id="bench-area"><div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No benchmark results yet. Run a performance test from the Scan page.</p></div></div></div>
+
+    <!-- ======== LEADERBOARD ======== -->
+    <div class="page" id="page-leaderboard">
+      <div class="lb-hero">
+        <h1>Leaderboard</h1>
+        <p>All audit results ranked by pass rate</p>
+      </div>
+      <div class="lb-controls">
+        <input type="text" id="lb-search" placeholder="Filter by model or endpoint..." oninput="renderLeaderboard()">
+        <button class="lb-sort active" data-sort="rate" onclick="setLbSort('rate',this)">Pass Rate</button>
+        <button class="lb-sort" data-sort="time" onclick="setLbSort('time',this)">Newest</button>
+        <button class="lb-sort" data-sort="fails" onclick="setLbSort('fails',this)">Most Fails</button>
+        <span style="border-left:1px solid var(--border);height:20px;margin:0 0.3rem"></span>
+        <button class="lb-sort" data-sort="domain" onclick="setLbSort('domain',this)">By Domain</button>
+        <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.35rem 0.8rem;margin-left:auto" onclick="refreshLeaderboard()">Refresh</button>
+      </div>
+      <div id="lb-domain-summary" style="display:none"></div>
+      <div id="lb-list"></div>
+    </div>
+
+    <!-- ======== REFERENCE ======== -->
+    <div class="page" id="page-reference">
+      <div class="ref-hero"><h1>Detector Reference</h1><p>85 detectors across 5 severity stages</p></div>
+      <div class="ref-bar" id="ref-bar"></div>
+      <div class="ref-grid" id="ref-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES=['pre_screen','S0','P0','P1','P2'];
+const SL={pre_screen:'PRE',S0:'S0',P0:'P0',P1:'P1',P2:'P2'};
+const VO=['fail','suspicious','inconclusive','pass','skip'];
+let report=null;
+let fetchedModels=[];
+let selectedModels=new Set();
+let currentTaskId=null;
+
+/* ======== ROUTING ======== */
+function showPage(id,pushState=true){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-links a[onclick]').forEach(a=>a.classList.remove('active'));
+  document.getElementById('nav-'+id)?.classList.add('active');
+  if(id==='reference')renderRef();
+  if(id==='leaderboard')refreshLeaderboard();
+  if(id==='results'&&!currentTaskId)renderResultsList();
+  if(pushState){
+    const url=id==='scan'?'/':id==='reference'?'/reference':id==='leaderboard'?'/leaderboard':'/results';
+    history.pushState({page:id},'',(url===window.location.pathname)?url:url);
+  }
+}
+
+function navigateToTask(taskId,push=true){
+  currentTaskId=taskId;
+  showPage('results',false);
+  if(push)history.pushState({page:'task',taskId},`Task ${taskId}`,`/task/${taskId}`);
+  // Try to load from server
+  const server=window.location.origin;
+  loadTask(taskId,server);
+}
+
+async function loadTask(taskId,server){
+  try{
+    const r=await fetch(server+'/api/v1/tests/'+taskId);
+    if(!r.ok){
+      document.getElementById('results-area').innerHTML=`
+        <div style="text-align:center;padding:5rem 0">
+          <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+          <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Task Not Found</h2>
+          <p style="color:var(--t3);font-size:0.95rem;margin-bottom:0.3rem">Task <code style="background:var(--card);padding:0.15rem 0.5rem;border-radius:4px;font-family:var(--mono);font-size:0.85rem">${esc(taskId)}</code> does not exist or has expired.</p>
+          <p style="color:var(--t4);font-size:0.85rem">Task data is stored in memory and is cleared when the server restarts.</p>
+          <button class="btn btn-primary" style="margin-top:1.5rem" onclick="showPage('scan')">Start New Scan</button>
+        </div>`;
+      return;
+    }
+    const t=await r.json();
+    if(t.status==='completed'||t.status==='failed'){
+      fetchReport(taskId,server);
+    }else if(t.status==='running'||t.status==='pending'){
+      runProgress(taskId,server);
+    }else{
+      // cancelled or unknown
+      document.getElementById('results-area').innerHTML=`
+        <div style="text-align:center;padding:5rem 0">
+          <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Task ${esc(t.status)}</h2>
+          <p style="color:var(--t3);font-size:0.95rem">This task was ${esc(t.status)}.</p>
+          <button class="btn btn-primary" style="margin-top:1.5rem" onclick="showPage('scan')">Start New Scan</button>
+        </div>`;
+    }
+  }catch(e){
+    document.getElementById('results-area').innerHTML=`
+      <div style="text-align:center;padding:5rem 0">
+        <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+        <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Connection Error</h2>
+        <p style="color:var(--t3);font-size:0.95rem">${esc(e.message)}</p>
+        <button class="btn btn-ghost" style="margin-top:1rem" onclick="loadTask('${esc(taskId)}','${esc(server)}')">Retry</button>
+      </div>`;
+  }
+}
+
+// Handle browser back/forward + initial URL
+window.addEventListener('popstate',e=>{
+  const s=e.state;
+  if(s?.page==='task'&&s.taskId)navigateToTask(s.taskId,false);
+  else if(s?.page)showPage(s.page,false);
+});
+
+function initRoute(){
+  const path=window.location.pathname;
+  if(path.startsWith('/task/')){
+    const id=path.slice(6);
+    if(id)navigateToTask(id,false);
+  }else if(path.startsWith('/bench/')){
+    const id=path.slice(7);
+    if(id){showPage('benchmark',false);loadBenchTask(id,window.location.origin)}
+  }else if(path==='/reference'){showPage('reference',false)}
+  else if(path==='/results'){showPage('results',false)}
+  else if(path==='/benchmark'||path==='/performance'){showPage('benchmark',false)}
+  else if(path==='/leaderboard'){showPage('leaderboard',false)}
+  else{showPage('scan',false)}
+}
+
+async function loadBenchTask(id,server){
+  try{
+    const r=await fetch(server+'/api/v1/benchmarks/'+id);
+    if(!r.ok){
+      document.getElementById('bench-area').innerHTML=`<div style="text-align:center;padding:5rem 0"><h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem">Benchmark Not Found</h2><p style="color:var(--t3)">Task <code style="font-family:var(--mono)">${esc(id)}</code> does not exist or has expired.</p><button class="btn btn-primary" style="margin-top:1.5rem" onclick="showPage('scan')">Start New Test</button></div>`;
+      return;
+    }
+    const t=await r.json();
+    if(t.status==='completed'){fetchBenchReport(id,server)}
+    else if(t.status==='running'||t.status==='pending'){runBenchProgress(id,server)}
+  }catch(e){
+    document.getElementById('bench-area').innerHTML=`<div style="text-align:center;padding:5rem 0;color:var(--red)">${esc(e.message)}</div>`;
+  }
+}
+
+/* ======== FETCH MODELS ======== */
+async function fetchModels(){
+  const ep=document.getElementById('f-endpoint').value;
+  const key=document.getElementById('f-apikey').value;
+  if(!ep||!key){alert('Enter endpoint and API key first');return}
+  const btn=document.getElementById('btn-fetch');
+  btn.disabled=true;btn.innerHTML='Fetching...';
+  try{
+    const r=await fetch(window.location.origin+'/api/v1/probe-models',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({router_endpoint:ep,api_key:key,auth_method:document.getElementById('f-auth').value})
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.statusText)}
+    fetchedModels=await r.json();
+    selectedModels.clear();
+    renderModelList();
+  }catch(e){alert('Failed to fetch models: '+e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.22-8.56"/><path d="M21 3v5h-5"/></svg>Fetch Models'}
+}
+
+function getFilteredModels(){
+  const q=(document.getElementById('f-model-input')?.value||'').toLowerCase().trim();
+  if(!q)return fetchedModels;
+  return fetchedModels.filter(m=>m.id.toLowerCase().includes(q)||(m.owned_by||'').toLowerCase().includes(q));
+}
+
+function onModelFilter(){if(fetchedModels.length)renderModelList()}
+
+function renderModelList(){
+  const el=document.getElementById('model-list');
+  if(!fetchedModels.length){el.style.display='none';return}
+  el.style.display='block';
+  const filtered=getFilteredModels();
+  const q=(document.getElementById('f-model-input')?.value||'').trim();
+  el.innerHTML=`<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectFiltered()">Select${q?' Filtered':' All'}</button>
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem" onclick="selectedModels.clear();renderModelList()">Clear</button>
+      <span style="font-size:0.8rem;color:var(--t4)">${selectedModels.size} selected${q?` · ${filtered.length} / ${fetchedModels.length} shown`:` · ${fetchedModels.length} total`}</span>
+    </div>
+    <div class="model-grid" style="max-height:240px;overflow-y:auto;padding:2px">${filtered.map(m=>{
+    const sel=selectedModels.has(m.id);
+    return `<div class="model-chip ${sel?'selected':''}" onclick="toggleModel('${m.id.replace(/'/g,"\\'")}')">
+      <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+      ${esc(m.id)}${m.owned_by?`<span class="model-owner">${esc(m.owned_by)}</span>`:''}
+    </div>`}).join('')}${!filtered.length?`<div style="padding:0.5rem;color:var(--t4);font-size:0.85rem">No models matching "${esc(q)}"</div>`:''}</div>`;
+}
+
+function toggleModel(id){
+  if(selectedModels.has(id))selectedModels.delete(id);else selectedModels.add(id);
+  renderModelList();
+}
+function selectFiltered(){getFilteredModels().forEach(m=>selectedModels.add(m.id));renderModelList()}
+
+function getSelectedModels(){
+  // Priority: selected chips > typed input > default
+  if(selectedModels.size>0)return[...selectedModels];
+  const typed=document.getElementById('f-model-input').value.trim();
+  if(typed)return typed.split(',').map(s=>s.trim()).filter(Boolean);
+  return['gpt-4o'];
+}
+
+/* ======== SCAN ======== */
+async function startScan(){
+  const server=window.location.origin;
+  const ep=document.getElementById('f-endpoint').value;
+  const key=document.getElementById('f-apikey').value;
+  if(!ep||!key){alert('Endpoint and API Key are required');return}
+  const models=getSelectedModels();
+  const caps=[...document.querySelectorAll('.caps-row input:checked')].map(c=>c.value);
+
+  if(models.length>1){
+    // Multi-model batch: create multiple tasks
+    showPage('results');
+    await runBatch(models,ep,key,caps,server);
+    return;
+  }
+
+  const body={
+    router_endpoint:ep,api_key:key,
+    claimed_model:models[0],
+    claimed_provider:document.getElementById('f-provider').value,
+    auth_method:document.getElementById('f-auth').value,
+    api_format:document.getElementById('f-format').value,
+    capabilities:caps,
+    timeout:parseFloat(document.getElementById('f-timeout').value)||60,
+    concurrency:parseInt(document.getElementById('f-concurrency').value)||3,
+  };
+  const dep=document.getElementById('f-direct-ep').value;
+  if(dep){body.direct_endpoint=dep;body.direct_api_key=document.getElementById('f-direct-key').value}
+  const sk2=document.getElementById('f-second-key').value;
+  if(sk2){body.second_api_key=sk2}
+  const btn=document.getElementById('btn-scan');
+  btn.disabled=true;btn.innerHTML='Creating...';
+  try{
+    const r=await fetch(server+'/api/v1/tests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(await r.text());
+    const task=await r.json();
+    saveMyTaskId(task.task_id);
+    showPage('results',false);
+    runProgress(task.task_id,server);
+  }catch(e){alert('Error: '+e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Start Security Audit'}
+}
+
+function runProgress(taskId,server){
+  currentTaskId=taskId;
+  history.replaceState({page:'task',taskId},`Task ${taskId}`,`/task/${taskId}`);
+  const area=document.getElementById('results-area');
+  const startTime=Date.now();
+
+  const pendingIcon='<span class="pulse-icon" style="color:var(--t4)">●</span>';
+  const spinnerSvg='<svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>';
+  // Build detector grid from the DB
+  const detRows=DB.map(d=>`<tr id="dg-${d.id}" style="opacity:0.5">
+    <td class="cid">${d.id}</td><td class="cname" style="color:var(--t3)">${d.name}</td>
+    <td class="cpri">${d.pri}</td>
+    <td id="dv-${d.id}" style="text-align:center">${pendingIcon}</td>
+    <td id="dt-${d.id}" class="ctime">—</td>
+  </tr>`).join('');
+
+  area.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+      <div>
+        <h2 style="font-size:1.5rem;font-weight:800">Scanning in Progress</h2>
+        <div style="display:flex;align-items:center;gap:1rem;margin-top:0.4rem">
+          <span style="font-family:var(--mono);font-size:0.82rem;color:var(--t4)">${taskId}</span>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:0.25rem 0.6rem" onclick="navigator.clipboard.writeText(location.href)">Copy Link</button>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:2rem;font-weight:800;font-family:var(--mono)" id="p-counter">0 / 60</div>
+        <div style="font-size:0.85rem;color:var(--t4)" id="p-elapsed">0s elapsed</div>
+      </div>
+    </div>
+    <div class="pbar-wrap" style="margin-bottom:1.5rem"><div class="pbar" id="pbar"></div></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="rt" style="margin:0">
+        <thead><tr><th>ID</th><th>Name</th><th>Priority</th><th style="text-align:center;width:60px">Status</th><th style="text-align:right;width:75px">Time</th></tr></thead>
+        <tbody>${detRows}</tbody>
+      </table>
+    </div>`;
+
+  // Timer
+  const timerIv=setInterval(()=>{
+    const el=document.getElementById('p-elapsed');
+    if(el)el.textContent=((Date.now()-startTime)/1000|0)+'s elapsed';
+    else clearInterval(timerIv);
+  },1000);
+
+  const ws=new WebSocket(server.replace(/^http/,'ws')+'/api/v1/tests/'+taskId+'/ws');
+  let done=0,total=60;
+  ws.onmessage=e=>{
+    const ev=JSON.parse(e.data);
+    if(ev.progress){
+      const[d,t]=ev.progress.split('/').map(Number);
+      done=d;total=t;
+      const bar=document.getElementById('pbar');if(bar)bar.style.width=(d/t*100)+'%';
+      const ctr=document.getElementById('p-counter');if(ctr)ctr.textContent=`${d} / ${t}`;
+    }
+    if(ev.type==='detector_start'){
+      const el=document.getElementById('dv-'+ev.data.id);
+      if(el)el.innerHTML=spinnerSvg;
+      const row=document.getElementById('dg-'+ev.data.id);
+      if(row){row.style.background='var(--card2)';row.style.opacity='1'}
+    }
+    if(ev.type==='detector_end'){
+      const d=ev.data,v=d.verdict;
+      const icons={pass:'<span style="color:var(--green);font-size:1.1rem">✓</span>',fail:'<span style="color:var(--red);font-size:1.1rem">✗</span>',suspicious:'<span style="color:var(--purple);font-size:1rem">⚠</span>',inconclusive:'<span style="color:var(--yellow);font-size:1rem">?</span>',skip:'<span style="color:var(--t4);font-size:0.8rem">—</span>'};
+      const el=document.getElementById('dv-'+d.id);if(el)el.innerHTML=icons[v]||'?';
+      const tel=document.getElementById('dt-'+d.id);if(tel)tel.textContent=(d.latency_ms/1000).toFixed(1)+'s';
+      const row=document.getElementById('dg-'+d.id);
+      if(row){row.style.background='';row.style.opacity='1'}
+    }
+    if(ev.type==='task_end'){
+      clearInterval(timerIv);
+      ws.close();
+      fetchReport(taskId,server);
+    }
+  };
+  ws.onerror=()=>{clearInterval(timerIv);poll(taskId,server)};
+  ws.onclose=e=>{if(e.code!==1000){clearInterval(timerIv);poll(taskId,server)}};
+}
+
+async function poll(id,srv){
+  for(let i=0;i<300;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{
+      const r=await fetch(srv+'/api/v1/tests/'+id);
+      if(!r.ok)continue;
+      const t=await r.json();
+      if(['completed','failed','cancelled'].includes(t.status)){fetchReport(id,srv);return}
+    }catch(e){}
+  }
+}
+
+async function fetchReport(id,srv){
+  try{
+    const r=await fetch(srv+'/api/v1/tests/'+id+'/report');
+    if(r.ok){
+      report=await r.json();
+      history.replaceState({page:'task',taskId:id},`Task ${id}`,`/task/${id}`);
+      renderReport(report,id);
+      return;
+    }
+  }catch(e){}
+  document.getElementById('results-area').innerHTML='<p style="color:var(--red);text-align:center;padding:3rem">Failed to load report.</p>';
+}
+
+/* ======== BATCH (multi-model) ======== */
+async function runBatch(models,ep,key,caps,server){
+  const area=document.getElementById('results-area');
+  area.innerHTML=`<div class="progress-page"><div class="progress-hero"><h2>Batch Scan: ${models.length} Models</h2><p>Creating tasks...</p></div><div id="batch-list" style="display:flex;flex-direction:column;gap:0.5rem"></div></div>`;
+  const list=document.getElementById('batch-list');
+  const tasks=[];
+
+  for(const m of models){
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm)';
+    row.innerHTML=`<span style="font-family:var(--mono);font-weight:600;flex:1;font-size:0.9rem">${esc(m)}</span><span class="badge badge-warn" id="bs-${CSS.escape(m)}">PENDING</span>`;
+    list.appendChild(row);
+    try{
+      const r=await fetch(server+'/api/v1/tests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        router_endpoint:ep,api_key:key,claimed_model:m,
+        claimed_provider:document.getElementById('f-provider').value,
+        auth_method:document.getElementById('f-auth').value,
+        api_format:document.getElementById('f-format').value,
+        capabilities:caps,timeout:parseFloat(document.getElementById('f-timeout').value)||60,concurrency:parseInt(document.getElementById('f-concurrency').value)||3,
+      })});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const task=await r.json();
+      saveMyTaskId(task.task_id);
+      tasks.push({model:m,taskId:task.task_id});
+      document.getElementById('bs-'+CSS.escape(m)).textContent='RUNNING';
+      document.getElementById('bs-'+CSS.escape(m)).className='badge badge-warn';
+    }catch(e){
+      document.getElementById('bs-'+CSS.escape(m)).textContent='ERROR';
+      document.getElementById('bs-'+CSS.escape(m)).className='badge badge-fail';
+    }
+  }
+
+  // Poll all tasks
+  const results=[];
+  for(const t of tasks){
+    const badge=document.getElementById('bs-'+CSS.escape(t.model));
+    try{
+      const rep=await waitForTask(t.taskId,server);
+      results.push({model:t.model,report:rep});
+      const v=rep?.tier_assignment||'UNKNOWN';
+      badge.textContent=v;
+      badge.className='badge '+(rep?.overall_verdict==='pass'?'badge-pass':'badge-fail');
+    }catch(e){
+      badge.textContent='FAILED';badge.className='badge badge-fail';
+    }
+  }
+
+  // Show summary
+  if(results.length===1){report=results[0].report;renderReport(report);return}
+  if(results.length>1)renderBatchSummary(results,ep);
+}
+
+async function waitForTask(id,srv){
+  for(let i=0;i<600;i++){
+    await new Promise(r=>setTimeout(r,2000));
+    try{
+      const r=await fetch(srv+'/api/v1/tests/'+id);
+      if(!r.ok)continue;
+      const t=await r.json();
+      if(t.status==='completed'){
+        const rr=await fetch(srv+'/api/v1/tests/'+id+'/report');
+        if(rr.ok)return await rr.json();
+      }
+      if(['failed','cancelled'].includes(t.status))return null;
+    }catch(e){}
+  }
+  return null;
+}
+
+function renderBatchSummary(results,ep){
+  const area=document.getElementById('results-area');
+  let html=`<div style="margin-bottom:2rem"><h2 style="font-size:1.6rem;font-weight:800">Batch Results</h2><p style="color:var(--t3);font-family:var(--mono);font-size:0.85rem">${esc(ep)} &mdash; ${results.length} models</p></div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0.75rem">`;
+  results.forEach(({model,report:r})=>{
+    if(!r){html+=`<div class="card" style="opacity:0.5"><div style="font-family:var(--mono);font-weight:700;margin-bottom:0.3rem">${esc(model)}</div><span class="badge badge-fail">ERROR</span></div>`;return}
+    const isFail=r.overall_verdict!=='pass';
+    const bc=isFail?'var(--red-border)':'var(--green-border)';
+    html+=`<div class="card" style="border-color:${bc};cursor:pointer" onclick="report=${JSON.stringify(r).replace(/'/g,"&#39;").replace(/"/g,'&quot;')};renderReport(report)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+        <span style="font-family:var(--mono);font-weight:700;font-size:0.95rem">${esc(model)}</span>
+        <span class="badge ${isFail?'badge-fail':'badge-pass'}">${r.tier_assignment}</span>
+      </div>
+      <div style="display:flex;gap:1rem;font-size:0.85rem;color:var(--t3)">
+        <span><strong style="color:var(--green)">${r.passed}</strong> pass</span>
+        <span><strong style="color:var(--red)">${r.failed}</strong> fail</span>
+        <span>${(r.total_latency_ms/1000).toFixed(0)}s</span>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  area.innerHTML=html;
+}
+
+/* ======== REPORT ======== */
+function renderReport(r,taskId){
+  const area=document.getElementById('results-area');
+
+  // Preflight error — show prominent error banner and stop
+  if(r.error_code!==undefined && r.error_code!==null){
+    area.innerHTML=`
+      <div class="r-banner fail" style="text-align:center;padding:3rem">
+        <div style="font-size:3rem;margin-bottom:1rem">&#x26A0;</div>
+        <h2 style="font-size:1.4rem;margin-bottom:0.5rem">Endpoint Error</h2>
+        <div style="font-family:var(--mono);font-size:1.1rem;color:var(--red);margin-bottom:1rem">
+          ${r.error_code===0?'Network Error':'HTTP '+r.error_code}
+        </div>
+        <div style="color:var(--t2);max-width:600px;margin:0 auto;word-break:break-word">
+          ${esc(r.error_msg||'Unknown error')}
+        </div>
+        <div style="margin-top:1.5rem;color:var(--t3);font-size:0.85rem">
+          All detectors were skipped. Please check the endpoint URL and API key.
+        </div>
+      </div>`;
+    return;
+  }
+
+  const isFail=r.overall_verdict!=='pass';
+  const sec=(r.total_latency_ms/1000).toFixed(1);
+  const cost=r.estimated_cost_usd?.toFixed(2)||'0.00';
+  const inc=r.total_detectors-r.passed-r.failed-(r.suspicious||0)-r.skipped;
+  const passRate=Math.round(r.passed/r.total_detectors*100);
+  const shareUrl=taskId?`${window.location.origin}/task/${taskId}`:'';
+
+  // Donut
+  const slices=[
+    {n:r.failed,c:'var(--red)',l:'Failed'},
+    {n:r.suspicious||0,c:'var(--purple)',l:'Suspicious'},
+    {n:inc,c:'var(--yellow)',l:'Inconclusive'},
+    {n:r.passed,c:'var(--green)',l:'Passed'},
+    {n:r.skipped,c:'#52525b',l:'Skipped'},
+  ].filter(s=>s.n>0);
+  const R=85,CX=100,CY=100,SW=18,C=2*Math.PI*R;
+  let off=0,paths='';
+  slices.forEach(s=>{
+    const d=s.n/r.total_detectors*C;
+    paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${s.c}" stroke-width="${SW}" stroke-dasharray="${d} ${C-d}" stroke-dashoffset="${-off}" stroke-linecap="round" opacity="0.9"/>`;
+    off+=d;
+  });
+
+  // Pipeline
+  const stg={};r.results.forEach(d=>(stg[d.priority]=stg[d.priority]||[]).push(d));
+  let pipHTML='';
+  STAGES.forEach(s=>{
+    const dets=stg[s]||[];if(!dets.length)return;
+    dets.sort((a,b)=>VO.indexOf(a.verdict)-VO.indexOf(b.verdict));
+    pipHTML+=`<div class="stage"><div class="stage-lbl">${SL[s]}</div><div class="chips">${dets.map(d=>`<div class="chip ${d.verdict}" title="${d.detector_name}: ${d.verdict}">${d.detector_id}</div>`).join('')}</div></div>`;
+  });
+
+  // Table
+  const sorted=[...r.results].sort((a,b)=>{const p=STAGES.indexOf(a.priority)-STAGES.indexOf(b.priority);return p||VO.indexOf(a.verdict)-VO.indexOf(b.verdict)});
+  let tbl='';
+  sorted.forEach(d=>{
+    const lat=d.latency_ms>0?(d.latency_ms/1000).toFixed(1)+'s':'-';
+    const bc=d.verdict==='pass'?'badge-pass':d.verdict==='fail'?'badge-fail':d.verdict==='suspicious'?'badge-sus':d.verdict==='skip'?'badge-skip':'badge-warn';
+    tbl+=`<tr class="dr" onclick="togEv(this)"><td class="cid">${d.detector_id}</td><td class="cname">${d.detector_name}</td><td class="cpri">${d.priority}</td><td><span class="badge ${bc}">${d.verdict}</span></td><td class="ctime">${lat}</td></tr>`;
+    const ev=d.evidence||{};const reason=d.skipped_reason||ev.reason||'';
+    const js=Object.keys(ev).length?JSON.stringify(ev,null,2):'';
+    tbl+=`<tr class="ev-tr" style="display:none"><td colspan="5">${reason?`<div style="font-size:0.88rem;color:var(--t2);margin-bottom:0.5rem">${esc(reason)}</div>`:''}${js?`<div class="ev-box">${esc(js)}</div>`:''}</td></tr>`;
+  });
+
+  area.innerHTML=`
+    <div style="margin-bottom:1rem"><button class="btn btn-ghost" style="font-size:0.82rem;padding:0.35rem 0.8rem" onclick="currentTaskId=null;showPage('results')">← All Results</button></div>
+    <div class="r-banner ${isFail?'fail':'pass'}">
+      <div class="r-banner-inner">
+        <div class="r-verdict"><h2>${r.tier_assignment}</h2><p>${r.passed} passed &middot; ${r.failed} failed &middot; ${r.total_detectors} total</p></div>
+        <div class="r-meta"><div class="endpoint">${r.router_endpoint}</div><div class="cost">${sec}s &middot; $${cost} &middot; ${r.total_requests} requests</div>
+          <div style="display:flex;gap:0.4rem;margin-top:0.6rem;justify-content:flex-end">
+            ${shareUrl?`<button class="btn btn-ghost" style="font-size:0.8rem;padding:0.35rem 0.8rem" onclick="navigator.clipboard.writeText('${shareUrl}');this.textContent='Copied!';setTimeout(()=>this.textContent='Share Link',1500)">Share Link</button>`:''}
+            <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.35rem 0.8rem" onclick="dlReport()">Export JSON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${r.evidence_notes?.length?`<div class="contradiction"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${r.evidence_notes.join('; ')}</div>`:''}
+    <div class="donut-section">
+      <div class="donut-wrap"><svg width="200" height="200" viewBox="0 0 200 200">${paths}</svg><div class="donut-center"><div class="big">${passRate}%</div><div class="sub">pass rate</div></div></div>
+      <div class="donut-legend">${slices.map(s=>`<div class="item"><div class="dot" style="background:${s.c}"></div><span class="n">${s.n}</span>${s.l}</div>`).join('')}</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="num">${r.total_detectors}</div><div class="lbl">Detectors</div></div>
+      <div class="metric"><div class="num" style="color:var(--green)">${r.passed}</div><div class="lbl">Passed</div></div>
+      <div class="metric"><div class="num" style="color:var(--red)">${r.failed}</div><div class="lbl">Failed</div></div>
+      <div class="metric"><div class="num" style="color:var(--yellow)">${inc}</div><div class="lbl">Inconclusive</div></div>
+      <div class="metric"><div class="num">${sec}s</div><div class="lbl">Duration</div></div>
+      <div class="metric"><div class="num">$${cost}</div><div class="lbl">Cost</div></div>
+    </div>
+    <div class="pipeline"><div class="card"><div class="card-label">Detection Pipeline</div>${pipHTML}</div></div>
+    <div class="card report-table"><div class="card-label">All Detectors</div><div style="overflow-x:auto"><table class="rt"><thead><tr><th>ID</th><th>Name</th><th>Priority</th><th>Verdict</th><th style="text-align:right">Latency</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
+}
+function togEv(row){const n=row.nextElementSibling;if(n?.classList.contains('ev-tr'))n.style.display=n.style.display==='none'?'':'none'}
+function dlReport(){if(!report)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));a.download='audit-report.json';a.click()}
+
+/* ======== REFERENCE ======== */
+const DB=[
+{id:"D31",name:"GodPayload",pri:"pre_screen",desc:"Composite pre-screen testing JSON schema, logit_bias, context algebra, system prompt leakage, and stream usage in a single payload.",mode:"once",reqs:1},
+{id:"D28",name:"SessionCrosstalkProbe",pri:"S0",desc:"Plants a secret across 9 concurrent requests and checks if an independent 10th request can extract it — detecting cross-session data leakage.",mode:"once",reqs:10},
+{id:"D45",name:"ToolCallArgVerifier",pri:"S0",desc:"Sends 5 financial tool-call scenarios (ETH, Uniswap, Solana, Stripe, bridge) and verifies addresses and amounts are not tampered.",mode:"once",reqs:5},
+{id:"D45b",name:"PackageTypoSquatProbe",pri:"S0",desc:"Tests if the router injects typosquatted package names in pip/npm/docker install commands.",mode:"once",reqs:3},
+{id:"D45c",name:"InstallerURLProbe",pri:"S0",desc:"Verifies installer URLs (Rustup, Homebrew, cert-manager, git clone) are not redirected to attacker-controlled servers.",mode:"once",reqs:4},
+{id:"D47",name:"AddressConsistencyProbe",pri:"S0",desc:"Plants a crypto address, then verifies it survives through balance-check and transfer tool calls without mutation.",mode:"once",reqs:3},
+{id:"D48",name:"AmountPrecisionProbe",pri:"S0",desc:"Verifies sub-cent precision (1.23456789 ETH) is preserved through financial tool calls.",mode:"relative",reqs:6},
+{id:"D4a",name:"TokenizerFingerprint",pri:"P0",desc:"Identifies model's tokenizer family via logprobs token boundaries. Mismatch = different model than claimed.",mode:"once",reqs:1},
+{id:"D4b",name:"NegativeConstraintProbe",pri:"P0",desc:"Tests instruction-following with character avoidance constraints that distinguish frontier from small models.",mode:"2/2",reqs:1},
+{id:"D16b",name:"ToolCallingProbe",pri:"P0",desc:"Verifies tool-calling response contains correct function name, schema, and no hallucinated fields.",mode:"once",reqs:1},
+{id:"D16c",name:"ParallelToolCallProbe",pri:"P0",desc:"Requests two simultaneous tool calls. Detects routers that collapse parallel calls to serial.",mode:"once",reqs:1},
+{id:"D21",name:"PhysicalParamProbe",pri:"P0",desc:"Tests 4 physical parameter blindspots: temp=2.0, logit_bias ban, logprobs presence, max_tokens=1 latency.",mode:"once",reqs:5},
+{id:"D22",name:"ProtocolStrictness",pri:"P0",desc:"Tests protocol-level strictness: JSON schema enforcement, double-user rejection, prefill continuation.",mode:"once",reqs:4},
+{id:"D22e",name:"CrossProtocolContradiction",pri:"P0",desc:"Sends cross-protocol features. A real provider rejects the foreign format.",mode:"once",reqs:1},
+{id:"D23",name:"HijackedTokenProbe",pri:"P0",desc:"Probes for leaked third-party branding revealing the API key was stolen from another service.",mode:"once",reqs:3},
+{id:"D30",name:"ErrorPathForensics",pri:"P0",desc:"Triggers errors and inspects for gateway middleware fingerprints (OneAPI, new-api, Poe) in headers.",mode:"once",reqs:3},
+{id:"D40",name:"SafetyRefusalIntegrity",pri:"P0",desc:"Sends universally-refused prompts. Frontier models refuse; bare open-source models comply.",mode:"once",reqs:3},
+{id:"D41",name:"BehavioralFingerprint",pri:"P0",desc:"Measures Shannon entropy + chi-square of 100 random digits. Bare small models show dramatically lower entropy.",mode:"2/2",reqs:1},
+{id:"D50",name:"SemanticNegation",pri:"P0",desc:"Sends a known-UNSAFE smart contract for audit. Compares verdict against direct provider.",mode:"relative",reqs:2},
+{id:"D81",name:"HiddenSystemPromptDetection",pri:"P0",desc:"Tricks the model into revealing hidden system instructions injected by the router (ads, tracking, behavior modification).",mode:"once",reqs:2},
+{id:"D24a",name:"ContextTruncationCanary",pri:"P1",desc:"Embeds 3 canary markers in a long prompt. Missing middle canary = silent truncation.",mode:"once",reqs:1},
+{id:"D24b",name:"ContextTruncationAlgebra",pri:"P1",desc:"Buries a variable at the 40k-token mark. Correct answer proves full context was forwarded.",mode:"once",reqs:1},
+{id:"D24c",name:"MultiTurnHistoryIntegrity",pri:"P1",desc:"Plants a nonce in turn 1, asks for recall in turn 3. Missing = history trimmed.",mode:"once",reqs:1},
+{id:"D25",name:"OutputCapProbe",pri:"P1",desc:"Requests 800 repetitions with max_tokens=2000. Detects secret output cap lowering.",mode:"once",reqs:1},
+{id:"D26",name:"SemanticCacheBuster",pri:"P1",desc:"Sends two requests with different nonces. If response B echoes nonce A = cached.",mode:"once",reqs:2},
+{id:"D27",name:"ImageFidelityProbe",pri:"P1",desc:"Sends an image with embedded verification code. Failure = image stripped or compressed.",mode:"2/2",reqs:2},
+{id:"D27b",name:"PDFFidelityProbe",pri:"P1",desc:"Sends a PDF with a hidden nonce. Verifies exact extraction.",mode:"once",reqs:1},
+{id:"D27c",name:"MultiImageOrderProbe",pri:"P1",desc:"Sends 2 images, asks about the second. Wrong answer = order scrambled.",mode:"2/2",reqs:2},
+{id:"D27d",name:"AudioFidelityProbe",pri:"P1",desc:"Sends audio with known speech. Verifies transcription accuracy.",mode:"2/2",reqs:2},
+{id:"D29",name:"UsageBillAuditor",pri:"P1",desc:"Compares reported prompt_tokens against local tiktoken count. Catches billing inflation.",mode:"once",reqs:0},
+{id:"D29b",name:"PromptCacheIntegrity",pri:"P1",desc:"Sends identical requests with cache_control. Detects ignored caching or fabricated cache_read.",mode:"once",reqs:2},
+{id:"D32a",name:"StreamingBasicProbe",pri:"P1",desc:"Streams a completion, checks chunk count and content distribution. Detects fake streaming.",mode:"once",reqs:1},
+{id:"D38",name:"SeedReproducibility",pri:"P1",desc:"Sends 3 identical seeded requests. Divergent output = seed ignored.",mode:"once",reqs:3},
+{id:"D42",name:"ContextWindowHonesty",pri:"P1",desc:"Sends ~15k-token prompt, compares reported tokens against local count. Catches silent truncation.",mode:"once",reqs:1},
+{id:"D52",name:"ResponseFormatJSON",pri:"P1",desc:"Requests json_object format. Verifies response is valid JSON, not prose.",mode:"once",reqs:1},
+{id:"D54",name:"TaskCompletion",pri:"P1",desc:"Asks for 20 items with completion marker. Detects semantic truncation.",mode:"2/2",reqs:1},
+{id:"D55",name:"AsyncTaskProbe",pri:"P1",desc:"Creates two async tasks. Verifies unique IDs and non-identical artifacts.",mode:"once",reqs:2},
+{id:"D56",name:"ToolChoiceHonor",pri:"P1",desc:"Pins tool_choice to a specific function. Detects silent dropping of the constraint.",mode:"once",reqs:1},
+{id:"D59",name:"KnowledgeCutoff",pri:"P1",desc:"Asks 3 well-known post-2022 facts. Pre-2023 substitutes fail to recall them.",mode:"once",reqs:3},
+{id:"D62",name:"LogprobsHonesty",pri:"P1",desc:"Requests logprobs=true. Verifies they're present, non-flat, and consistent.",mode:"once",reqs:1},
+{id:"D64",name:"StreamingChunkShape",pri:"P1",desc:"Analyzes SSE chunk distribution. Detects re-streamed non-streaming upstreams.",mode:"once",reqs:1},
+{id:"D70",name:"LogitBiasHonor",pri:"P1",desc:"Suppresses token ' the' via logit_bias=-100. Compares frequency with/without bias.",mode:"once",reqs:2},
+{id:"D82",name:"ReasoningTokenAudit",pri:"P1",desc:"Sends trivial question, checks if reasoning_tokens are suspiciously inflated.",mode:"once",reqs:1},
+{id:"D83",name:"CompletionTokenAudit",pri:"P1",desc:"Compares reported completion_tokens against local count. Detects output token inflation.",mode:"once",reqs:1},
+{id:"D84",name:"ZeroWidthCharDetection",pri:"P1",desc:"Scans responses for invisible Unicode characters. Detects steganographic tracking.",mode:"once",reqs:3},
+{id:"D86",name:"ContextCompressionDetection",pri:"P1",desc:"Plants exact values in conversation history. Tests precise recall after filler turns.",mode:"once",reqs:1},
+{id:"D11",name:"RequestIntegrity",pri:"P2",desc:"Embeds randomized canary in system prompt. Tests for removal or override via injection.",mode:"once",reqs:1},
+{id:"D15",name:"GuardrailIntegrity",pri:"P2",desc:"Sets guardrails (no SQL, required prefix) and tests compliance. Detects guardrail stripping.",mode:"once",reqs:1},
+{id:"D37",name:"StopSeqProbe",pri:"P2",desc:"Asks for multi-paragraph output. Single paragraph + stop = router injected stop sequence.",mode:"once",reqs:1},
+{id:"D43",name:"MaxTokensHonor",pri:"P2",desc:"Requests max_tokens=2000. If truncated below 1200 with finish_reason=length, router clamped.",mode:"once",reqs:1},
+{id:"D44",name:"TopPSensitivity",pri:"P2",desc:"Compares output diversity at top_p=0.1 vs 1.0. Indistinguishable = top_p dropped.",mode:"2/2",reqs:8},
+{id:"D51",name:"UserStopSequence",pri:"P2",desc:"Supplies stop=['DONE']. Verifies truncation happens at the stop token.",mode:"once",reqs:1},
+{id:"D53",name:"MetadataCompleteness",pri:"P2",desc:"Checks usage fields and system_fingerprint are present and complete.",mode:"once",reqs:2},
+{id:"D57",name:"ResponseIDUniqueness",pri:"P2",desc:"Sends 3 identical requests. Each response.id must be unique.",mode:"once",reqs:3},
+{id:"D60",name:"LatencyFingerprint",pri:"P2",desc:"Measures TTFT and tokens/sec. Compares against model family latency bands.",mode:"2/2",reqs:1},
+{id:"D61",name:"TemperatureSensitivity",pri:"P2",desc:"Compares diversity at temp=0 vs temp=1. No difference = temperature dropped.",mode:"2/2",reqs:8},
+{id:"D65",name:"StyleFingerprint",pri:"P2",desc:"Extracts writing-style features and compares against claimed model family centroid.",mode:"2/2",reqs:3},
+{id:"D68",name:"FrequencyPenaltyHonor",pri:"P2",desc:"Tests repetition with/without frequency_penalty=1.8. Identical = penalty dropped.",mode:"2/2",reqs:2},
+{id:"D85",name:"IntraFamilyDowngrade",pri:"P2",desc:"Compares per-token latency on trivial vs complex prompts. Detects cheaper intra-family routing.",mode:"2/2",reqs:2},
+{id:"D87",name:"ResponseModelFieldAudit",pri:"P2",desc:"Checks response.model matches request, timestamp is fresh, and field is consistent across calls.",mode:"once",reqs:3},
+{id:"D91",name:"ArtificialLatencyPadding",pri:"P2",desc:"Detects fake TTFT delay on short requests masking a cheap model. Compares max_tokens=1 vs max_tokens=200 streaming latency.",mode:"once",reqs:2},
+{id:"D93",name:"ResponseTokenPadding",pri:"P1",desc:"Detects trailing whitespace injection (spaces, newlines) to inflate completion_tokens billing.",mode:"once",reqs:1},
+{id:"D94",name:"PromptEchoInflation",pri:"P1",desc:"Detects prompt text echoed in response to inflate output token count and billing.",mode:"once",reqs:1},
+{id:"D95",name:"ResponseDeduplication",pri:"P1",desc:"Detects cached/templated responses by sending semantically similar but differently worded prompts and checking for byte-identical output.",mode:"once",reqs:3},
+{id:"D96",name:"UnicodeNormalizationLoss",pri:"P2",desc:"Detects Unicode character loss through router transcoding (emoji, CJK, math symbols, accented chars).",mode:"once",reqs:1},
+{id:"D97",name:"HiddenTurnInjection",pri:"P1",desc:"Detects router injecting hidden conversation turns by asking the model to count user messages.",mode:"once",reqs:1},
+{id:"D99",name:"RateLimitTransparency",pri:"P2",desc:"Verifies rate-limited responses include proper 429 status + Retry-After header instead of opaque 500s.",mode:"once",reqs:15},
+{id:"D100",name:"CrossKeyIsolation",pri:"S0",desc:"Plants a secret via API key 1, attempts extraction via key 2. Detects cross-key session data leakage.",mode:"once",reqs:2},
+{id:"D101",name:"ToolResultManipulation",pri:"S0",desc:"Plants exact values in a tool call result, then asks the model to recall them. Detects router tampering tool results.",mode:"once",reqs:1},
+{id:"D102",name:"FunctionSchemaFidelity",pri:"P1",desc:"Sends a deeply nested tool schema (3 levels) and verifies the returned arguments preserve full structure.",mode:"once",reqs:1},
+{id:"D103",name:"ContentFilterBias",pri:"P2",desc:"Asks neutral competitor comparison questions. Detects routers that filter/censor mentions of rival AI providers.",mode:"once",reqs:3},
+{id:"D104",name:"EmbeddingDimensionVerify",pri:"P1",desc:"Verifies embedding vector dimensions match the claimed model specification (e.g., 1536 for text-embedding-3-small).",mode:"once",reqs:1},
+{id:"D110",name:"StreamChunkIntegrity",pri:"P1",desc:"Compares stream vs non-stream output for the same prompt. Detects routers that modify content during SSE streaming.",mode:"once",reqs:2},
+{id:"D111",name:"StreamPrematureTermination",pri:"P1",desc:"Detects streams cut short without finish_reason or [DONE] marker — premature termination by the router.",mode:"once",reqs:1},
+{id:"D114",name:"MultiHopRouterDetection",pri:"P0",desc:"Counts distinct proxy header families in response. 2+ families = multi-hop routing chain.",mode:"once",reqs:1},
+{id:"D116",name:"CredentialLeakageInResponse",pri:"S0",desc:"Scans error responses for leaked API keys, bearer tokens, PEM keys, and credential patterns.",mode:"once",reqs:2},
+{id:"D117",name:"HeaderLeakage",pri:"P1",desc:"Checks response headers for leaked backend IPs, upstream URLs, debug headers.",mode:"once",reqs:1},
+{id:"D118",name:"ToolSchemaInjection",pri:"S0",desc:"Detects router injecting unauthorized tools into tool_calls. Only requested tool names should appear.",mode:"once",reqs:1},
+{id:"D119",name:"ToolCallOrderManipulation",pri:"P1",desc:"Sends 3 parallel tool calls. Checks for collapsed calls, duplicated IDs, or unauthorized names.",mode:"once",reqs:1},
+{id:"D122",name:"ResponseRewriteDetection",pri:"P1",desc:"Asks for exact marker output. Detects router-appended branding, disclaimers, or post-processing.",mode:"once",reqs:1},
+{id:"D92",name:"MultiModalInputStripping",pri:"P1",desc:"Sends image with embedded code, asks model to read it. Detects routers that charge for vision but strip image content.",mode:"once",reqs:1},
+{id:"D112",name:"ThinkingContentIntegrity",pri:"P1",desc:"Sends a math problem requiring step-by-step reasoning. Detects reasoning quality degradation from model substitution.",mode:"once",reqs:1},
+{id:"D113",name:"ThinkingTokenConsistency",pri:"P2",desc:"Sends same reasoning problem twice at temp=0. Detects inconsistent backends via answer/style divergence.",mode:"once",reqs:2},
+{id:"D115",name:"RequestEchoVerification",pri:"P1",desc:"Embeds a nonce in system message and asks model to echo it. Detects system message stripping or modification.",mode:"once",reqs:1},
+{id:"D123",name:"ResponseTruncationBilling",pri:"P1",desc:"Detects truncated output billed at full token count — output is short but completion_tokens is high.",mode:"once",reqs:1},
+];
+
+let refF='all';
+function renderRef(){
+  const bar=document.getElementById('ref-bar');
+  const grid=document.getElementById('ref-grid');
+  const cnt={all:DB.length};STAGES.forEach(s=>cnt[s]=DB.filter(d=>d.pri===s).length);
+  bar.innerHTML=`<button class="fbtn ${refF==='all'?'active':''}" onclick="setF('all')">All ${cnt.all}</button>`+STAGES.map(s=>`<button class="fbtn ${refF===s?'active':''}" onclick="setF('${s}')">${SL[s]} ${cnt[s]||0}</button>`).join('');
+  const list=refF==='all'?DB:DB.filter(d=>d.pri===refF);
+  grid.innerHTML=list.map(d=>`<div class="rc"><div class="rc-top"><span class="rc-id">${d.id}</span><span class="rc-pri ${d.pri}">${d.pri.toUpperCase()}</span></div><div class="rc-name">${d.name}</div><div class="rc-desc">${d.desc}</div><div class="rc-foot"><span>Mode: ${d.mode}</span><span>Requests: ${d.reqs}</span></div></div>`).join('');
+}
+function setF(f){refF=f;renderRef()}
+
+/* Drag-drop report */
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',async e=>{
+  e.preventDefault();
+  const f=[...e.dataTransfer.files].find(f=>f.name.endsWith('.json'));
+  if(f){try{const d=JSON.parse(await f.text());if(d.results){report=d;showPage('results');renderReport(d)}}catch(e){}}
+});
+
+/* ======== MY RESULTS (localStorage tracked) ======== */
+function getMyTaskIds(){
+  try{return JSON.parse(localStorage.getItem('routerx_my_tasks')||'[]')}catch(e){return[]}
+}
+function saveMyTaskId(id){
+  const ids=getMyTaskIds();
+  if(!ids.includes(id)){ids.unshift(id);localStorage.setItem('routerx_my_tasks',JSON.stringify(ids.slice(0,200)))}
+}
+
+async function renderResultsList(){
+  const area=document.getElementById('results-area');
+  const myIds=getMyTaskIds();
+  if(!myIds.length){
+    area.innerHTML='<div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">No results yet. Run a scan first.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="showPage(\'scan\')">Start Scan</button></div>';
+    return;
+  }
+  area.innerHTML='<div style="text-align:center;padding:3rem 0;color:var(--t4)">Loading your results...</div>';
+  // Fetch each task status from API (parallel, max 20)
+  const fetches=myIds.slice(0,50).map(id=>
+    fetch(window.location.origin+'/api/v1/tests/'+id).then(r=>r.ok?r.json():null).catch(()=>null)
+  );
+  const tasks=(await Promise.all(fetches)).filter(Boolean);
+  if(!tasks.length){
+    area.innerHTML='<div style="text-align:center;padding:5rem 0;color:var(--t4)"><p style="font-size:1.05rem">Your previous results have expired.</p><p style="color:var(--t4);font-size:0.85rem;margin-top:0.3rem">Task data is cleared when the server restarts.</p><button class="btn btn-primary" style="margin-top:1rem" onclick="showPage(\'scan\')">Start New Scan</button></div>';
+    return;
+  }
+  let html=`<div class="lb-hero"><h1>My Results</h1><p>${tasks.length} audit${tasks.length>1?'s':''} from this browser</p></div>`;
+  html+=`<div class="lb-controls"><input type="text" id="rl-search" placeholder="Filter by model or endpoint..." oninput="filterResultsList()"><button class="btn btn-ghost" style="font-size:0.78rem;padding:0.35rem 0.8rem;margin-left:auto" onclick="renderResultsList()">Refresh</button></div>`;
+  html+=`<div class="lb-list" id="rl-list">`;
+  tasks.forEach((t,i)=>{
+    const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
+    const rate=tot?Math.round(p/tot*100):0;
+    const isFail=t.overall_verdict&&t.overall_verdict!=='pass';
+    const isRunning=t.status==='running'||t.status==='pending';
+    const tierCls=isRunning?'badge-warn':isFail?'badge-fail':'badge-pass';
+    const tierText=isRunning?(t.status==='running'?'RUNNING':'PENDING'):(t.tier_assignment||'—');
+    const barColor=isRunning?'var(--blue)':rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
+    const host=(t.router_endpoint||'').replace(/https?:\/\//,'').split('/')[0];
+    const time=new Date(t.created_at).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    html+=`<div class="lb-item" data-model="${esc((t.claimed_model||'').toLowerCase())}" data-ep="${esc(host.toLowerCase())}" onclick="navigateToTask('${t.task_id}')">
+      <div class="lb-rank" style="color:var(--t4);font-size:1rem">${isRunning?'<svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3" style="width:20px;height:20px"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>':(i+1)}</div>
+      <div class="lb-info">
+        <div class="lb-model">${esc(t.claimed_model||'?')}</div>
+        <div class="lb-meta">
+          <span>${esc(host)}</span>
+          <span>${time}</span>
+          ${!isRunning?`<span style="color:var(--green)">${p} pass</span><span style="color:var(--red)">${f} fail</span>`:`<span>${t.progress||'...'}</span>`}
+        </div>
+      </div>
+      <div class="lb-stats">
+        ${!isRunning?`<div class="lb-bar"><div class="lb-bar-fill" style="width:${rate}%;background:${barColor}"></div></div><div class="lb-pct" style="color:${barColor}">${rate}%</div>`:''}
+      </div>
+      <div class="lb-tier"><span class="badge ${tierCls}">${tierText}</span></div>
+    </div>`;
+  });
+  html+=`</div>`;
+  area.innerHTML=html;
+}
+
+function filterResultsList(){
+  const q=(document.getElementById('rl-search')?.value||'').toLowerCase();
+  document.querySelectorAll('#rl-list .lb-item').forEach(el=>{
+    const m=el.dataset.model||'';
+    const e=el.dataset.ep||'';
+    el.style.display=(m.includes(q)||e.includes(q))?'':'none';
+  });
+}
+
+/* ======== BENCHMARK ======== */
+async function startBenchmark(){
+  const server=window.location.origin;
+  const ep=document.getElementById('f-endpoint').value;
+  const key=document.getElementById('f-apikey').value;
+  if(!ep||!key){alert('Endpoint and API Key are required');return}
+  const models=getSelectedModels();
+  const btn=document.getElementById('btn-bench');
+  btn.disabled=true;btn.textContent='Starting...';
+  try{
+    const r=await fetch(server+'/api/v1/benchmarks',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        router_endpoint:ep,api_key:key,claimed_model:models[0],
+        auth_method:document.getElementById('f-auth').value,
+        timeout:parseFloat(document.getElementById('f-timeout').value)||60,
+      })
+    });
+    if(!r.ok)throw new Error(await r.text());
+    const task=await r.json();
+    saveMyTaskId(task.task_id);
+    showPage('benchmark',false);
+    history.pushState({page:'bench',taskId:task.task_id},'',`/bench/${task.task_id}`);
+    runBenchProgress(task.task_id,server);
+  }catch(e){alert('Error: '+e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Performance Test'}
+}
+
+function runBenchProgress(taskId,server){
+  const area=document.getElementById('bench-area');
+  const startTime=Date.now();
+  const benchNames={P01:'TTFT',P02:'Throughput',P03:'ITL Jitter',R01:'Error Rate',R03:'Consistency'};
+  area.innerHTML=`
+    <div style="text-align:center;margin-bottom:2rem">
+      <div class="orbit-wrap" style="margin:0 auto 1.5rem"><div class="orbit"></div><div class="orbit-num"><span id="bp-done">0</span><small id="bp-total">/ 5</small></div></div>
+      <h2 style="font-size:1.5rem;font-weight:800">Running Performance Benchmarks</h2>
+      <p style="font-family:var(--mono);font-size:0.82rem;color:var(--t4)">${taskId}</p>
+      <p style="font-size:0.85rem;color:var(--t4);margin-top:0.5rem" id="bp-elapsed">0s elapsed</p>
+    </div>
+    <div class="pbar-wrap" style="margin-bottom:2rem"><div class="pbar" id="bp-bar"></div></div>
+    <div class="bench-grid" id="bp-grid">
+      ${Object.entries(benchNames).map(([id,name])=>`<div class="grade-card" id="bg-${id}"><div class="grade-letter" style="color:var(--t4)">—</div><div class="grade-name">${name}</div><div class="grade-cat">${id.startsWith('P')?'performance':'reliability'}</div><div class="grade-metrics" id="bm-${id}"><div class="row"><span>Waiting...</span></div></div></div>`).join('')}
+    </div>`;
+  const timerIv=setInterval(()=>{
+    const el=document.getElementById('bp-elapsed');
+    if(el)el.textContent=((Date.now()-startTime)/1000|0)+'s elapsed';else clearInterval(timerIv);
+  },1000);
+  const ws=new WebSocket(server.replace(/^http/,'ws')+'/api/v1/benchmarks/'+taskId+'/ws');
+  ws.onmessage=e=>{
+    const ev=JSON.parse(e.data);
+    if(ev.progress){
+      const[d,t]=ev.progress.split('/').map(Number);
+      const bar=document.getElementById('bp-bar');if(bar)bar.style.width=(d/t*100)+'%';
+      document.getElementById('bp-done').textContent=d;
+      document.getElementById('bp-total').textContent='/ '+t;
+    }
+    if(ev.type==='benchmark_end'&&ev.data){
+      const d=ev.data;
+      const card=document.getElementById('bg-'+d.bench_id);
+      if(card){
+        const letter=card.querySelector('.grade-letter');
+        letter.textContent=d.grade;letter.className='grade-letter '+d.grade;
+      }
+      const mEl=document.getElementById('bm-'+d.bench_id);
+      if(mEl&&d.metrics){
+        mEl.innerHTML=Object.entries(d.metrics).filter(([k])=>!k.startsWith('_')&&k!=='error').slice(0,4).map(([k,v])=>{
+          const fv=typeof v==='number'?v.toFixed(v>=100?0:v>=1?1:3):v;
+          return `<div class="row"><span>${k}</span><span class="val">${fv}</span></div>`;
+        }).join('');
+      }
+    }
+    if(ev.type==='task_end'){
+      clearInterval(timerIv);ws.close();
+      fetchBenchReport(taskId,server);
+    }
+  };
+  ws.onerror=()=>{clearInterval(timerIv);pollBench(taskId,server)};
+  ws.onclose=e=>{if(e.code!==1000){clearInterval(timerIv);pollBench(taskId,server)}};
+}
+
+async function pollBench(id,srv){
+  for(let i=0;i<120;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{
+      const r=await fetch(srv+'/api/v1/benchmarks/'+id);if(!r.ok)continue;
+      const t=await r.json();
+      if(['completed','failed','cancelled'].includes(t.status)){fetchBenchReport(id,srv);return}
+    }catch(e){}
+  }
+}
+
+async function fetchBenchReport(id,srv){
+  try{
+    const r=await fetch(srv+'/api/v1/benchmarks/'+id+'/report');
+    if(r.ok){const d=await r.json();renderBenchReport(d,id);return}
+  }catch(e){}
+  document.getElementById('bench-area').innerHTML='<p style="color:var(--red);text-align:center;padding:3rem">Failed to load benchmark report.</p>';
+}
+
+function renderBenchReport(r,taskId){
+  const area=document.getElementById('bench-area');
+  const gc=r.overall_grade||'?';
+  const sec=(r.total_latency_ms/1000).toFixed(1);
+  let html=`
+    <div class="bench-overall">
+      <div class="big grade-letter ${gc}">${gc}</div>
+      <div class="sub">Overall Performance Grade &middot; ${sec}s</div>
+      <div style="margin-top:1rem">
+        <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.35rem 0.8rem" onclick="navigator.clipboard.writeText(location.href)">Share Link</button>
+        <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.35rem 0.8rem;margin-left:0.3rem" onclick="dlBench()">Export JSON</button>
+      </div>
+    </div>
+    <div class="bench-grid">`;
+  (r.benchmarks||[]).forEach(b=>{
+    const metricRows=Object.entries(b.metrics||{}).filter(([k])=>!k.startsWith('_')&&k!=='error').slice(0,5).map(([k,v])=>{
+      const fv=typeof v==='number'?(v>=100?v.toFixed(0):v>=1?v.toFixed(1):v.toFixed(3)):String(v);
+      return `<div class="row"><span>${k}</span><span class="val">${fv}</span></div>`;
+    }).join('');
+    html+=`<div class="grade-card">
+      <div class="grade-letter ${b.grade}">${b.grade}</div>
+      <div class="grade-name">${b.name}</div>
+      <div class="grade-cat">${b.category}</div>
+      <div class="grade-metrics">${metricRows}</div>
+      <div style="font-size:0.72rem;color:var(--t4);margin-top:0.6rem;line-height:1.4">${esc(b.description||'')}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  area.innerHTML=html;
+  benchReport=r;
+}
+let benchReport=null;
+function dlBench(){if(!benchReport)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(benchReport,null,2)],{type:'application/json'}));a.download='benchmark-report.json';a.click()}
+
+/* ======== LEADERBOARD ======== */
+let lbData=[];
+let lbSort='rate';
+
+async function refreshLeaderboard(){
+  const el=document.getElementById('lb-list');
+  el.innerHTML='<div class="lb-empty">Loading...</div>';
+  try{
+    const r=await fetch(window.location.origin+'/api/v1/tests?limit=100');
+    if(!r.ok)throw new Error('Failed to fetch');
+    lbData=await r.json();
+    renderLeaderboard();
+  }catch(e){
+    el.innerHTML=`<div class="lb-empty">Failed to load: ${esc(e.message)}</div>`;
+  }
+}
+
+function setLbSort(s,btn){
+  lbSort=s;
+  document.querySelectorAll('.lb-sort').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard();
+}
+
+function _getDomain(ep){return ep.replace(/https?:\/\//,'').split('/')[0]}
+
+function renderLeaderboard(){
+  const el=document.getElementById('lb-list');
+  const sumEl=document.getElementById('lb-domain-summary');
+  const q=(document.getElementById('lb-search')?.value||'').toLowerCase();
+
+  let items=lbData.filter(t=>t.status==='completed'&&t.overall_verdict);
+  if(q)items=items.filter(t=>t.claimed_model.toLowerCase().includes(q)||t.router_endpoint.toLowerCase().includes(q));
+
+  // Domain view
+  if(lbSort==='domain'){
+    sumEl.style.display='block';
+    _renderDomainView(items,el,sumEl);
+    return;
+  }
+  sumEl.style.display='none';
+
+  // Standard sort
+  if(lbSort==='rate')items.sort((a,b)=>{
+    const ra=a.total_detectors?(a.passed||0)/a.total_detectors:0;
+    const rb=b.total_detectors?(b.passed||0)/b.total_detectors:0;
+    return rb-ra;
+  });
+  else if(lbSort==='time')items.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  else if(lbSort==='fails')items.sort((a,b)=>(b.failed||0)-(a.failed||0));
+
+  if(!items.length){el.innerHTML='<div class="lb-empty">No completed audits found.</div>';return}
+
+  el.innerHTML=items.map((t,i)=>{
+    const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
+    const rate=tot?Math.round(p/tot*100):0;
+    const isFail=t.overall_verdict!=='pass';
+    const tierCls=isFail?'badge-fail':'badge-pass';
+    const barColor=rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
+    const host=_getDomain(t.router_endpoint);
+    const time=t.completed_at?new Date(t.completed_at).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const rankCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    return `<div class="lb-item" onclick="navigateToTask('${t.task_id}')">
+      <div class="lb-rank ${rankCls}">${i+1}</div>
+      <div class="lb-info">
+        <div class="lb-model">${esc(t.claimed_model)}</div>
+        <div class="lb-meta">
+          <span>${esc(host)}</span>
+          <span>${time}</span>
+          <span style="color:var(--green)">${p} pass</span>
+          <span style="color:var(--red)">${f} fail</span>
+        </div>
+      </div>
+      <div class="lb-stats">
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${rate}%;background:${barColor}"></div></div>
+        <div class="lb-pct" style="color:${barColor}">${rate}%</div>
+      </div>
+      <div class="lb-tier"><span class="badge ${tierCls}">${t.tier_assignment||'—'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function _renderDomainView(items,listEl,sumEl){
+  // Group by domain
+  const domains={};
+  items.forEach(t=>{
+    const d=_getDomain(t.router_endpoint);
+    if(!domains[d])domains[d]={items:[],totalPass:0,totalFail:0,totalDet:0,tiers:{}};
+    const g=domains[d];
+    g.items.push(t);
+    g.totalPass+=(t.passed||0);
+    g.totalFail+=(t.failed||0);
+    g.totalDet+=(t.total_detectors||85);
+    const tier=t.tier_assignment||'UNKNOWN';
+    g.tiers[tier]=(g.tiers[tier]||0)+1;
+  });
+
+  // Compute domain scores and sort by average pass rate
+  const ranked=Object.entries(domains).map(([domain,g])=>{
+    const avgRate=g.totalDet?Math.round(g.totalPass/g.totalDet*100):0;
+    const t1=(g.tiers['TIER_1']||0);
+    const t2=(g.tiers['TIER_2']||0);
+    const bl=(g.tiers['BLACKLIST']||0);
+    return {domain,avgRate,total:g.items.length,t1,t2,bl,totalPass:g.totalPass,totalFail:g.totalFail,items:g.items};
+  }).sort((a,b)=>b.avgRate-a.avgRate);
+
+  // Domain summary cards
+  sumEl.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;margin-bottom:1.5rem">
+      ${ranked.map((d,i)=>{
+        const barColor=d.avgRate>=80?'var(--green)':d.avgRate>=50?'var(--yellow)':'var(--red)';
+        const rankCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+        return `<div class="card" style="padding:1.2rem;border-color:${barColor}22">
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem">
+            <div class="lb-rank ${rankCls}" style="font-size:0.9rem;width:28px;height:28px">${i+1}</div>
+            <div style="font-weight:700;font-size:1rem">${esc(d.domain)}</div>
+            <div style="margin-left:auto;font-size:1.3rem;font-weight:800;color:${barColor}">${d.avgRate}%</div>
+          </div>
+          <div class="lb-bar" style="margin-bottom:0.5rem"><div class="lb-bar-fill" style="width:${d.avgRate}%;background:${barColor}"></div></div>
+          <div style="display:flex;gap:0.8rem;font-size:0.8rem;color:var(--t3)">
+            <span>${d.total} models</span>
+            <span style="color:var(--green)">${d.t1} TIER_1</span>
+            <span style="color:var(--yellow)">${d.t2} TIER_2</span>
+            <span style="color:var(--red)">${d.bl} BLACKLIST</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--t4);margin-top:0.3rem">
+            ${d.totalPass} pass / ${d.totalFail} fail
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Per-domain model list
+  listEl.innerHTML=ranked.map(d=>{
+    const barColor=d.avgRate>=80?'var(--green)':d.avgRate>=50?'var(--yellow)':'var(--red)';
+    const modelRows=d.items.sort((a,b)=>{
+      const ra=a.total_detectors?(a.passed||0)/a.total_detectors:0;
+      const rb=b.total_detectors?(b.passed||0)/b.total_detectors:0;
+      return rb-ra;
+    }).map(t=>{
+      const p=t.passed||0,f=t.failed||0,tot=t.total_detectors||85;
+      const rate=tot?Math.round(p/tot*100):0;
+      const rc=rate>=80?'var(--green)':rate>=50?'var(--yellow)':'var(--red)';
+      const isFail=t.overall_verdict!=='pass';
+      return `<div class="lb-item" onclick="navigateToTask('${t.task_id}')" style="padding:0.6rem 1rem">
+        <div class="lb-info" style="flex:1">
+          <div class="lb-model" style="font-size:0.88rem">${esc(t.claimed_model)}</div>
+        </div>
+        <div class="lb-stats" style="width:120px">
+          <div class="lb-bar"><div class="lb-bar-fill" style="width:${rate}%;background:${rc}"></div></div>
+          <div class="lb-pct" style="color:${rc};font-size:0.8rem">${rate}%</div>
+        </div>
+        <div class="lb-tier"><span class="badge ${isFail?'badge-fail':'badge-pass'}" style="font-size:0.7rem">${t.tier_assignment||'—'}</span></div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;padding:0 0.5rem">
+        <span style="font-weight:700;font-size:1.05rem">${esc(d.domain)}</span>
+        <span style="font-size:0.85rem;color:${barColor};font-weight:700">${d.avgRate}%</span>
+        <span style="font-size:0.8rem;color:var(--t3)">${d.total} models</span>
+      </div>
+      ${modelRows}
+    </div>`;
+  }).join('');
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+renderRef();
+initRoute();
+</script>
+</body>
+</html>
