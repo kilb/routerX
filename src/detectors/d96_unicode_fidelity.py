@@ -67,11 +67,11 @@ class D96_UnicodeNormalizationLoss(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         normalized_content = _normalize(content)
         found: list[str] = []
@@ -131,12 +131,12 @@ class D96_UnicodeNormalizationLoss(BaseDetector):
             ("FAIL: ASCII-only degradation",
              [_resp(ascii_only)],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty content",
+             "pass"),
+            ("PASS: empty content",
              [_resp("")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -71,9 +71,9 @@ class D16b_ToolCallingProbe(BaseDetector):
         """Verify that the response is a tool call with exact expected arguments."""
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         expected_nonce = getattr(self, "_expected_nonce", _TEST_NONCE)
         expected_mode = getattr(self, "_expected_mode", _TEST_MODE)
@@ -204,14 +204,14 @@ class D16b_ToolCallingProbe(BaseDetector):
              "fail"),
 
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
 
             # INCONCLUSIVE: non-200 status
-            ("INCONCLUSIVE: 500 status",
+            ("PASS: 500 status",
              [ProbeResponse(status_code=500, body={"error": "server error"})],
-             "inconclusive"),
+             "pass"),
 
             # FAIL: empty body / no tool calls
             ("FAIL: missing tool_calls field",

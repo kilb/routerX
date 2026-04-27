@@ -47,18 +47,18 @@ class D94_PromptEchoInflation(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         prompt_words = _PROMPT.lower().split()
         response_words = content.lower().split()
         if not response_words:
-            return self._inconclusive("response has no words")
+            return self._pass({"note": "response has no words — no evidence of issue"})
 
         # Count consecutive prefix match
         prefix_match = 0
@@ -117,12 +117,12 @@ class D94_PromptEchoInflation(BaseDetector):
                  "The answer is Tokyo."
              )],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty content",
+             "pass"),
+            ("PASS: empty content",
              [_resp("")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

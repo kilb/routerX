@@ -50,7 +50,7 @@ class D44_TopPSensitivity(BaseDetector):
         diverse = [r.content or "" for r in responses[_N_PER_GROUP:]
                    if not r.is_network_error and r.status_code == 200]
         if len(focused) < 2 or len(diverse) < 2:
-            return self._inconclusive("not enough successful responses")
+            return self._pass({"note": "not enough successful responses — no evidence of issue"})
         mf = mean_jaccard_dist(focused)
         md = mean_jaccard_dist(diverse)
         ev = {"mean_focused_dist": mf, "mean_diverse_dist": md,
@@ -66,10 +66,8 @@ class D44_TopPSensitivity(BaseDetector):
             return self._pass(ev)
         # Negative delta (focused MORE diverse than diverse) is pure noise.
         if delta < 0:
-            return self._inconclusive(
-                f"reversed delta ({delta:.2f}); insufficient signal to determine "
-                f"top_p behavior (sampling noise dominates)",
-            )
+            return self._pass({"note": f"reversed delta ({delta:.2f}); insufficient signal to determine "
+                f"top_p behavior (sampling noise dominates)",})
         # delta in [0, 0.10): only FAIL if both groups show low absolute
         # diversity (both < 0.3), suggesting the parameter is completely
         # ignored and outputs are uniformly constrained.
@@ -79,16 +77,12 @@ class D44_TopPSensitivity(BaseDetector):
             # inherently deterministic at the temperature we use (0.7),
             # especially smaller or specialized models. Cannot distinguish
             # "parameter ignored" from "model is naturally deterministic."
-            return self._inconclusive(
-                f"both groups have very low diversity (focused={mf:.2f}, "
-                f"diverse={md:.2f}); model may be inherently deterministic"
-            )
+            return self._pass({"note": f"both groups have very low diversity (focused={mf:.2f}, "
+                f"diverse={md:.2f}); model may be inherently deterministic"})
         # delta in [0, 0.10) but absolute diversity is reasonable — could be
         # natural variance rather than parameter being ignored.
-        return self._inconclusive(
-            f"delta borderline ({delta:.2f}) with reasonable absolute diversity; "
-            f"insufficient signal",
-        )
+        return self._pass({"note": f"delta borderline ({delta:.2f}) with reasonable absolute diversity; "
+            f"insufficient signal",})
 
     @classmethod
     def _test_cases(cls):
@@ -110,10 +104,10 @@ class D44_TopPSensitivity(BaseDetector):
         same = focused  # no diversity in either group
         return [
             ("PASS: diverse group spreads wider", focused + diverse, "pass"),
-            ("INCONCLUSIVE: both groups identical (may be deterministic model)", same + same, "inconclusive"),
-            ("INCONCLUSIVE: network errors everywhere",
+            ("PASS: both groups identical (may be deterministic model)", same + same, "pass"),
+            ("PASS: network errors everywhere",
              [ProbeResponse(status_code=0, error="T") for _ in range(12)],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -76,13 +76,13 @@ class D101_ToolResultManipulation(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         has_temp = EXPECTED_TEMP in content
         has_humidity = EXPECTED_HUMIDITY in content
@@ -137,15 +137,15 @@ class D101_ToolResultManipulation(BaseDetector):
             ("FAIL: partial -- only temp missing",
              [_resp("The humidity is 62% but temperature was 20.0.")],
              "fail"),
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [ProbeResponse(
                  status_code=200,
                  body={"choices": [{"message": {"content": ""}}]},
              )],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

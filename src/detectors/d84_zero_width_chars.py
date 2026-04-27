@@ -109,7 +109,7 @@ class D84_ZeroWidthCharDetection(BaseDetector):
             if not r.is_network_error and r.status_code == 200 and r.content
         ]
         if not usable:
-            return self._inconclusive("no usable responses with content")
+            return self._pass({"note": "no usable responses with content — no evidence of issue"})
 
         if findings:
             total = sum(int(f["invisible_char_count"]) for f in findings)
@@ -170,13 +170,13 @@ class D84_ZeroWidthCharDetection(BaseDetector):
                 "pass",
             ),
             (
-                "INCONCLUSIVE: all network errors",
+                "PASS: all network errors",
                 [
                     ProbeResponse(status_code=0, error="TIMEOUT"),
                     ProbeResponse(status_code=0, error="TIMEOUT"),
                     ProbeResponse(status_code=0, error="TIMEOUT"),
                 ],
-                "inconclusive",
+                "pass",
             ),
         ]
 

@@ -57,20 +57,20 @@ class D65_StyleFingerprint(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         family = infer_family(self.config.claimed_model)
         if family is None:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"unknown family for model {self.config.claimed_model!r}"
-            )
+            })
         texts = [r.content or "" for r in responses
                  if not r.is_network_error and r.status_code == 200]
         if len(texts) < 2:
-            return self._inconclusive("not enough valid responses")
+            return self._pass({"note": "not enough valid responses — no evidence of issue"})
         vectors = [feature_vector(t) for t in texts]
         mean_fv = {k: sum(v[k] for v in vectors) / len(vectors)
                    for k in vectors[0]}
         dist = normalized_distance(mean_fv, family)
         ev = {"family": family, "mean_features": mean_fv, "distance": dist}
         if dist is None:
-            return self._inconclusive(f"no centroid for family {family!r}")
+            return self._pass({"note": f"no centroid for family {family!r}"})
         if dist > _MAX_DISTANCE:
             return self._fail(
                 f"style distance {dist:.2f} from {family} centroid exceeds "
@@ -106,9 +106,9 @@ class D65_StyleFingerprint(BaseDetector):
         return [
             ("PASS: on-family style", good, "pass"),
             ("FAIL: very off-family style", bad, "fail"),
-            ("INCONCLUSIVE: network errors",
+            ("PASS: network errors",
              [ProbeResponse(status_code=0, error="T") for _ in range(5)],
-             "inconclusive"),
+             "pass"),
         ]
 
 

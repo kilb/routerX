@@ -345,6 +345,7 @@ a { color: inherit; text-decoration: none; }
 .mx-cell.run { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 14px oklch(0.55 0.22 268 / 0.55), 0 0 4px oklch(0.55 0.22 268 / 0.30); animation: cell-pulse 0.9s ease-in-out infinite; }
 .mx-cell.pass { background: var(--pass); border-color: var(--pass); }
 .mx-cell.warn, .mx-cell.suspicious, .mx-cell.inconclusive { background: var(--warn); border-color: var(--warn); }
+.mx-cell.timeout { background: oklch(0.65 0.10 230); border-color: oklch(0.65 0.10 230); }
 .mx-cell.fail { background: var(--fail); border-color: var(--fail); }
 .mx-cell.skip { background: var(--ink-5); border-color: var(--ink-5); }
 @keyframes cell-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.78); opacity: 0.7; } }
@@ -361,6 +362,7 @@ a { color: inherit; text-decoration: none; }
 .run-row.run .stat { background: var(--accent-bg); color: var(--accent); border: 1.5px solid var(--accent); border-top-color: transparent; animation: spin 0.9s linear infinite; }
 .run-row.pass .stat { background: var(--pass-bg); color: var(--pass); }
 .run-row.warn .stat, .run-row.suspicious .stat, .run-row.inconclusive .stat { background: var(--warn-bg); color: var(--warn); }
+.run-row.timeout .stat { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .run-row.fail .stat { background: var(--fail-bg); color: var(--fail); }
 .run-row.skip .stat { background: var(--bg-2); color: var(--ink-4); }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -373,6 +375,7 @@ a { color: inherit; text-decoration: none; }
 .run-row.run .state { background: var(--accent-bg); color: var(--accent); }
 .run-row.pass .state { background: var(--pass-bg); color: var(--pass); }
 .run-row.warn .state, .run-row.suspicious .state, .run-row.inconclusive .state { background: var(--warn-bg); color: var(--warn); }
+.run-row.timeout .state { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .run-row.fail .state { background: var(--fail-bg); color: var(--fail); }
 .run-row.skip .state { background: var(--bg-2); color: var(--ink-4); }
 .run-group-h { display: flex; align-items: center; justify-content: space-between; padding: 9px 18px; background: var(--bg-3); border-bottom: 1px solid var(--border-2); font-family: var(--ff-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; }
@@ -444,9 +447,10 @@ a { color: inherit; text-decoration: none; }
 .verdict .score-ring .ctr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .verdict .score-ring .ctr .n { font-family: var(--ff-disp); font-size: 26px; font-weight: 500; letter-spacing: -0.035em; color: oklch(1 0 0 / 1); line-height: 1; }
 .verdict .score-ring .ctr .l { font-family: var(--ff-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: oklch(1 0 0 / 0.55); margin-top: 2px; }
-.verdict .v-tally { display: grid; grid-template-columns: repeat(3, auto); gap: 18px; text-align: right; }
+.verdict .v-tally { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)); gap: 18px; text-align: right; }
 .verdict .vt-item .n { font-family: var(--ff-disp); font-size: 22px; font-weight: 500; letter-spacing: -0.025em; line-height: 1; }
 .verdict .vt-item.pass .n { color: oklch(0.78 0.16 152); }
+.verdict .vt-item.timeout .n { color: oklch(0.55 0.12 230); }
 .verdict .vt-item.warn .n { color: oklch(0.85 0.16 75); }
 .verdict .vt-item.fail .n { color: oklch(0.78 0.18 27); }
 .verdict .vt-item .l { margin-top: 3px; font-family: var(--ff-mono); font-size: 9px; color: oklch(1 0 0 / 0.55); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -471,6 +475,7 @@ a { color: inherit; text-decoration: none; }
 .pipeline-stage .stg-chip.fail { background: var(--fail-bg); color: var(--fail); }
 .pipeline-stage .stg-chip.suspicious { background: var(--suspicious-bg); color: var(--suspicious); }
 .pipeline-stage .stg-chip.inconclusive { background: var(--warn-bg); color: var(--warn); }
+.pipeline-stage .stg-chip.timeout { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .pipeline-stage .stg-chip.skip { background: var(--bg-2); color: var(--ink-4); }
 
 /* Category bars tile */
@@ -525,6 +530,7 @@ a { color: inherit; text-decoration: none; }
 .check-list .row .stat { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 11px; font-weight: 700; }
 .check-list .row.pass .stat { background: var(--pass-bg); color: var(--pass); }
 .check-list .row.warn .stat, .check-list .row.suspicious .stat, .check-list .row.inconclusive .stat { background: var(--warn-bg); color: var(--warn); }
+.check-list .row.timeout .stat { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .check-list .row.fail .stat { background: var(--fail-bg); color: var(--fail); }
 .check-list .row.skip .stat { background: var(--bg-2); color: var(--ink-4); }
 .check-list .row .id { font-family: var(--ff-mono); font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
@@ -534,6 +540,7 @@ a { color: inherit; text-decoration: none; }
 .check-list .row .state { font-family: var(--ff-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 100px; text-align: center; }
 .check-list .row.pass .state { background: var(--pass-bg); color: var(--pass); }
 .check-list .row.warn .state, .check-list .row.suspicious .state, .check-list .row.inconclusive .state { background: var(--warn-bg); color: var(--warn); }
+.check-list .row.timeout .state { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .check-list .row.fail .state { background: var(--fail-bg); color: var(--fail); }
 .check-list .row.skip .state { background: var(--bg-2); color: var(--ink-4); }
 .check-list .row .chev { font-family: var(--ff-mono); color: var(--ink-4); font-size: 12px; text-align: right; }
@@ -554,6 +561,7 @@ a { color: inherit; text-decoration: none; }
 .drawer-title .stat-big { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 18px; font-weight: 700; flex-shrink: 0; }
 .drawer-title.pass .stat-big { background: var(--pass-bg); color: var(--pass); }
 .drawer-title.warn .stat-big, .drawer-title.suspicious .stat-big, .drawer-title.inconclusive .stat-big { background: var(--warn-bg); color: var(--warn); }
+.drawer-title.timeout .stat-big { background: oklch(0.92 0.04 230); color: oklch(0.55 0.12 230); }
 .drawer-title.fail .stat-big { background: var(--fail-bg); color: var(--fail); }
 .drawer-title.skip .stat-big { background: var(--bg-2); color: var(--ink-4); }
 .drawer-title h2 { margin: 0; font-family: var(--ff-disp); font-size: 22px; font-weight: 500; letter-spacing: -0.022em; line-height: 1.2; }
@@ -564,6 +572,7 @@ a { color: inherit; text-decoration: none; }
 .drawer-stats .cell .v { margin-top: 3px; font-family: var(--ff-disp); font-size: 18px; font-weight: 500; letter-spacing: -0.020em; line-height: 1.1; }
 .drawer-stats .cell.pass .v { color: var(--pass); }
 .drawer-stats .cell.warn .v, .drawer-stats .cell.suspicious .v, .drawer-stats .cell.inconclusive .v { color: var(--warn); }
+.drawer-stats .cell.timeout .v { color: oklch(0.55 0.12 230); }
 .drawer-stats .cell.fail .v { color: var(--fail); }
 .drawer-section { margin-bottom: 20px; }
 .drawer-section .h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: var(--ff-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; }
@@ -573,14 +582,17 @@ a { color: inherit; text-decoration: none; }
 .finding-card { display: flex; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); }
 .finding-card.pass { background: var(--pass-bg); border-color: oklch(0.62 0.16 152 / 0.30); }
 .finding-card.warn, .finding-card.suspicious, .finding-card.inconclusive { background: var(--warn-bg); border-color: oklch(0.72 0.15 75 / 0.30); }
+.finding-card.timeout { background: oklch(0.96 0.02 230); border-color: oklch(0.65 0.10 230 / 0.30); }
 .finding-card.fail { background: var(--fail-bg); border-color: oklch(0.60 0.20 27 / 0.30); }
 .finding-card .ic { width: 24px; height: 24px; border-radius: 50%; background: oklch(1 0 0 / 0.6); display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 12px; font-weight: 700; flex-shrink: 0; }
 .finding-card.pass .ic { color: var(--pass); }
 .finding-card.warn .ic, .finding-card.suspicious .ic, .finding-card.inconclusive .ic { color: var(--warn); }
+.finding-card.timeout .ic { color: oklch(0.55 0.12 230); }
 .finding-card.fail .ic { color: var(--fail); }
 .finding-card .body .k { font-family: var(--ff-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 4px; }
 .finding-card.pass .body .k { color: var(--pass); }
 .finding-card.warn .body .k, .finding-card.suspicious .body .k, .finding-card.inconclusive .body .k { color: var(--warn); }
+.finding-card.timeout .body .k { color: oklch(0.55 0.12 230); }
 .finding-card.fail .body .k { color: var(--fail); }
 .finding-card .body .v { font-size: 13.5px; color: var(--ink); line-height: 1.5; }
 .drawer-foot { border-top: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); }
@@ -753,7 +765,7 @@ const API_BASE = window.location.origin;
 const STAGES = ['pre_screen', 'S0', 'P0', 'P1', 'P2'];
 const STAGE_LABELS = { pre_screen: 'PRE', S0: 'S0', P0: 'P0', P1: 'P1', P2: 'P2' };
 const STAGE_NAMES = { pre_screen: 'Pre-Screen', S0: 'Critical Security', P0: 'Identity & Integrity', P1: 'Parameter & Billing', P2: 'Quality & Conformance' };
-const VERDICTS = ['fail', 'suspicious', 'inconclusive', 'pass', 'skip'];
+const VERDICTS = ['fail', 'suspicious', 'inconclusive', 'timeout', 'pass', 'skip'];
 const CAPABILITIES = ['text', 'vision', 'tool_calling', 'pdf', 'audio'];
 const PROVIDERS = [
   { value: 'any', label: 'Any / Unknown' },
@@ -1457,7 +1469,8 @@ function ReportScreen({ report, taskId, config, onReset }) {
   const verdict = report.overall_verdict === 'pass' ? 'pass' : (report.failed || 0) > 0 ? 'fail' : 'warn';
   const sec = ((report.total_latency_ms || 0) / 1000).toFixed(1);
   const cost = (report.estimated_cost_usd || 0).toFixed(2);
-  const inconclusive = (report.total_detectors || 0) - (report.passed || 0) - (report.failed || 0) - (report.suspicious || 0) - (report.skipped || 0);
+  const timedOut = report.timed_out || 0;
+  const inconclusive = (report.total_detectors || 0) - (report.passed || 0) - (report.failed || 0) - (report.suspicious || 0) - (report.skipped || 0) - timedOut;
   const scoreR = 52;
   const scoreC = 2 * Math.PI * scoreR;
   const scoreDash = scoreC * (1 - score / 100);
@@ -1538,6 +1551,7 @@ function ReportScreen({ report, taskId, config, onReset }) {
             </div>
             <div className="v-tally">
               <div className="vt-item pass"><div className="n">{report.passed || 0}</div><div className="l">pass</div></div>
+              {timedOut > 0 && <div className="vt-item timeout"><div className="n">{timedOut}</div><div className="l">timeout</div></div>}
               <div className="vt-item warn"><div className="n">{(report.suspicious || 0) + inconclusive}</div><div className="l">other</div></div>
               <div className="vt-item fail"><div className="n">{report.failed || 0}</div><div className="l">fail</div></div>
             </div>

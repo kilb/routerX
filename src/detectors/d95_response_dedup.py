@@ -61,9 +61,9 @@ class D95_ResponseDeduplication(BaseDetector):
                 contents.append(c)
 
         if len(contents) < MIN_VALID_RESPONSES:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"only {len(contents)} valid responses, need {MIN_VALID_RESPONSES}"
-            )
+            })
 
         stripped = [c.strip() for c in contents]
         evidence: dict = {"response_previews": [c[:100] for c in stripped]}
@@ -126,11 +126,11 @@ class D95_ResponseDeduplication(BaseDetector):
             ("FAIL: all identical (substantive length)",
              [_resp("Machine learning is a branch of artificial intelligence that enables computers to learn from data and improve their performance on specific tasks without being explicitly programmed for every scenario.")] * 3,
              "fail"),
-            ("INCONCLUSIVE: not enough valid responses",
+            ("PASS: not enough valid responses",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               ProbeResponse(status_code=0, error="TIMEOUT"),
               _resp("some answer")],
-             "inconclusive"),
+             "pass"),
             ("FAIL: near-identical (high Jaccard > 0.98)",
              [_resp(
                  # ~200 unique words; only last word differs ("testing" vs

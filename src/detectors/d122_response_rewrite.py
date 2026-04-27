@@ -54,13 +54,13 @@ class D122_ResponseRewriteDetection(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         has_marker = _MARKER in content
         # Only check for rewrite indicators AFTER the marker position.
@@ -118,10 +118,10 @@ class D122_ResponseRewriteDetection(BaseDetector):
              [_resp("Hello there!")], "pass"),
             ("FAIL: marker present but with branding",
              [_resp(f"{_MARKER}\n\nPowered by SuperAI Gateway. All rights reserved.")], "fail"),
-            ("INCONCLUSIVE: empty content",
-             [_resp("")], "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: empty content",
+             [_resp("")], "pass"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

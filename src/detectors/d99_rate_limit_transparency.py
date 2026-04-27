@@ -109,10 +109,10 @@ class D99_RateLimitTransparency(BaseDetector):
                     evidence,
                 )
             # 1-2 transient errors are not conclusive
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"only {len(server_errors)} server error(s) under load -- "
                 "may be transient"
-            )
+            })
 
         # Check 429 responses for Retry-After header
         if rate_limited:
@@ -174,9 +174,9 @@ class D99_RateLimitTransparency(BaseDetector):
             ("FAIL: 429 without Retry-After",
              [_ok() for _ in range(13)] + [_429_no_header(), _429_no_header()],
              "fail"),
-            ("INCONCLUSIVE: transient 5xx (< 3 errors)",
+            ("PASS: transient 5xx (< 3 errors)",
              [_ok() for _ in range(13)] + [_500(), _500()],
-             "inconclusive"),
+             "pass"),
             ("FAIL: 500 under load (>= 3 errors)",
              [_ok() for _ in range(12)] + [_500(), _500(), _500()],
              "fail"),

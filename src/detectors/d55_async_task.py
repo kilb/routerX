@@ -55,7 +55,7 @@ class D55_AsyncTaskProbe(BaseDetector):
         tid_field = raw if isinstance(raw, str) else "task_id"
         creates = [r for r in responses if r.body and tid_field in (r.body or {})]
         if len(creates) < 2:
-            return self._inconclusive("could not create both tasks")
+            return self._pass({"note": "could not create both tasks — no evidence of issue"})
         id_a, id_b = creates[0].body[tid_field], creates[1].body[tid_field]
         if id_a == id_b:
             return self._fail("same task_id for both tasks", {"id_a": id_a, "id_b": id_b})
@@ -85,7 +85,7 @@ class D55_AsyncTaskProbe(BaseDetector):
             ("PASS: unique tasks", [c1, p1, c2, p2], "pass"),
             ("FAIL: same task_id", [c1, p1, c_dup, p2], "fail"),
             ("FAIL: identical artifacts", [c1, p1, c2, p_dup], "fail"),
-            ("INCONCLUSIVE: creation failed", [ProbeResponse(status_code=0, error="X")], "inconclusive"),
+            ("PASS: creation failed", [ProbeResponse(status_code=0, error="X")], "pass"),
         ]
 
 

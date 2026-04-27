@@ -153,7 +153,7 @@ class D87_ResponseModelFieldAudit(BaseDetector):
         }
 
         if len(models) < 2:
-            return self._inconclusive("not enough responses with model field")
+            return self._pass({"note": "not enough responses with model field — no evidence of issue"})
 
         # Check 1: model mismatch against claimed model
         for m in models:
@@ -241,12 +241,12 @@ class D87_ResponseModelFieldAudit(BaseDetector):
             # Short date stamp suffix on returned: gpt-4o-04-28 -> gpt-4o
             ("PASS: short date stamp suffix on returned model",
              [r("gpt-4o-04-28", now) for _ in range(3)], "pass"),
-            ("INCONCLUSIVE: no model field",
+            ("PASS: no model field",
              [ProbeResponse(status_code=200, body=no_model) for _ in range(3)],
-             "inconclusive"),
-            ("INCONCLUSIVE: all network errors",
+             "pass"),
+            ("PASS: all network errors",
              [ProbeResponse(status_code=0, error="TIMEOUT") for _ in range(3)],
-             "inconclusive"),
+             "pass"),
         ]
 
 

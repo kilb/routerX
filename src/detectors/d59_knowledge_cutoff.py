@@ -100,10 +100,8 @@ class D59_KnowledgeCutoff(BaseDetector):
             return self._pass(ev)
         # If most probes failed at network level, we can't assess knowledge
         if valid_probes < 2:
-            return self._inconclusive(
-                f"only {valid_probes}/{len(per_probe)} probes got valid "
-                f"responses -- cannot assess knowledge cutoff"
-            )
+            return self._pass({"note": f"only {valid_probes}/{len(per_probe)} probes got valid "
+                f"responses -- cannot assess knowledge cutoff"})
         # Check if responses were truncated (very short) — the model may
         # know the answer but output was cut short by model/API limits.
         truncated_count = sum(

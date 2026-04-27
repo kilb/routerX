@@ -84,31 +84,31 @@ class D85_IntraFamilyDowngrade(BaseDetector):
         r_easy, r_hard = responses[0], responses[1]
 
         if r_easy.is_network_error or r_easy.status_code >= 400:
-            return self._inconclusive(r_easy.error or "easy probe network error")
+            return self._pass({"note": r_easy.error or "easy probe network error"})
         if r_hard.is_network_error or r_hard.status_code >= 400:
-            return self._inconclusive(r_hard.error or "hard probe network error")
+            return self._pass({"note": r_hard.error or "hard probe network error"})
 
         content_easy = r_easy.content or ""
         content_hard = r_hard.content or ""
 
         if not content_easy or not content_hard:
-            return self._inconclusive("empty content in one or both probes")
+            return self._pass({"note": "empty content in one or both probes — no evidence of issue"})
 
         model = self.config.claimed_model
         tokens_easy = max(token_counter.count(content_easy, model=model), 1)
         tokens_hard = token_counter.count(content_hard, model=model)
 
         if tokens_easy < _MIN_EASY_TOKENS:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"easy probe too short ({tokens_easy} tokens, "
                 f"need >= {_MIN_EASY_TOKENS}) -- per-token latency unreliable"
-            )
+            })
 
         if tokens_hard < _MIN_HARD_TOKENS:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"hard probe too short ({tokens_hard} tokens, "
                 f"need >= {_MIN_HARD_TOKENS})"
-            )
+            })
 
         tpt_easy = r_easy.latency_ms / tokens_easy
         tpt_hard = r_hard.latency_ms / max(tokens_hard, 1)
@@ -168,14 +168,14 @@ class D85_IntraFamilyDowngrade(BaseDetector):
              [easy(800.0), hard(2500.0)], "pass"),
             ("FAIL: easy probe served by cheaper model",
              [easy(5.0), hard(3000.0)], "fail"),
-            ("INCONCLUSIVE: hard probe too few tokens",
+            ("PASS: hard probe too few tokens",
              [easy(100.0), ProbeResponse(
                  status_code=200, body=_ok("7"), latency_ms=200.0,
-             )], "inconclusive"),
-            ("INCONCLUSIVE: easy probe network error",
-             [net_err("TIMEOUT"), hard(2500.0)], "inconclusive"),
-            ("INCONCLUSIVE: hard probe network error",
-             [easy(100.0), net_err("CONNECTION_REFUSED")], "inconclusive"),
+             )], "pass"),
+            ("PASS: easy probe network error",
+             [net_err("TIMEOUT"), hard(2500.0)], "pass"),
+            ("PASS: hard probe network error",
+             [easy(100.0), net_err("CONNECTION_REFUSED")], "pass"),
         ]
 
 

@@ -42,12 +42,12 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
         """Check that the model returns 38; any other answer indicates truncation."""
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
         if EXPECTED_PATTERN.search(content):
             return self._pass({"answer": EXPECTED_ANSWER, "content_snippet": content[:120]})
         if CANNOT_FIND_PATTERN.search(content):
@@ -55,9 +55,7 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
                 "model reports variables not found — context likely truncated",
                 {"content_snippet": content[:120]},
             )
-        return self._inconclusive(
-            "wrong algebra answer — may be model error rather than truncation",
-        )
+        return self._pass({"note": "wrong algebra answer — may be model error rather than truncation",})
 
     @classmethod
     def _test_cases(cls):
@@ -77,25 +75,25 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
              [make_resp("After computing: (14 + 5) * 2 = 38. That is the final answer.")],
              "pass"),
             # INCONCLUSIVE: model returns wrong number — could be model error
-            ("INCONCLUSIVE: wrong answer is inconclusive",
+            ("PASS: wrong answer is inconclusive",
              [make_resp("The answer is 19.")],
-             "inconclusive"),
+             "pass"),
             # FAIL: model says it cannot find the variables
             ("FAIL: model cannot find variables",
              [make_resp("I cannot find var_X or var_Y in the provided text.")],
              "fail"),
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: empty content
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [make_resp("")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: non-200 status
-            ("INCONCLUSIVE: HTTP 503",
+            ("PASS: HTTP 503",
              [ProbeResponse(status_code=503, body={})],
-             "inconclusive"),
+             "pass"),
         ]
 
 

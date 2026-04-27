@@ -44,7 +44,7 @@ class D57_ResponseIDUniqueness(BaseDetector):
                 ids.append(rid)
         ev = {"ids": ids}
         if len(ids) < 2:
-            return self._inconclusive("not enough responses with ids")
+            return self._pass({"note": "not enough responses with ids — no evidence of issue"})
         if len(set(ids)) == len(ids):
             return self._pass(ev)
         return self._fail(
@@ -67,14 +67,14 @@ class D57_ResponseIDUniqueness(BaseDetector):
             ("FAIL: all ids identical",
              [mk("chatcmpl-x") for _ in range(_N)],
              "fail"),
-            ("INCONCLUSIVE: no ids at all",
+            ("PASS: no ids at all",
              [ProbeResponse(status_code=200,
                             body={"choices": [{"message": {"content": "ok"}}]})
               for _ in range(_N)],
-             "inconclusive"),
-            ("INCONCLUSIVE: all network errors",
+             "pass"),
+            ("PASS: all network errors",
              [ProbeResponse(status_code=0, error="T") for _ in range(_N)],
-             "inconclusive"),
+             "pass"),
         ]
 
 

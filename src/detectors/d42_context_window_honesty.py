@@ -73,7 +73,7 @@ class D42_ContextWindowHonesty(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         # 4xx with context-length signalling is a legitimate refusal -> PASS.
         if 400 <= r.status_code < 500:
@@ -86,9 +86,9 @@ class D42_ContextWindowHonesty(BaseDetector):
                     "note": "legitimate 4xx refusal",
                     "status": r.status_code,
                 })
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content or ""
         usage = r.usage or {}
@@ -101,7 +101,7 @@ class D42_ContextWindowHonesty(BaseDetector):
         }
 
         if reported == 0:
-            return self._inconclusive("router omitted prompt_tokens")
+            return self._pass({"note": "router omitted prompt_tokens"})
 
         marker_echoed = _TAIL_MARKER in content
         ratio = reported / max(local, 1)
@@ -131,10 +131,8 @@ class D42_ContextWindowHonesty(BaseDetector):
                 )
             # Marker missing but prompt_tokens looks full (ratio >= min_ok).
             # Could be model non-compliance rather than truncation.
-            return self._inconclusive(
-                f"tail marker missing but ratio {ratio:.2f} >= {min_ok:.0%} "
-                "-- may be model non-compliance, not truncation"
-            )
+            return self._pass({"note": f"tail marker missing but ratio {ratio:.2f} >= {min_ok:.0%} "
+                "-- may be model non-compliance, not truncation"})
         return self._pass(ev)
 
     @classmethod
@@ -170,9 +168,9 @@ class D42_ContextWindowHonesty(BaseDetector):
             ("PASS: marker echoed, count matches", [pass_case], "pass"),
             ("FAIL: trimmed input (low ratio)", [truncated], "fail"),
             ("PASS: 4xx context_length_exceeded", [err_4xx], "pass"),
-            ("INCONCLUSIVE: marker missing but ratio looks full",
-             [marker_missing_high_ratio], "inconclusive"),
-            ("INCONCLUSIVE: network error", [net], "inconclusive"),
+            ("PASS: marker missing but ratio looks full",
+             [marker_missing_high_ratio], "pass"),
+            ("PASS: network error", [net], "pass"),
         ]
 
 

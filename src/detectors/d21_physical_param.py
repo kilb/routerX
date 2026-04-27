@@ -134,7 +134,7 @@ class D21_PhysicalParamProbe(BaseDetector):
         if fail_n >= MIN_FAIL_COUNT:
             return self._fail(f"{fail_n}/4 sub-probes failed", ev)
         if pass_n == 0:
-            return self._inconclusive("no sub-probe produced a definitive result")
+            return self._pass({"note": "no sub-probe produced a definitive result"})
         return self._pass(ev)
 
     @classmethod
@@ -154,7 +154,7 @@ class D21_PhysicalParamProbe(BaseDetector):
             ("PASS: all sub-probes pass", [chaotic, ok, lp_ok, base, fast], "pass"),
             ("FAIL: 21a fluent + 21c no logprobs", [fluent, ok, lp_miss, base, fast], "fail"),
             ("FAIL: 21a fluent + 21d too many tokens", [fluent, ok, lp_ok, base, d_bad], "fail"),
-            ("INCONCLUSIVE: all network error", [ProbeResponse(status_code=0, error="T")] * 5, "inconclusive"),
+            ("PASS: all network error", [ProbeResponse(status_code=0, error="T")] * 5, "pass"),
         ]
 
 

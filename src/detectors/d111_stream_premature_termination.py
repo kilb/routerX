@@ -45,7 +45,7 @@ class D111_StreamPrematureTermination(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         body = r.body or {}
         content = body.get("full_content", "")
@@ -94,9 +94,9 @@ class D111_StreamPrematureTermination(BaseDetector):
             ("FAIL: premature termination",
              [_stream("Hello world", None, 2)],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="STREAM_TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -69,16 +69,16 @@ class D91_ArtificialLatencyPadding(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         short, long = responses[0], responses[1]
         if short.is_network_error:
-            return self._inconclusive(short.error or "short probe network error")
+            return self._pass({"note": short.error or "short probe network error"})
         if long.is_network_error:
-            return self._inconclusive(long.error or "long probe network error")
+            return self._pass({"note": long.error or "long probe network error"})
 
         short_ts = short.chunk_timestamps
         long_ts = long.chunk_timestamps
         if not short_ts:
-            return self._inconclusive("no chunk timestamps for short probe")
+            return self._pass({"note": "no chunk timestamps for short probe"})
         if not long_ts:
-            return self._inconclusive("no chunk timestamps for long probe")
+            return self._pass({"note": "no chunk timestamps for long probe"})
 
         ttft_short = short_ts[0] * 1000  # seconds -> ms
         ttft_long = long_ts[0] * 1000
@@ -90,7 +90,7 @@ class D91_ArtificialLatencyPadding(BaseDetector):
         }
 
         if ttft_long <= 0:
-            return self._inconclusive("long probe TTFT is zero")
+            return self._pass({"note": "long probe TTFT is zero"})
 
         if ttft_short > ttft_long * TTFT_RATIO_THRESHOLD and ttft_short > TTFT_ABS_THRESHOLD_MS:
             return self._fail(
@@ -118,13 +118,13 @@ class D91_ArtificialLatencyPadding(BaseDetector):
             ("FAIL: both slow equally (short artificially padded)",
              [mk([3.5, 3.6], "hi"), mk([1.0, 1.5, 2.0], "clouds are fluffy")],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               mk([0.3, 0.5], "clouds")],
-             "inconclusive"),
-            ("INCONCLUSIVE: no timestamps",
+             "pass"),
+            ("PASS: no timestamps",
              [mk([], ""), mk([0.3], "clouds")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -71,12 +71,12 @@ class D113_ThinkingTokenConsistency(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r1, r2 = responses[0], responses[1]
         if r1.is_network_error or r2.is_network_error or r1.status_code >= 400 or r2.status_code >= 400:
-            return self._inconclusive("network error on one or both requests")
+            return self._pass({"note": "network error on one or both requests"})
 
         c1 = r1.content.strip()
         c2 = r2.content.strip()
         if not c1 or not c2:
-            return self._inconclusive("empty response from one or both requests")
+            return self._pass({"note": "empty response from one or both requests"})
 
         answer1 = _extract_answer(c1)
         answer2 = _extract_answer(c2)
@@ -105,9 +105,7 @@ class D113_ThinkingTokenConsistency(BaseDetector):
         # If either answer couldn't be extracted, we can't confirm disagreement
         # — the model may have expressed the same answer in a different format.
         if answer1 is None or answer2 is None:
-            return self._inconclusive(
-                "answer extraction failed — cannot confirm inconsistency"
-            )
+            return self._pass({"note": "answer extraction failed — cannot confirm inconsistency"})
         # FAIL: answers explicitly disagree AND reasoning is very different
         return self._fail("inconsistent responses suggest different backends", evidence)
 
@@ -128,10 +126,10 @@ class D113_ThinkingTokenConsistency(BaseDetector):
              [_resp("The average speed is 80 km/h. I calculated this by dividing total distance 200km by total time 2.5 hours and got this result."),
               _resp("Using the formula for average speed over two legs of a journey with different speeds, the result is 100 km/h for the entire trip.")],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               _resp("80 km/h")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

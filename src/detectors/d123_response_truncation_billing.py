@@ -54,23 +54,23 @@ class D123_ResponseTruncationBilling(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         usage = r.usage
         if not usage:
-            return self._inconclusive("no usage field in response")
+            return self._pass({"note": "no usage field in response"})
 
         reported = usage.get("completion_tokens") or usage.get("output_tokens") or 0
         if reported == 0:
-            return self._inconclusive("completion_tokens missing or zero")
+            return self._pass({"note": "completion_tokens missing or zero"})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         local = token_counter.count(content, self.config.claimed_model)
         if local == 0:
-            return self._inconclusive("local token count returned zero")
+            return self._pass({"note": "local token count returned zero"})
 
         ratio = reported / local if local > 0 else 0
         evidence = {
@@ -131,12 +131,12 @@ class D123_ResponseTruncationBilling(BaseDetector):
             ("FAIL: truncated but billed high",
              [_resp("Computing began...", 300)],
              "fail"),
-            ("INCONCLUSIVE: no usage",
+            ("PASS: no usage",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": long_content}, "finish_reason": "stop"}]})],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

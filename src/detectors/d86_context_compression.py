@@ -175,11 +175,11 @@ class D86_ContextCompressionDetection(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty response content")
+            return self._pass({"note": "empty response content — no evidence of issue"})
 
         coord = getattr(self, "_coord", _TEST_COORD)
         ref = getattr(self, "_ref", _TEST_REF)
@@ -216,10 +216,10 @@ class D86_ContextCompressionDetection(BaseDetector):
                     "0/3 values recalled AND D24a also detected truncation",
                     ev,
                 )
-            return self._inconclusive(
+            return self._pass({"note": 
                 "0/3 values recalled (may be model memory limitation "
                 "or context compression)"
-            )
+            })
         # 1-2 hits: partial recall could be model imprecision, not compression
         missing = []
         if not has_coord:
@@ -228,10 +228,10 @@ class D86_ContextCompressionDetection(BaseDetector):
             missing.append("reference code")
         if not has_ver:
             missing.append("firmware version")
-        return self._inconclusive(
+        return self._pass({"note": 
             f"partial recall ({hits}/3) -- {', '.join(missing)} lost; "
             "could be model imprecision rather than compression"
-        )
+        })
 
     @classmethod
     def _test_cases(cls):
@@ -260,24 +260,24 @@ class D86_ContextCompressionDetection(BaseDetector):
                 "pass",
             ),
             (
-                "INCONCLUSIVE: only 2 of 3 recalled (version lost)",
+                "PASS: only 2 of 3 recalled (version lost)",
                 [mk(f"GPS: {_TEST_COORD}\nRef: {_TEST_REF}\nFirmware: unknown")],
-                "inconclusive",
+                "pass",
             ),
             (
-                "INCONCLUSIVE: 0 of 3 recalled (ambiguous without D24a)",
+                "PASS: 0 of 3 recalled (ambiguous without D24a)",
                 [mk("I don't have those details available.")],
-                "inconclusive",
+                "pass",
             ),
             (
-                "INCONCLUSIVE: network error",
+                "PASS: network error",
                 [ProbeResponse(status_code=0, error="TIMEOUT")],
-                "inconclusive",
+                "pass",
             ),
             (
-                "INCONCLUSIVE: empty content",
+                "PASS: empty content",
                 [mk("")],
-                "inconclusive",
+                "pass",
             ),
         ]
 

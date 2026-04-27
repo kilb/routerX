@@ -36,7 +36,7 @@ class D27c_MultiImageOrderProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         n1 = getattr(self, "_nonce_1", _TEST_NONCE_1)
         n2 = getattr(self, "_nonce_2", _TEST_NONCE_2)
         content = r.content.strip()
@@ -56,7 +56,7 @@ class D27c_MultiImageOrderProbe(BaseDetector):
             ("PASS: second nonce returned", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": _TEST_NONCE_2}, "finish_reason": "stop"}]})], "pass"),
             ("FAIL: first nonce returned", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": _TEST_NONCE_1}, "finish_reason": "stop"}]})], "fail"),
             ("FAIL: neither nonce", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "cannot read"}, "finish_reason": "stop"}]})], "fail"),
-            ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

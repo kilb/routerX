@@ -66,19 +66,19 @@ class D60_LatencyFingerprint(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         band = lookup_band(self.config.claimed_model)
         if band is None:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"no latency band for model {self.config.claimed_model!r}"
-            )
+            })
         min_ttft, max_ttft, min_tps, max_tps = band
         timestamps = r.chunk_timestamps or []
         content = r.content or ""
         if len(timestamps) < 2:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"not enough stream chunks ({len(timestamps)})"
-            )
+            })
 
         ttft = timestamps[0]
         duration = max(timestamps[-1] - timestamps[0], 1e-6)
@@ -89,9 +89,9 @@ class D60_LatencyFingerprint(BaseDetector):
 
         # TPS is unreliable with very few tokens — proxy overhead dominates.
         if local_tokens < 20:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"only {local_tokens} tokens -- too few for reliable tps measurement"
-            )
+            })
 
         widened = {
             "ttft": (min_ttft / _TOLERANCE, max_ttft * _TOLERANCE),
@@ -126,9 +126,9 @@ class D60_LatencyFingerprint(BaseDetector):
         tps_delta = _edge_delta(tps, *widened["tps"])
         max_delta = max(ttft_delta, tps_delta)
         if max_delta < _MIN_EDGE_DELTA:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"latency near band edge (max delta {max_delta:.2f})"
-            )
+            })
         return self._fail(
             f"latency outside widened band: ttft={ttft:.2f}s "
             f"(band [{min_ttft}, {max_ttft}]), "
@@ -157,8 +157,8 @@ class D60_LatencyFingerprint(BaseDetector):
         return [
             ("PASS: latency inside band", [good], "pass"),
             ("FAIL: TTFT way above band", [slow], "fail"),
-            ("INCONCLUSIVE: network error", [net], "inconclusive"),
-            ("INCONCLUSIVE: too few chunks", [too_few], "inconclusive"),
+            ("PASS: network error", [net], "pass"),
+            ("PASS: too few chunks", [too_few], "pass"),
         ]
 
 

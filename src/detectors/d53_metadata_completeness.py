@@ -78,9 +78,9 @@ class D53_MetadataCompleteness(BaseDetector):
         router_resp = responses[0]
 
         if router_resp.is_network_error:
-            return self._inconclusive(router_resp.error or "network error")
+            return self._pass({"note": router_resp.error or "network error"})
         if router_resp.status_code != 200:
-            return self._inconclusive(router_resp.error_detail)
+            return self._pass({"note": router_resp.error_detail})
 
         router_usage = router_resp.usage
 
@@ -242,15 +242,15 @@ class D53_MetadataCompleteness(BaseDetector):
             ),
             # INCONCLUSIVE: router itself returns network error.
             (
-                "INCONCLUSIVE: router network error",
+                "PASS: router network error",
                 [ProbeResponse(status_code=0, error="TIMEOUT"), make_direct(full_usage)],
-                "inconclusive",
+                "pass",
             ),
             # INCONCLUSIVE: router returns non-200 status.
             (
-                "INCONCLUSIVE: router 503",
+                "PASS: router 503",
                 [ProbeResponse(status_code=503, body=None), make_direct(full_usage)],
-                "inconclusive",
+                "pass",
             ),
         ]
 

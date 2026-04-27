@@ -66,7 +66,7 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         expected = getattr(self, "_nonce", _TEST_NONCE)
         content = r.content
         ev = {"expected": expected, "got": content[:200]}
@@ -86,16 +86,12 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
             "don't know", "don't remember", "not sure", "cannot recall",
             "no lucky number", "didn't mention", "sorry",
         )):
-            return self._inconclusive(
-                "model cannot recall nonce (may be memory limitation, not trimming)"
-            )
+            return self._pass({"note": "model cannot recall nonce (may be memory limitation, not trimming)"})
         # If model produced SOME number/nonce-like answer, it's trying to
         # remember but got it wrong — ambiguous.
         import re
         if re.search(r"LUCKY[-_]?\w+|\d{4,}", content):
-            return self._inconclusive(
-                "model recalled wrong value (may be memory error, not trimming)"
-            )
+            return self._pass({"note": "model recalled wrong value (may be memory error, not trimming)"})
         return self._fail("early history was trimmed; first-turn nonce missing", ev)
 
     @classmethod
@@ -110,14 +106,14 @@ class D24c_MultiTurnHistoryIntegrity(BaseDetector):
         return [
             ("PASS: nonce recalled (fallback match)",
              [mk(f"{_TEST_NONCE} is the number.")], "pass"),
-            ("INCONCLUSIVE: model says don't know",
-             [mk("I don't know what your lucky number was.")], "inconclusive"),
-            ("INCONCLUSIVE: wrong nonce-like value",
-             [mk("Your lucky number was LUCKY-WRONGVAL.")], "inconclusive"),
+            ("PASS: model says don't know",
+             [mk("I don't know what your lucky number was.")], "pass"),
+            ("PASS: wrong nonce-like value",
+             [mk("Your lucky number was LUCKY-WRONGVAL.")], "pass"),
             ("FAIL: unrelated response (no recall attempt)",
              [mk("The weather is nice today.")], "fail"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

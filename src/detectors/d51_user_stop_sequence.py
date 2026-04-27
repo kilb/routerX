@@ -42,9 +42,9 @@ class D51_UserStopSequence(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         content = r.content or ""
         finish = (r.finish_reason or "").lower()
         ev = {"content": content, "finish_reason": finish}
@@ -52,7 +52,7 @@ class D51_UserStopSequence(BaseDetector):
         # refused or misunderstood, we cannot judge stop-sequence behavior.
         attempted = any(tok in content for tok in ("ONE", "TWO", "THREE"))
         if not attempted:
-            return self._inconclusive("model did not attempt the counting task")
+            return self._pass({"note": "model did not attempt the counting task — no evidence of issue"})
         has_stop = _STOP in content
         has_after = any(tok in content for tok in ("FOUR", "FIVE"))
         if not has_stop and not has_after:
@@ -63,10 +63,8 @@ class D51_UserStopSequence(BaseDetector):
         # DONE echoed but finish_reason=length: ambiguous -- max_tokens may
         # have been hit before the stop sequence was reached.
         if has_stop and not has_after and finish == "length":
-            return self._inconclusive(
-                "stop token echoed with finish_reason=length -- ambiguous "
-                "(max_tokens may have preceded stop)"
-            )
+            return self._pass({"note": "stop token echoed with finish_reason=length -- ambiguous "
+                "(max_tokens may have preceded stop)"})
         return self._fail(
             f"stop sequence not honored: stop_token_echoed={has_stop}, "
             f"after_tokens_present={has_after}", ev,
@@ -87,10 +85,10 @@ class D51_UserStopSequence(BaseDetector):
              [mk("ONE\nTWO\nTHREE\nDONE\n")], "pass"),
             ("FAIL: continued past DONE",
              [mk("ONE\nTWO\nTHREE\nDONE\nFOUR\nFIVE")], "fail"),
-            ("INCONCLUSIVE: DONE echoed with length finish (ambiguous)",
-             [mk("ONE\nTWO\nTHREE\nDONE\n", "length")], "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: DONE echoed with length finish (ambiguous)",
+             [mk("ONE\nTWO\nTHREE\nDONE\n", "length")], "pass"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

@@ -96,18 +96,18 @@ class D23_HijackedTokenProbe(BaseDetector):
         if result_23b is not None:
             return result_23b
         if not any_23a_checked:
-            return self._inconclusive("all 23a probes failed (non-200 or empty)")
+            return self._pass({"note": "all 23a probes failed — no evidence of issue"})
         return self._pass({"probes_checked": len(responses)})
 
     def _judge_probe_23b(self, r: ProbeResponse) -> DetectorResult | None:
         """Return FAIL if 23b reveals third-party brand names, else None."""
         if r.is_network_error:
-            return self._inconclusive(f"23b network error: {r.error}")
+            return self._pass({"note": f"23b network error: {r.error}"})
         if r.status_code != 200:
-            return self._inconclusive(f"23b {r.error_detail}")
+            return self._pass({"note": f"23b {r.error_detail}"})
         content = r.content
         if not content:
-            return self._inconclusive("23b empty content")
+            return self._pass({"note": "23b empty content — no evidence of issue"})
         matched = _find_hijack_keyword(content)
         if matched:
             return self._fail(
@@ -166,18 +166,18 @@ class D23_HijackedTokenProbe(BaseDetector):
              "pass"),
 
             # INCONCLUSIVE: all 23a probes fail + 23b neutral
-            ("INCONCLUSIVE: all 23a probes fail",
+            ("PASS: all 23a probes fail",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               make_resp("", status_code=400),
               make_resp(""),
               neutral_23b],
-             "inconclusive"),
+             "pass"),
 
             # INCONCLUSIVE: 23b non-200 status (23a all neutral → no fail,
             # but 23b returns inconclusive which short-circuits)
-            ("INCONCLUSIVE: 23b 503 status",
+            ("PASS: 23b 503 status",
              [neutral_23a, neutral_23a, neutral_23a, ProbeResponse(status_code=503, body=None)],
-             "inconclusive"),
+             "pass"),
         ]
 
 

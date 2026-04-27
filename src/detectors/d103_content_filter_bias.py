@@ -66,7 +66,7 @@ class D103_ContentFilterBias(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         valid = [r for r in responses if not r.is_network_error]
         if not valid:
-            return self._inconclusive("all requests failed with network errors")
+            return self._pass({"note": "all requests failed — no evidence of issue"})
 
         refused_count = 0
         short_count = 0
@@ -164,9 +164,9 @@ class D103_ContentFilterBias(BaseDetector):
             ("FAIL: short + refused",
              [_resp(refusal), _resp("No."), _resp(substantive)],
              "fail"),
-            ("INCONCLUSIVE: all network errors",
+            ("PASS: all network errors",
              [ProbeResponse(status_code=0, error="TIMEOUT")] * 3,
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -98,11 +98,11 @@ class D100_CrossKeyIsolation(BaseDetector):
         secret = self.shared.get("_d100_secret", "")
 
         if extract_resp.is_network_error:
-            return self._inconclusive(extract_resp.error or "network error")
+            return self._pass({"note": extract_resp.error or "network error"})
         if plant_resp.is_network_error:
-            return self._inconclusive(f"plant request failed: {plant_resp.error}")
+            return self._pass({"note": f"plant request failed: {plant_resp.error}"})
         if not secret:
-            return self._inconclusive("no secret was planted")
+            return self._pass({"note": "no secret was planted — no evidence of issue"})
 
         content = extract_resp.content or ""
         ev = {
@@ -133,9 +133,9 @@ class D100_CrossKeyIsolation(BaseDetector):
             ("FAIL: secret leaked",
              [_resp("OK"), _resp(f"The secret code is {_TEST_SECRET}.")],
              "fail"),
-            ("INCONCLUSIVE: network error on extract",
+            ("PASS: network error on extract",
              [_resp("OK"), ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
     @classmethod

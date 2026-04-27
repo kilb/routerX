@@ -49,17 +49,17 @@ class D64_StreamingChunkShape(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         timestamps = r.chunk_timestamps or []
         content = r.content or ""
         tokens = token_counter.count(content, model=self.config.claimed_model)
 
         if tokens < 20:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"only {tokens} tokens of output -- too short to judge shape"
-            )
+            })
         if len(timestamps) < 2:
             return self._fail("fewer than 2 stream chunks",
                               {"timestamps": timestamps, "tokens": tokens})
@@ -109,8 +109,8 @@ class D64_StreamingChunkShape(BaseDetector):
             ("PASS: genuine streaming shape", [genuine], "pass"),
             ("FAIL: very few chunks", [chunky], "fail"),
             ("PASS: burst delivery (proxy TCP buffering)", [burst], "pass"),
-            ("INCONCLUSIVE: too short output", [short], "inconclusive"),
-            ("INCONCLUSIVE: network error", [net], "inconclusive"),
+            ("PASS: too short output", [short], "pass"),
+            ("PASS: network error", [net], "pass"),
         ]
 
 

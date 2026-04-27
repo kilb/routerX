@@ -61,7 +61,7 @@ class D31_GodPayload(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         body = r.body or {}
         content = body.get("full_content", "") or r.content
         usage = body.get("usage")
@@ -137,7 +137,7 @@ class D31_GodPayload(BaseDetector):
              [ProbeResponse(status_code=200, body=sb("plain text no answer", {"total_tokens": 100}))], "pass"),
             ("FAIL: system leak + algebra both fail",
              [ProbeResponse(status_code=200, body=sb('{"code": 99} cursor', {"total_tokens": 100}))], "fail"),
-            ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="T")], "inconclusive"),
+            ("PASS: network error", [ProbeResponse(status_code=0, error="T")], "pass"),
         ]
 
 

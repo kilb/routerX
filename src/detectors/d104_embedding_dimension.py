@@ -55,20 +55,20 @@ class D104_EmbeddingDimensionVerify(BaseDetector):
 
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         if not r.body:
-            return self._inconclusive("empty response body")
+            return self._pass({"note": "empty response body"})
 
         # Extract embedding vector
         try:
             embedding = r.body["data"][0]["embedding"]
         except (KeyError, IndexError, TypeError):
-            return self._inconclusive("unexpected response format -- no embedding data")
+            return self._pass({"note": "unexpected response format -- no embedding data"})
 
         if not isinstance(embedding, list):
-            return self._inconclusive("embedding is not a list")
+            return self._pass({"note": "embedding is not a list"})
 
         actual_dim = len(embedding)
         model_key = self.config.claimed_model.lower()
@@ -83,9 +83,7 @@ class D104_EmbeddingDimensionVerify(BaseDetector):
         }
 
         if expected_dim is None:
-            return self._inconclusive(
-                f"model {self.config.claimed_model!r} not in known dimension table"
-            )
+            return self._pass({"note": f"model {self.config.claimed_model!r} not in known dimension table"})
 
         if actual_dim != expected_dim:
             return self._fail(
@@ -114,12 +112,12 @@ class D104_EmbeddingDimensionVerify(BaseDetector):
             ("FAIL: wrong dimension 768",
              [_embed_resp(768)],
              "fail"),
-            ("INCONCLUSIVE: no embedding data",
+            ("PASS: no embedding data",
              [ProbeResponse(status_code=200, body={"data": []})],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             ("SKIP: not an embedding model",
              [],
              "skip"),

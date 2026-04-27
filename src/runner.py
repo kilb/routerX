@@ -586,6 +586,7 @@ class TestRunner:
         f = sum(1 for r in self.results if r.verdict == Verdict.FAIL)
         s = sum(1 for r in self.results if r.verdict == Verdict.SUSPICIOUS)
         k = sum(1 for r in self.results if r.verdict == Verdict.SKIP)
+        t = sum(1 for r in self.results if r.verdict == Verdict.TIMEOUT)
 
         s0_fail = any(
             r.verdict == Verdict.FAIL and r.priority == Priority.S0
@@ -634,7 +635,7 @@ class TestRunner:
             overall_verdict=overall,
             tier_assignment=tier,
             total_detectors=len(self.results),
-            passed=p, failed=f, suspicious=s, skipped=k,
+            passed=p, failed=f, suspicious=s, skipped=k, timed_out=t,
             total_requests=total_reqs,
             total_latency_ms=total_latency,
             estimated_cost_usd=self._compute_cost(),

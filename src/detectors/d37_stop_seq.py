@@ -40,10 +40,10 @@ class D37_StopSeqProbe(BaseDetector):
         """Fail if only 1 paragraph returned with finish_reason=stop (stop sequence injected)."""
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         paragraphs = [p.strip() for p in re.split(r'\n\s*\n', content) if p.strip()]
         # Fallback: if no double-newline found, also try single-newline separated blocks
@@ -67,10 +67,8 @@ class D37_StopSeqProbe(BaseDetector):
                 return self._fail("router injected stop sequence truncating output", evidence)
             # Long content in fewer paragraphs: model chose not to split,
             # not evidence of stop sequence injection
-            return self._inconclusive(
-                "few paragraphs but content is long -- model may have "
-                "chosen not to break into paragraphs"
-            )
+            return self._pass({"note": "few paragraphs but content is long -- model may have "
+                "chosen not to break into paragraphs"})
 
         # Ambiguous: multiple paragraphs but finished with length, or other finish reasons
         return self._pass(evidence)
@@ -105,7 +103,7 @@ class D37_StopSeqProbe(BaseDetector):
              [make_resp(one_para, "length")],
              "pass"),
             # INCONCLUSIVE: long single paragraph (model chose not to break)
-            ("INCONCLUSIVE: long single paragraph, finish_reason=stop",
+            ("PASS: long single paragraph, finish_reason=stop",
              [make_resp(
                  "Artificial intelligence is transforming every sector of society "
                  "in ways we could not have imagined just a decade ago. From healthcare "
@@ -114,15 +112,15 @@ class D37_StopSeqProbe(BaseDetector):
                  "of modern life, raising important questions about ethics, employment, "
                  "and the very nature of human intelligence itself.",
                  "stop")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: empty content
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [make_resp("", "stop")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

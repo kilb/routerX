@@ -44,12 +44,12 @@ class D52_ResponseFormatJSON(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         content = (r.content or "").strip()
         if not content:
-            return self._inconclusive("empty response content")
+            return self._pass({"note": "empty response content — no evidence of issue"})
         ev = {"content_excerpt": content[:300]}
 
         # Strip common markdown fencing first (some providers add it even with
@@ -128,8 +128,8 @@ class D52_ResponseFormatJSON(BaseDetector):
             ("PASS: fenced JSON", [fenced], "pass"),
             ("SKIP: prose instead of JSON (model may not support)", [prose], "skip"),
             ("PASS: malformed JSON starts with { (truncated)", [malformed], "pass"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

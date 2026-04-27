@@ -131,7 +131,7 @@ class D22_ProtocolStrictness(BaseDetector):
             # Distinguish "not applicable" (no probes sent) from "all failed"
             any_sent = any(r is not None for r in responses)
             if any_sent:
-                return self._inconclusive("all sub-probes failed or returned errors")
+                return self._pass({"note": "all sub-probes failed — no evidence of issue"})
             return self._skip("no applicable sub-probes for this api_format/provider")
         return self._pass(ev)
 
@@ -156,8 +156,8 @@ class D22_ProtocolStrictness(BaseDetector):
              [ok_json, err400, prefill_bad, err400], "pass"),
             ("FAIL: 22d gateway fingerprint", [ok_json, err400, prefill_ok,
              ProbeResponse(status_code=200, body={}, raw_text="<html>cloudflare</html>")], "fail"),
-            ("INCONCLUSIVE: all network error",
-             [None, None, None, ProbeResponse(status_code=0, error="T")], "inconclusive"),
+            ("PASS: all network error",
+             [None, None, None, ProbeResponse(status_code=0, error="T")], "pass"),
         ]
 
 

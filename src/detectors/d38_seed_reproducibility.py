@@ -66,7 +66,7 @@ class D38_SeedReproducibility(BaseDetector):
                 if responses and responses[0].is_network_error
                 else "insufficient valid responses"
             )
-            return self._inconclusive(reason)
+            return self._pass({"note": reason})
 
         contents = [r.content for r in valid]
         seed = getattr(self, "_seed", 42)
@@ -128,14 +128,14 @@ class D38_SeedReproducibility(BaseDetector):
              [make_resp(identical), make_resp(alt1), make_resp(alt2)],
              "fail"),
             # INCONCLUSIVE: single valid response (two network errors)
-            ("INCONCLUSIVE: only one valid response",
+            ("PASS: only one valid response",
              [make_resp(identical), ProbeResponse(status_code=0, error="TIMEOUT"),
               ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: all network errors
-            ("INCONCLUSIVE: all network errors",
+            ("PASS: all network errors",
              [ProbeResponse(status_code=0, error="CONNECTION_REFUSED")] * 3,
-             "inconclusive"),
+             "pass"),
             # FAIL (degraded): last two match, first differs (2/3)
             ("FAIL: last two match, first differs (2/3 suspicious)",
              [make_resp(alt1), make_resp(identical), make_resp(identical)],

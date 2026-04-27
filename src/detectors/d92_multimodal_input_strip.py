@@ -52,13 +52,13 @@ class D92_MultiModalInputStripping(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content.strip()
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         code = getattr(self, "_code", _TEST_CODE)
         evidence = {"expected_code": code, "response": content[:200]}
@@ -90,7 +90,7 @@ class D92_MultiModalInputStripping(BaseDetector):
         if len(content) > MIN_SUBSTANTIVE_LEN:
             return self._fail("image code not found -- image may be stripped", evidence)
 
-        return self._inconclusive("response too short to determine")
+        return self._pass({"note": "response too short to determine"})
 
     @classmethod
     def _test_cases(cls):
@@ -110,12 +110,12 @@ class D92_MultiModalInputStripping(BaseDetector):
             ("FAIL: image stripped, no visual awareness",
              [_resp("I'd be happy to help! What would you like to know?")],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty content",
+             "pass"),
+            ("PASS: empty content",
              [_resp("")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

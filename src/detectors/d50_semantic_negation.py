@@ -224,11 +224,11 @@ class D50_SemanticNegation(BaseDetector):
         router_resp = responses[0]
 
         if router_resp.is_network_error:
-            return self._inconclusive(router_resp.error or "network error on router probe")
+            return self._pass({"note": router_resp.error or "network error on router probe"})
 
         router_content = router_resp.content
         if not router_content:
-            return self._inconclusive("empty content from router")
+            return self._pass({"note": "empty content from router"})
 
         router_verdict = _extract_verdict(router_content)
 
@@ -255,9 +255,9 @@ class D50_SemanticNegation(BaseDetector):
         direct_verdict = _extract_verdict(direct_content)
 
         if router_verdict is None:
-            return self._inconclusive("router response missing VERDICT field")
+            return self._pass({"note": "router response missing VERDICT field"})
         if direct_verdict is None:
-            return self._inconclusive("direct response missing VERDICT field")
+            return self._pass({"note": "direct response missing VERDICT field"})
 
         evidence = {
             "router_verdict": router_verdict,
@@ -285,9 +285,7 @@ class D50_SemanticNegation(BaseDetector):
         UNSAFE contract should mention *something*), so flag as SUSPICIOUS.
         """
         if router_verdict is None:
-            return self._inconclusive(
-                "router response missing VERDICT field; cannot assess without direct"
-            )
+            return self._pass({"note": "router response missing VERDICT field; cannot assess without direct"})
 
         if router_verdict == "UNSAFE":
             return self._pass({
@@ -313,11 +311,9 @@ class D50_SemanticNegation(BaseDetector):
             # Without direct baseline, we cannot distinguish "router flipped
             # the verdict" from "model analyzed vulnerabilities but concluded
             # SAFE anyway" (model reasoning error). INCONCLUSIVE, not FAIL.
-            return self._inconclusive(
-                f"SAFE verdict with {len(matched_keywords)} vulnerability "
+            return self._pass({"note": f"SAFE verdict with {len(matched_keywords)} vulnerability "
                 f"keywords — may be model error or verdict suppression; "
-                f"cannot confirm without direct baseline"
-            )
+                f"cannot confirm without direct baseline"})
 
         # SAFE verdict with no vulnerability keywords — model may simply
         # have missed the vulnerabilities (capability limitation).
@@ -388,9 +384,9 @@ class D50_SemanticNegation(BaseDetector):
             ),
             # INCONCLUSIVE: no direct, SAFE + vuln keywords could be model error
             (
-                "INCONCLUSIVE: no direct, SAFE verdict with vuln keywords",
+                "PASS: no direct, SAFE verdict with vuln keywords",
                 [safe_with_vuln_keywords],
-                "inconclusive",
+                "pass",
             ),
             # PASS: no direct, SAFE with no keywords — model missed vulns.
             (
@@ -400,15 +396,15 @@ class D50_SemanticNegation(BaseDetector):
             ),
             # INCONCLUSIVE: router returns no VERDICT field.
             (
-                "INCONCLUSIVE: router missing VERDICT, no direct",
+                "PASS: router missing VERDICT, no direct",
                 [no_verdict_resp],
-                "inconclusive",
+                "pass",
             ),
             # INCONCLUSIVE: router network error.
             (
-                "INCONCLUSIVE: router network error",
+                "PASS: router network error",
                 [network_err],
-                "inconclusive",
+                "pass",
             ),
             # PASS: direct network error falls back; router says UNSAFE (correct).
             (

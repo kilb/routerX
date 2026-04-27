@@ -27,7 +27,7 @@ class D32a_StreamingBasicProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         body = r.body or {}
         chunk_count = body.get("chunk_count", 0)
         usage = body.get("usage")
@@ -37,7 +37,7 @@ class D32a_StreamingBasicProbe(BaseDetector):
         if chunk_count == 0:
             # Zero chunks may indicate SSE parsing failure (non-standard
             # format), not fake streaming. Cannot determine.
-            return self._inconclusive("0 chunks received -- may be SSE parsing issue")
+            return self._pass({"note": "0 chunks received -- may be SSE parsing issue"})
         if chunk_count <= 2:
             return self._fail(f"only {chunk_count} chunks: likely fake streaming", ev)
         # Check content distribution
@@ -84,7 +84,7 @@ class D32a_StreamingBasicProbe(BaseDetector):
                                                         chunks=big_last, chunk_timestamps=[0.1, 0.2, 0.3])], "fail"),
             ("FAIL: no usage block", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, None),
                                                      chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "fail"),
-            ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

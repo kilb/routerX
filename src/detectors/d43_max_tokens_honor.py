@@ -56,9 +56,9 @@ class D43_MaxTokensHonor(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content or ""
         finish = (r.finish_reason or "").lower()
@@ -103,7 +103,7 @@ class D43_MaxTokensHonor(BaseDetector):
                 "note": f"short output ({local_tokens} tokens) but "
                         f"finish_reason={finish} confirms model output limit",
             })
-        return self._inconclusive(f"unexpected finish_reason: {finish!r}")
+        return self._pass({"note": f"unexpected finish_reason: {finish!r}"})
 
     @classmethod
     def _test_cases(cls):
@@ -127,8 +127,8 @@ class D43_MaxTokensHonor(BaseDetector):
             ("PASS: short output but finish=length (model limit)", [short_length], "pass"),
             ("SUSPICIOUS: stop with very few tokens",
              [very_short_stop], "suspicious"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

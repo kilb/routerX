@@ -99,7 +99,7 @@ class D116_CredentialLeakageInResponse(BaseDetector):
             ("FAIL: AWS key leaked",
              [_err("AKIAIOSFODNN7EXAMPLE found"), _err("ok")],
              "fail"),
-            ("INCONCLUSIVE: all network errors",
+            ("PASS: all network errors",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               ProbeResponse(status_code=0, error="TIMEOUT")],
              "pass"),  # No leakage found if we can't reach server

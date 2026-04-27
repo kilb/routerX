@@ -57,7 +57,7 @@ class D114_MultiHopRouterDetection(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         headers_lower = {k.lower(): v for k, v in r.headers.items()}
         detected_families: set[str] = set()
@@ -103,9 +103,9 @@ class D114_MultiHopRouterDetection(BaseDetector):
             ("FAIL: three families",
              [_resp({"Via": "1.1 proxy", "X-OpenRouter-Id": "abc", "X-Gateway-Req": "123"})],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

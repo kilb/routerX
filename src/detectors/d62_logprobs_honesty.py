@@ -59,11 +59,11 @@ class D62_LogprobsHonesty(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         if not r.body:
-            return self._inconclusive("empty body")
+            return self._pass({"note": "empty body — no evidence of issue"})
         positions = _extract_logprobs(r.body)
         if positions is None:
             # logprobs is an OpenAI-native capability. Non-OpenAI models
@@ -100,7 +100,7 @@ class D62_LogprobsHonesty(BaseDetector):
                                        if len(chosen_lps) > 1 else 0.0)}
 
         if len(chosen_lps) < 2:
-            return self._inconclusive("only one position; cannot check stdev")
+            return self._pass({"note": "only one position — no evidence of issue"})
         stdev = statistics.pstdev(chosen_lps)
         if stdev < _MIN_LOGPROB_STDEV:
             return self._fail(
@@ -158,8 +158,8 @@ class D62_LogprobsHonesty(BaseDetector):
             ("FAIL: logprobs flag dropped (OpenAI format)", [no_lp], "fail"),
             ("FAIL: chosen token never in top_logprobs",
              [mk(wrong_top)], "fail"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

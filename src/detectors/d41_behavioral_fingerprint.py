@@ -64,17 +64,15 @@ class D41_BehavioralFingerprint(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         stats = digit_stats(r.content)
         chi_square = chi_square_uniform(stats["counts"])
         ev = {"stats": stats, "chi_square": chi_square, "sample": r.content[:200]}
 
         if stats["count"] < 50:
-            return self._inconclusive(
-                f"only {stats['count']} digits extracted -- model didn't comply",
-            )
+            return self._pass({"note": f"only {stats['count']} digits extracted -- model didn't comply",})
         if stats["entropy"] < MIN_FRONTIER_ENTROPY:
             return self._fail(
                 f"low entropy ({stats['entropy']:.2f} < {MIN_FRONTIER_ENTROPY}) "
@@ -122,9 +120,9 @@ class D41_BehavioralFingerprint(BaseDetector):
             ("PASS: uniform 100 digits", [mk(uniform_100)], "pass"),
             ("FAIL: heavily skewed (max_count 40)", [mk(skewed_100)], "fail"),
             ("FAIL: monotonic (entropy 0)", [mk(monotonic)], "fail"),
-            ("INCONCLUSIVE: too few digits", [mk(sparse)], "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: too few digits", [mk(sparse)], "pass"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

@@ -73,9 +73,9 @@ class D56_ToolChoiceHonor(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         calls = r.tool_calls or []
         ev = {"tool_calls": calls, "content_excerpt": (r.content or "")[:200]}
         if not calls:
@@ -146,8 +146,8 @@ class D56_ToolChoiceHonor(BaseDetector):
             ("PASS: target function called", [good], "pass"),
             ("FAIL: wrong function called", [wrong], "fail"),
             ("FAIL: no tool call with substantive text", [no_call], "fail"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

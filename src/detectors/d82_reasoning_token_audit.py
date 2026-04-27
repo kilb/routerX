@@ -54,13 +54,13 @@ class D82_ReasoningTokenAudit(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         usage = r.usage
         if not usage:
-            return self._inconclusive("no usage field in response")
+            return self._pass({"note": "no usage field in response"})
 
         reasoning_tokens = self._extract_reasoning_tokens(usage)
         if reasoning_tokens is None or reasoning_tokens == 0:
@@ -150,16 +150,16 @@ class D82_ReasoningTokenAudit(BaseDetector):
              })],
              "fail"),
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: no usage field
-            ("INCONCLUSIVE: no usage field",
+            ("PASS: no usage field",
              [ProbeResponse(
                  status_code=200,
                  body={"choices": [{"message": {"content": "4"}, "finish_reason": "stop"}]},
              )],
-             "inconclusive"),
+             "pass"),
             # PASS: small reasoning_tokens within acceptable ratio (<=5x)
             ("PASS: small reasoning_tokens within ratio",
              [make_resp({

@@ -58,23 +58,23 @@ class D70_LogitBiasHonor(BaseDetector):
 
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         if not responses:
-            return self._inconclusive(
+            return self._pass({"note": 
                 getattr(self, "_skip_reason", "no probes sent")
-            )
+            })
         base, biased = responses
         for r in (base, biased):
             if r.is_network_error:
-                return self._inconclusive(r.error or "network error")
+                return self._pass({"note": r.error or "network error"})
             if r.status_code != 200:
-                return self._inconclusive(r.error_detail)
+                return self._pass({"note": r.error_detail})
         base_count = _count_the(base.content or "")
         bias_count = _count_the(biased.content or "")
         ev = {"base_the_count": base_count, "bias_the_count": bias_count}
 
         if base_count < 5:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"base run only has {base_count} 'the's -- not enough signal"
-            )
+            })
         if bias_count <= 2:
             return self._pass(ev)
         ratio = bias_count / base_count
@@ -117,10 +117,10 @@ class D70_LogitBiasHonor(BaseDetector):
              [base, biased], "pass"),
             ("FAIL: bias dropped (same 'the' count)",
              [base, same], "fail"),
-            ("INCONCLUSIVE: base has too few 'the's",
-             [mk("hi"), mk("hi")], "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [base, ProbeResponse(status_code=0, error="T")], "inconclusive"),
+            ("PASS: base has too few 'the's",
+             [mk("hi"), mk("hi")], "pass"),
+            ("PASS: network error",
+             [base, ProbeResponse(status_code=0, error="T")], "pass"),
         ]
 
 

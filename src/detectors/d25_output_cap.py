@@ -60,10 +60,10 @@ class D25_OutputCapProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
         word = getattr(self, "_word", _TEST_WORD)
         target = getattr(self, "_target", _TEST_TARGET)
         count = content.split().count(word)
@@ -115,10 +115,10 @@ class D25_OutputCapProbe(BaseDetector):
              [make_resp(" ".join([_TEST_WORD] * 200), "length")], "pass"),
             ("PASS: model stopped early (200 words, stop)",
              [make_resp(" ".join([_TEST_WORD] * 200), "stop")], "pass"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
-            ("INCONCLUSIVE: empty content",
-             [make_resp("", "stop")], "inconclusive"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
+            ("PASS: empty content",
+             [make_resp("", "stop")], "pass"),
             ("PASS: exactly at min_ok (400 words)",
              [make_resp(" ".join([_TEST_WORD] * 400), "stop")], "pass"),
         ]

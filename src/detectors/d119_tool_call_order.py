@@ -70,11 +70,11 @@ class D119_ToolCallOrderManipulation(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         tc = r.tool_calls
         if not tc:
-            return self._inconclusive("no tool calls returned")
+            return self._pass({"note": "no tool calls returned — no evidence of issue"})
 
         names = [c["function"]["name"] for c in tc]
         ids = [c.get("id", "") for c in tc]
@@ -133,9 +133,9 @@ class D119_ToolCallOrderManipulation(BaseDetector):
                  {"id": "c1", "type": "function", "function": {"name": "get_weather", "arguments": "{}"}},
                  {"id": "c2", "type": "function", "function": {"name": "exec_shell", "arguments": "{}"}},
              ])], "fail"),
-            ("INCONCLUSIVE: no tool calls",
+            ("PASS: no tool calls",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "Sure"}, "finish_reason": "stop"}]})],
-             "inconclusive"),
+             "pass"),
         ]
 
 

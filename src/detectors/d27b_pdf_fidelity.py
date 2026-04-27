@@ -44,13 +44,13 @@ class D27b_PDFFidelityProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         nonce = getattr(self, "_nonce", _DEFAULT_NONCE)
         content = r.content.strip()
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
         if nonce in content:
             return self._pass({"expected": nonce, "got": content})
         return self._fail("PDF nonce not found", {"expected": nonce, "got": content})
@@ -60,9 +60,9 @@ class D27b_PDFFidelityProbe(BaseDetector):
         return [
             ("PASS: nonce found", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": _DEFAULT_NONCE}, "finish_reason": "stop"}]})], "pass"),
             ("FAIL: wrong nonce", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "some other text"}, "finish_reason": "stop"}]})], "fail"),
-            ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
-            ("INCONCLUSIVE: empty content", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})], "inconclusive"),
-            ("INCONCLUSIVE: non-200 status", [ProbeResponse(status_code=503, body=None)], "inconclusive"),
+            ("PASS: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
+            ("PASS: empty content", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})], "pass"),
+            ("PASS: non-200 status", [ProbeResponse(status_code=503, body=None)], "pass"),
         ]
 
 

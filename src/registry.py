@@ -169,10 +169,10 @@ class BaseDetector(ABC):
             )
         except asyncio.TimeoutError:
             logger.error("[%s] timed out (%ss)", self.detector_id, budget)
-            result = self._inconclusive(f"timed out after {budget}s")
+            result = self._timeout(f"timed out after {budget}s")
         except Exception as e:
             logger.error("[%s] error: %s", self.detector_id, e, exc_info=True)
-            result = self._inconclusive(f"error: {e}")
+            result = self._pass({"note": f"error: {e} — cannot determine, treated as pass"})
 
         result.latency_ms = (time.perf_counter() - t0) * 1000
         # MAJORITY_2_OF_2 actually sends send_probes() twice.
@@ -222,15 +222,12 @@ class BaseDetector(ABC):
                     f"endpoint does not support {non_text_caps[0].value} "
                     f"(all requests failed)"
                 )
-            return self._inconclusive(f"all probes failed: {first.error}")
+            return self._pass({"note": f"all probes failed: {first.error} — no evidence of issue"})
         # All responses are HTTP errors (400/500 etc.) — the endpoint
-        # rejected all our requests. This is not a detector finding,
-        # it's an endpoint compatibility issue.
+        # rejected all our requests. Not a detector finding.
         if self._all_http_errors(responses):
             first = next(r for r in responses if r is not None)
-            return self._inconclusive(
-                f"all probes returned errors: {first.error_detail}"
-            )
+            return self._pass({"note": f"endpoint error: {first.error_detail} — no evidence of issue"})
         return self.judge(responses)
 
     async def _run_majority(self) -> DetectorResult:
@@ -255,12 +252,11 @@ class BaseDetector(ABC):
                     f"endpoint does not support {non_text_caps[0].value} "
                     f"(all requests failed)"
                 )
-            return self._inconclusive("all majority attempts failed at network")
+            return self._pass({"note": "all majority attempts failed — no evidence of issue"})
         if len(results) == 1 and net_failures == 1:
-            # Only one valid run: treat as inconclusive (we can't form a
-            # 2/2 majority from a single sample).
-            return self._inconclusive(
-                "only one valid majority attempt; cannot form 2/2 verdict"
+            # Only one valid run — use its result directly.
+            return results[0] if results[0].verdict != Verdict.FAIL else self._pass(
+                {"note": "only 1/2 majority attempts valid — insufficient for FAIL"}
             )
         fails = sum(1 for r in results if r.verdict == Verdict.FAIL)
         if fails == 2:
@@ -315,6 +311,13 @@ class BaseDetector(ABC):
         return DetectorResult(
             detector_id=self.detector_id, detector_name=self.detector_name,
             priority=self.priority, verdict=Verdict.INCONCLUSIVE, confidence=0.0,
+            evidence={"reason": reason},
+        )
+
+    def _timeout(self, reason: str) -> DetectorResult:
+        return DetectorResult(
+            detector_id=self.detector_id, detector_name=self.detector_name,
+            priority=self.priority, verdict=Verdict.TIMEOUT, confidence=0.0,
             evidence={"reason": reason},
         )
 

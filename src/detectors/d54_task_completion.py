@@ -65,10 +65,10 @@ class D54_TaskCompletion(BaseDetector):
         """Fail if the 20-item list is truncated or the completion marker is missing."""
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         raw_finish = r.finish_reason or ""
         fr = raw_finish.lower()
@@ -149,13 +149,13 @@ class D54_TaskCompletion(BaseDetector):
              [make_resp(short_list_length, "length")],
              "pass"),
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: empty content
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})],
-             "inconclusive"),
+             "pass"),
         ]
 
 

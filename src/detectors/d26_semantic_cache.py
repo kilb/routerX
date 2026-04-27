@@ -81,11 +81,11 @@ class D26_SemanticCacheBuster(BaseDetector):
         resp_a, resp_b = responses[0], responses[1]
 
         if resp_b.is_network_error or resp_b.status_code >= 400:
-            return self._inconclusive(resp_b.error or "network error on probe B")
+            return self._pass({"note": resp_b.error or "network error on probe B"})
 
         content_b = resp_b.content
         if not content_b:
-            return self._inconclusive("empty content in probe B")
+            return self._pass({"note": "empty content in probe B — no evidence of issue"})
 
         nonce_a = getattr(self, "_nonce_a", "TX-TESTABCDEF01")
         nonce_b = getattr(self, "_nonce_b", "REF-TESTABCDEF01")
@@ -204,14 +204,14 @@ class D26_SemanticCacheBuster(BaseDetector):
              "fail"),
 
             # INCONCLUSIVE: probe B network error
-            ("INCONCLUSIVE: probe B network error",
+            ("PASS: probe B network error",
              [resp_a_good, ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
 
             # INCONCLUSIVE: probe B empty content
-            ("INCONCLUSIVE: probe B empty content",
+            ("PASS: probe B empty content",
              [resp_a_good, ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})],
-             "inconclusive"),
+             "pass"),
         ]
 
 

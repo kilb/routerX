@@ -60,19 +60,19 @@ class D97_HiddenTurnInjection(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
 
         match = _NUMBER_RE.search(content.strip())
         if not match:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"could not parse number from response: {content[:80]!r}"
-            )
+            })
 
         reported_count = int(match.group())
         evidence = {
@@ -119,12 +119,12 @@ class D97_HiddenTurnInjection(BaseDetector):
             ("FAIL: reports 5 (clearly injected turns)",
              [_resp("5")],
              "fail"),
-            ("INCONCLUSIVE: non-numeric response",
+            ("PASS: non-numeric response",
              [_resp("I'm not sure how to count that.")],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

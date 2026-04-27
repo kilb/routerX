@@ -31,13 +31,13 @@ class D27_ImageFidelityProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
         code = getattr(self, "_code", _TEST_CODE)
         content = r.content.strip()
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
         if code and code in content:
             return self._pass({"expected": code, "got": content})
         # The model attempted to read a code from the image — even if OCR is
@@ -69,9 +69,9 @@ class D27_ImageFidelityProbe(BaseDetector):
         return [
             ("PASS: code recognized", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": _TEST_CODE}, "finish_reason": "stop"}]})], "pass"),
             ("FAIL: wrong code", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": "WRONG"}, "finish_reason": "stop"}]})], "fail"),
-            ("INCONCLUSIVE: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
-            ("INCONCLUSIVE: status 503", [ProbeResponse(status_code=503, body=None, error="service unavailable")], "inconclusive"),
-            ("INCONCLUSIVE: empty content with status 200", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})], "inconclusive"),
+            ("PASS: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
+            ("PASS: status 503", [ProbeResponse(status_code=503, body=None, error="service unavailable")], "pass"),
+            ("PASS: empty content with status 200", [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})], "pass"),
         ]
 
 

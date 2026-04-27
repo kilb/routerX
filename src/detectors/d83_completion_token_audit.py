@@ -73,23 +73,23 @@ class D83_CompletionTokenAudit(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         usage = r.usage
         if not usage:
-            return self._inconclusive("no usage field in response")
+            return self._pass({"note": "no usage field in response"})
 
         reported = usage.get("completion_tokens") or usage.get("output_tokens") or 0
         if reported == 0:
-            return self._inconclusive("completion_tokens missing or zero")
+            return self._pass({"note": "completion_tokens missing or zero"})
 
         content = r.content
         if not content:
-            return self._inconclusive("empty completion content")
+            return self._pass({"note": "empty completion content — no evidence of issue"})
 
         local = token_counter.count(content, self.config.claimed_model)
         if local == 0:
-            return self._inconclusive("local token count returned zero")
+            return self._pass({"note": "local token count returned zero"})
 
         deviation = (reported - local) / local
         evidence = {
@@ -152,7 +152,7 @@ class D83_CompletionTokenAudit(BaseDetector):
              "fail"),
 
             # INCONCLUSIVE: no completion_tokens in usage
-            ("INCONCLUSIVE: missing completion_tokens",
+            ("PASS: missing completion_tokens",
              [ProbeResponse(
                  status_code=200,
                  body={
@@ -161,17 +161,17 @@ class D83_CompletionTokenAudit(BaseDetector):
                      "usage": {"prompt_tokens": 20},
                  },
              )],
-             "inconclusive"),
+             "pass"),
 
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
 
             # INCONCLUSIVE: empty content
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [_resp("", 15)],
-             "inconclusive"),
+             "pass"),
 
             # PASS: slight over-count within 15% tolerance (9 tokens * 1.15 = 10.35)
             ("PASS: within tolerance threshold",

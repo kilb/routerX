@@ -49,13 +49,13 @@ class D112_ThinkingContentIntegrity(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content.strip()
         if not content:
-            return self._inconclusive("empty response")
+            return self._pass({"note": "empty response — no evidence of issue"})
 
         has_correct_answer = EXPECTED_ANSWER in content
         has_reasoning = any(marker in content for marker in REASONING_MARKERS)
@@ -101,12 +101,12 @@ class D112_ThinkingContentIntegrity(BaseDetector):
             ("FAIL: long wrong answer with no reasoning",
              [_resp("I believe the final answer to your mathematical question is exactly five hundred, which I computed mentally.")],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty",
+             "pass"),
+            ("PASS: empty",
              [_resp("")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

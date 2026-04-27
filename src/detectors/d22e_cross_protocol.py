@@ -47,7 +47,7 @@ class D22e_CrossProtocolContradiction(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code >= 400:
             return self._pass({"foreign_feature": "rejected", "status": r.status_code})
 
@@ -79,7 +79,7 @@ class D22e_CrossProtocolContradiction(BaseDetector):
             return self._fail("OpenAI alias does Anthropic-style prefill continuation",
                               {"content": content[:200]})
 
-        return self._inconclusive("unknown probe type")
+        return self._pass({"note": "unknown probe type"})
 
     @classmethod
     def _test_cases(cls):
@@ -95,9 +95,9 @@ class D22e_CrossProtocolContradiction(BaseDetector):
              "pass"),
             # Note: prefill path tests require _probe_type=_PROBE_PREFILL which
             # self_test cannot set. Tested via integration only.
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

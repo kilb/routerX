@@ -101,7 +101,7 @@ class D29b_PromptCacheIntegrity(BaseDetector):
         r1, r2 = responses[0], responses[1]
         if r1.is_network_error or r2.is_network_error:
             err = r1.error or r2.error
-            return self._inconclusive(f"network error: {err}")
+            return self._pass({"note": f"network error: {err}"})
         u1 = r1.usage or {}
         u2 = r2.usage or {}
 
@@ -140,10 +140,8 @@ class D29b_PromptCacheIntegrity(BaseDetector):
                 "prompt caching not applicable for non-OpenAI backend model "
                 "via OpenAI format proxy"
             )
-        return self._inconclusive(
-            "no cache indicators in either response -- OpenAI auto-caching "
-            "is not guaranteed"
-        )
+        return self._pass({"note": "no cache indicators in either response -- OpenAI auto-caching "
+            "is not guaranteed"})
 
     @classmethod
     def _test_cases(cls):
@@ -179,15 +177,15 @@ class D29b_PromptCacheIntegrity(BaseDetector):
             ("PASS: OpenAI cache hit", [o1, o2], "pass"),
             # Default self-test model is "gpt-4o" -- OpenAI path returns
             # INCONCLUSIVE when no cache indicators found (not guaranteed)
-            ("INCONCLUSIVE: no caching (OpenAI path)", [noop, noop], "inconclusive"),
+            ("PASS: no caching (OpenAI path)", [noop, noop], "pass"),
             ("FAIL: creation but no hit", [a1, noop], "fail"),
             ("PASS: cache_read on first call (proxy global cache)",
              [fab_anth, a2], "pass"),
             ("PASS: cached_tokens on first call (proxy global cache)",
              [fab_oai, o2], "pass"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"), noop],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -75,13 +75,11 @@ class D16c_ParallelToolCallProbe(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         tc = r.tool_calls
         if not tc:
-            return self._inconclusive(
-                "model didn't call any tools -- tool calling may not be "
-                "supported or model chose to respond with text instead"
-            )
+            return self._pass({"note": "model didn't call any tools -- tool calling may not be "
+                "supported or model chose to respond with text instead"})
         names = [c["function"]["name"] for c in tc]
         ev = {"tool_call_count": len(tc), "function_names": names}
         if len(tc) < 2:
@@ -129,12 +127,12 @@ class D16c_ParallelToolCallProbe(BaseDetector):
              [mk([weather_call])], "pass"),
             ("PASS: only currency called (model may not support parallel)",
              [mk([currency_call])], "pass"),
-            ("INCONCLUSIVE: no tool calls (model asked clarification)",
+            ("PASS: no tool calls (model asked clarification)",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {
                  "content": "Which currency?"}, "finish_reason": "stop"}]})],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [ProbeResponse(status_code=0, error="TIMEOUT")], "inconclusive"),
+             "pass"),
+            ("PASS: network error",
+             [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 
 

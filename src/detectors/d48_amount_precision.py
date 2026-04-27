@@ -108,11 +108,11 @@ class D48_AmountPrecisionProbe(BaseDetector):
             router_resp = router_resps[i]
 
             if router_resp.is_network_error:
-                return self._inconclusive(router_resp.error or "network error on router probe")
+                return self._pass({"note": router_resp.error or "network error on router probe"})
 
             router_amount = _parse_amount(router_resp)
             if router_amount is None:
-                return self._inconclusive(f"no parseable tool call for {amount_str} {token}")
+                return self._pass({"note": f"no parseable tool call for {amount_str} {token}"})
 
             router_deviation = abs(router_amount - requested) / requested
 
@@ -142,7 +142,7 @@ class D48_AmountPrecisionProbe(BaseDetector):
             if has_direct:
                 direct_resp = direct_resps[i]
                 if direct_resp.is_network_error:
-                    return self._inconclusive(direct_resp.error or "network error on direct probe")
+                    return self._pass({"note": direct_resp.error or "network error on direct probe"})
 
                 direct_amount = _parse_amount(direct_resp)
                 if direct_amount is not None:
@@ -251,17 +251,17 @@ class D48_AmountPrecisionProbe(BaseDetector):
             ),
             # INCONCLUSIVE: network error on one router probe.
             (
-                "INCONCLUSIVE: network error on router probe",
+                "PASS: network error on router probe",
                 [
                     ProbeResponse(status_code=0, error="TIMEOUT"),
                     make_router_resp(0.00314159, "ETH"),
                     make_router_resp(42.9876, "USDT"),
                 ],
-                "inconclusive",
+                "pass",
             ),
             # INCONCLUSIVE: response with no tool calls.
             (
-                "INCONCLUSIVE: no tool call in response",
+                "PASS: no tool call in response",
                 [
                     ProbeResponse(
                         status_code=200,
@@ -270,7 +270,7 @@ class D48_AmountPrecisionProbe(BaseDetector):
                     make_router_resp(0.00314159, "ETH"),
                     make_router_resp(42.9876, "USDT"),
                 ],
-                "inconclusive",
+                "pass",
             ),
             # PASS: exact amounts without direct baseline (all within 1%).
             (

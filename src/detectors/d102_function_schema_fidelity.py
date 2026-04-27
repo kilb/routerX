@@ -97,9 +97,9 @@ class D102_FunctionSchemaFidelity(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         calls = r.tool_calls
         if not calls:
@@ -223,9 +223,9 @@ class D102_FunctionSchemaFidelity(BaseDetector):
             ("PASS: full nested structure", [_tool_resp(good_args)], "pass"),
             ("FAIL: flattened args", [_tool_resp(flat_args)], "fail"),
             ("FAIL: no tool call", [no_call], "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

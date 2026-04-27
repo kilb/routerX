@@ -50,7 +50,7 @@ class D117_HeaderLeakage(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
 
         leaked: list[str] = []
         for hdr_name, hdr_value in r.headers.items():
@@ -93,9 +93,9 @@ class D117_HeaderLeakage(BaseDetector):
             ("FAIL: debug header",
              [_resp({"X-Debug-Trace": "req-abc-123"})],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

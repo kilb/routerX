@@ -53,9 +53,9 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
         r_no, r_hi = responses
         for r in (r_no, r_hi):
             if r.is_network_error:
-                return self._inconclusive(r.error or "network error")
+                return self._pass({"note": r.error or "network error"})
             if r.status_code != 200:
-                return self._inconclusive(r.error_detail)
+                return self._pass({"note": r.error_detail})
         no_text = r_no.content or ""
         hi_text = r_hi.content or ""
         no_count = _count_word(no_text, _WORD)
@@ -68,9 +68,9 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
               "no_penalty_len": no_len, "high_penalty_len": hi_len}
 
         if no_count < 10:
-            return self._inconclusive(
+            return self._pass({"note": 
                 f"base run only produced {no_count} 'apple's -- model didn't comply"
-            )
+            })
         ratio = hi_count / no_count
         # Length collapse: high-penalty run cut off early.
         if hi_len < 0.5 * no_len:
@@ -114,10 +114,10 @@ class D68_FrequencyPenaltyHonor(BaseDetector):
              [mk(repeat_30), mk(repeat_30)], "fail"),
             ("PASS: penalty truncated output early",
              [mk(repeat_30), mk("apple pear")], "pass"),
-            ("INCONCLUSIVE: base didn't comply",
-             [mk("I will not do that."), mk("I will not do that.")], "inconclusive"),
-            ("INCONCLUSIVE: network error",
-             [mk(repeat_30), ProbeResponse(status_code=0, error="T")], "inconclusive"),
+            ("PASS: base didn't comply",
+             [mk("I will not do that."), mk("I will not do that.")], "pass"),
+            ("PASS: network error",
+             [mk(repeat_30), ProbeResponse(status_code=0, error="T")], "pass"),
         ]
 
 

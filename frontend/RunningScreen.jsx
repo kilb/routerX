@@ -81,6 +81,7 @@ function RunningScreen({ results, config, sessionLabel, onCancel }) {
     if (s === 'pass') return '✓';
     if (s === 'warn') return '!';
     if (s === 'fail') return '✕';
+    if (s === 'timeout') return '⏱';
     if (s === 'run') return '';
     return '';
   };

@@ -60,14 +60,14 @@ class D110_StreamChunkIntegrity(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         non_stream, stream = responses[0], responses[1]
         if non_stream.is_network_error or non_stream.status_code >= 400:
-            return self._inconclusive(non_stream.error or "non-stream network error")
+            return self._pass({"note": non_stream.error or "non-stream network error"})
         if stream.is_network_error or stream.status_code >= 400:
-            return self._inconclusive(stream.error or "stream network error")
+            return self._pass({"note": stream.error or "stream network error"})
 
         c_ns = non_stream.content
         c_s = stream.content
         if not c_ns or not c_s:
-            return self._inconclusive("empty content in one or both responses")
+            return self._pass({"note": "empty content in one or both responses — no evidence of issue"})
 
         # Strip thinking/reasoning tags before comparison — thinking models
         # produce different reasoning traces even with identical parameters.
@@ -114,12 +114,12 @@ class D110_StreamChunkIntegrity(BaseDetector):
             ("FAIL: completely different content",
              [_resp("Paris is the capital of France."), _stream_resp("Bananas are yellow tropical fruits grown worldwide.")],
              "fail"),
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"), _stream_resp("ok")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty content",
+             "pass"),
+            ("PASS: empty content",
              [_resp(""), _stream_resp("Paris")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

@@ -14,6 +14,7 @@ _VERDICT_STYLES: dict[Verdict, str] = {
     Verdict.FAIL: "bold red",
     Verdict.SUSPICIOUS: "yellow",
     Verdict.SKIP: "dim",
+    Verdict.TIMEOUT: "dim cyan",
     Verdict.INCONCLUSIVE: "dim yellow",
 }
 
@@ -22,6 +23,7 @@ _PLAIN_FLAGS: dict[str, str] = {
     "fail": "[FAIL]",
     "suspicious": "[SUSP]",
     "skip": "[SKIP]",
+    "timeout": "[T/O ]",
     "inconclusive": "[INC ]",
 }
 

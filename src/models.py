@@ -30,6 +30,7 @@ class Verdict(str, Enum):
     FAIL = "fail"
     SUSPICIOUS = "suspicious"
     SKIP = "skip"
+    TIMEOUT = "timeout"
     INCONCLUSIVE = "inconclusive"
 
 
@@ -358,6 +359,7 @@ class TestReport(BaseModel):
     failed: int
     suspicious: int
     skipped: int
+    timed_out: int = 0
     total_requests: int
     total_latency_ms: float
     estimated_cost_usd: float

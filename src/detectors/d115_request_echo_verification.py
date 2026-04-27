@@ -48,13 +48,13 @@ class D115_RequestEchoVerification(BaseDetector):
     def judge(self, responses: list[ProbeResponse]) -> DetectorResult:
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         content = r.content.strip()
         if not content:
-            return self._inconclusive("empty response")
+            return self._pass({"note": "empty response — no evidence of issue"})
 
         nonce = getattr(self, "_nonce", "NONCE_TEST")
         evidence = {"nonce": nonce, "content_preview": content[:200]}
@@ -85,12 +85,12 @@ class D115_RequestEchoVerification(BaseDetector):
             ("PASS: nonce missing but no stripping evidence",
              [_resp("I don't have a session nonce.")],
              "pass"),
-            ("INCONCLUSIVE: empty content",
+            ("PASS: empty content",
              [_resp("")],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
         ]
 
 

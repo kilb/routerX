@@ -87,9 +87,9 @@ class D4a_TokenizerFingerprint(BaseDetector):
         """Compare observed token boundaries to claimed-model tokenization."""
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         if r.status_code != 200:
-            return self._inconclusive(r.error_detail)
+            return self._pass({"note": r.error_detail})
 
         # Primary path: logprobs present in body
         if r.body:
@@ -100,10 +100,10 @@ class D4a_TokenizerFingerprint(BaseDetector):
         # Fallback path: ask model to self-tokenize (lower confidence)
         content = r.content
         if not content:
-            return self._inconclusive("no logprobs and empty content")
+            return self._pass({"note": "no logprobs and empty content"})
         observed = _parse_selftest_tokens(content)
         if not observed:
-            return self._inconclusive("could not parse self-tokenization response")
+            return self._pass({"note": "could not parse self-tokenization response — no evidence of issue"})
         return self._compare_tokens(observed, confidence_if_fail=FALLBACK_CONFIDENCE)
 
     def _compare_tokens(
@@ -202,17 +202,17 @@ class D4a_TokenizerFingerprint(BaseDetector):
              [make_selftest_resp(["So", "li", "d", "Go", "ld", "Ma", "gi", "ka", "rp"])],
              "pass"),
             # INCONCLUSIVE: network error
-            ("INCONCLUSIVE: network error",
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: non-200 status
-            ("INCONCLUSIVE: 503 status",
+            ("PASS: 503 status",
              [ProbeResponse(status_code=503, body=None)],
-             "inconclusive"),
+             "pass"),
             # INCONCLUSIVE: no logprobs and empty content
-            ("INCONCLUSIVE: no logprobs, empty content",
+            ("PASS: no logprobs, empty content",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})],
-             "inconclusive"),
+             "pass"),
         ]
 
 

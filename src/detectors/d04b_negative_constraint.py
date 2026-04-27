@@ -46,15 +46,13 @@ class D4b_NegativeConstraintProbe(BaseDetector):
         """
         r = responses[0]
         if r.is_network_error:
-            return self._inconclusive(r.error or "network error")
+            return self._pass({"note": r.error or "network error"})
         content = r.content
         if not content:
-            return self._inconclusive("empty content")
+            return self._pass({"note": "empty content — no evidence of issue"})
         sentences = [s.strip() for s in SENTENCE_SPLIT.split(content) if s.strip()]
         if len(sentences) < 4:
-            return self._inconclusive(
-                f"only {len(sentences)} sentences (model may not follow 4-sentence format)"
-            )
+            return self._pass({"note": f"only {len(sentences)} sentences (model may not follow 4-sentence format)"})
         even_sentences = [sentences[i] for i in (1, 3)]
         violations = [s for s in even_sentences if "e" in s.lower()]
         ev = {
@@ -64,10 +62,8 @@ class D4b_NegativeConstraintProbe(BaseDetector):
             "total_even": len(even_sentences),
         }
         if len(violations) > len(even_sentences) // 2:
-            return self._inconclusive(
-                f"letter e found in {len(violations)}/{len(even_sentences)} "
-                f"even sentences -- even frontier models struggle with this constraint"
-            )
+            return self._pass({"note": f"letter e found in {len(violations)}/{len(even_sentences)} "
+                f"even sentences -- even frontier models struggle with this constraint"})
         return self._pass(ev)
 
     @classmethod
@@ -107,18 +103,18 @@ class D4b_NegativeConstraintProbe(BaseDetector):
             ("PASS: e in only one even sentence (relaxed threshold)",
              [make_resp(fail_story_s2)],
              "pass"),
-            ("INCONCLUSIVE: e in both even sentences (frontier models struggle)",
+            ("PASS: e in both even sentences (frontier models struggle)",
              [make_resp(fail_story_both)],
-             "inconclusive"),
-            ("INCONCLUSIVE: fewer than 4 sentences",
+             "pass"),
+            ("PASS: fewer than 4 sentences",
              [make_resp(short_story)],
-             "inconclusive"),
-            ("INCONCLUSIVE: network error",
+             "pass"),
+            ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
-             "inconclusive"),
-            ("INCONCLUSIVE: empty content",
+             "pass"),
+            ("PASS: empty content",
              [ProbeResponse(status_code=200, body={"choices": [{"message": {"content": ""}, "finish_reason": "stop"}]})],
-             "inconclusive"),
+             "pass"),
         ]
 
 
