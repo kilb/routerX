@@ -32,10 +32,13 @@ _TEST_FALLBACK_LOCAL = 15000
 # Ratios on reported/local prompt_tokens. Non-OpenAI providers use a
 # different tokenizer than tiktoken, so allow wider divergence to avoid
 # false positives from legitimate tokenizer differences (~15-25%).
+# Gemini in particular uses SentencePiece which diverges 30-50% from tiktoken.
 MIN_OK_RATIO_OPENAI = 0.50
-MIN_OK_RATIO_OTHER = 0.35
+MIN_OK_RATIO_OTHER = 0.30
 MARKER_GATE_RATIO_OPENAI = 0.85
-MARKER_GATE_RATIO_OTHER = 0.65
+# Marker missing is a weak signal — many models ignore "reply only the marker".
+# Only FAIL when token ratio is also clearly low, not from tokenizer drift.
+MARKER_GATE_RATIO_OTHER = 0.35
 
 
 @detector
