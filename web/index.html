@@ -1316,42 +1316,11 @@ function ReportScreen({ report, taskId, config, onReset }) {
   const [search, setSearch] = useState('');
   const [openIdx, setOpenIdx] = useState(null);
 
-  if (!report) return <div className="loading-center"><div className="spinner" /><div>Loading report...</div></div>;
+  // ALL hooks MUST be called before any conditional return (Rules of Hooks)
+  const results = (report && report.results) || [];
 
-  // Error state
-  if (report.error_code !== undefined && report.error_code !== null) {
-    return (
-      <div className="report-pg">
-        <div className="error-banner">
-          <div style={{ fontSize: 48 }}>{'\u26a0'}</div>
-          <h2>Endpoint Error</h2>
-          <div className="code">{report.error_code === 0 ? 'Network Error' : 'HTTP ' + report.error_code}</div>
-          <div className="msg">{report.error_msg || 'Unknown error'}</div>
-          <div className="hint">All detectors were skipped. Please check the endpoint URL and API key.</div>
-          <button className="btn-dark" style={{ marginTop: 20 }} onClick={onReset}>Try again {'\u2192'}</button>
-        </div>
-      </div>
-    );
-  }
-
-  const results = report.results || [];
-  const score = computeScore(report);
-  const verdict = report.overall_verdict === 'pass' ? 'pass' : (report.failed || 0) > 0 ? 'fail' : 'warn';
-  const sec = ((report.total_latency_ms || 0) / 1000).toFixed(1);
-  const cost = (report.estimated_cost_usd || 0).toFixed(2);
-  const inconclusive = (report.total_detectors || 0) - (report.passed || 0) - (report.failed || 0) - (report.suspicious || 0) - (report.skipped || 0);
-
-  // Score ring math
-  const scoreR = 52;
-  const scoreC = 2 * Math.PI * scoreR;
-  const scoreDash = scoreC * (1 - score / 100);
-
-  // Group by priority for pipeline
-  const byPri = {};
-  results.forEach(d => { const p = d.priority || 'P1'; (byPri[p] = byPri[p] || []).push(d); });
-
-  // Category bar data
   const catBars = useMemo(() => {
+    if (!results.length) return [];
     const m = {};
     results.forEach(d => {
       const p = d.priority || 'P1';
@@ -1371,14 +1340,12 @@ function ReportScreen({ report, taskId, config, onReset }) {
     }));
   }, [results]);
 
-  // Issues
   const issues = useMemo(() =>
     results.filter(d => d.verdict === 'fail' || d.verdict === 'suspicious')
       .sort((a, b) => a.verdict === b.verdict ? 0 : a.verdict === 'fail' ? -1 : 1)
       .slice(0, 8),
   [results]);
 
-  // Filtered items
   const sorted = useMemo(() =>
     [...results].sort((a, b) => {
       const pi = STAGES.indexOf(a.priority) - STAGES.indexOf(b.priority);
@@ -1408,6 +1375,36 @@ function ReportScreen({ report, taskId, config, onReset }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [opened, openIdx, filtered.length]);
+
+  // --- All hooks called above. Conditional returns safe below. ---
+
+  if (!report) return <div className="loading-center"><div className="spinner" /><div>Loading report...</div></div>;
+
+  if (report.error_code !== undefined && report.error_code !== null) {
+    return (
+      <div className="report-pg">
+        <div className="error-banner">
+          <div style={{ fontSize: 48 }}>{'\u26a0'}</div>
+          <h2>Endpoint Error</h2>
+          <div className="code">{report.error_code === 0 ? 'Network Error' : 'HTTP ' + report.error_code}</div>
+          <div className="msg">{report.error_msg || 'Unknown error'}</div>
+          <div className="hint">All detectors were skipped. Please check the endpoint URL and API key.</div>
+          <button className="btn-dark" style={{ marginTop: 20 }} onClick={onReset}>Try again {'\u2192'}</button>
+        </div>
+      </div>
+    );
+  }
+
+  const score = computeScore(report);
+  const verdict = report.overall_verdict === 'pass' ? 'pass' : (report.failed || 0) > 0 ? 'fail' : 'warn';
+  const sec = ((report.total_latency_ms || 0) / 1000).toFixed(1);
+  const cost = (report.estimated_cost_usd || 0).toFixed(2);
+  const inconclusive = (report.total_detectors || 0) - (report.passed || 0) - (report.failed || 0) - (report.suspicious || 0) - (report.skipped || 0);
+  const scoreR = 52;
+  const scoreC = 2 * Math.PI * scoreR;
+  const scoreDash = scoreC * (1 - score / 100);
+  const byPri = {};
+  results.forEach(d => { const p = d.priority || 'P1'; (byPri[p] = byPri[p] || []).push(d); });
 
   const shareUrl = taskId ? `${window.location.origin}/task/${taskId}` : '';
 
