@@ -82,7 +82,9 @@ ESSENTIAL_DETECTORS: set[str] = {
     # P1: tool calling
     "D16b", "D16c", "D56",
     # P1: identity & consistency
-    "D87", "D57", "D30",
+    "D87", "D57", "D30", "D130",
+    # P0: reverse proxy / web scraping
+    "D131",
     # P1: context
     "D24b", "D24c", "D42",
     # P1: other clear signals
