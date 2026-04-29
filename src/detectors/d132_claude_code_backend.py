@@ -26,52 +26,49 @@ from ..models import (
     ProbeResponse,
 )
 
-# Claude Code's distinctive tool names. Generic words like "read" and "write"
-# appear in normal text, so we use two tiers:
-# - Specific tools (grep, glob, todowrite, etc.) that never appear generically
-# - A regex pattern that matches the capitalized "Tool" naming convention
-#   (e.g. "Read tool", "Bash -", "Glob —") used in Claude Code's tool listing
+# Claude Code's distinctive tool names.
+# Only names that are UNIQUE to Claude Code — "grep" and "bash" are common
+# shell commands so they don't count. We require PascalCase or exact compound
+# names that never appear in normal conversation.
 _SPECIFIC_TOOLS = {
-    "grep", "glob", "todowrite", "todoupdate", "todoread",
+    "todowrite", "todoupdate", "todoread", "taskcreate", "taskupdate",
     "webfetch", "websearch", "notebookedit",
+    "schedulewakeup", "exitplanmode", "enterplanmode",
 }
-# Pattern: tool name as a titled/capitalized word followed by tool-list
-# indicators (dash, colon, parenthesis, "tool")
+# Claude Code lists tools in a distinctive format with PascalCase names.
+# Only match compound PascalCase names (WebFetch, TodoWrite, NotebookEdit)
+# that cannot appear in normal text. Skip simple words like Read/Write/Bash.
 _TOOL_LIST_RE = re.compile(
-    r"\b(Read|Write|Edit|Bash|Grep|Glob|Agent|WebFetch|WebSearch|TodoWrite)"
-    r"\s*(?:[-—:\(]|tool\b)",
-    re.IGNORECASE,
+    r"\b(WebFetch|WebSearch|TodoWrite|TodoUpdate|TodoRead|TaskCreate|"
+    r"TaskUpdate|NotebookEdit|ScheduleWakeup|EnterPlanMode|ExitPlanMode|"
+    r"ExitWorktree|EnterWorktree|ReadMcpResourceTool|ListMcpResourcesTool)"
+    r"\b",
 )
 
-# Phrases that only appear in Claude Code's system prompt context
+# Phrases unique to Claude Code's system prompt — generic dev terms removed.
+# Each phrase must be specific enough to not appear in a normal coding Q&A.
 _CONTEXT_PHRASES = [
-    "working directory",
-    "git repository",
     "claude code",
-    "cli tool",
-    "current working directory",
-    "codebase",
-    "tool use",
-    "file_path",
-    "bash command",
-    "read tool",
-    "write tool",
-    "edit tool",
-    "glob tool",
-    "grep tool",
+    "claude.ai/code",
+    "anthropic's official cli",
+    "current working directory is /",
+    "is a git repository: true",
+    "primary working directory:",
+    "gitStatus:",
+    "auto memory",
+    "memory system at",
+    "CLAUDE.md",
 ]
 
-# Strong signals: the model claims it can execute commands or read files
+# The model explicitly claims to have Claude Code's tool capabilities.
 _EXECUTION_PHRASES = [
-    r"i (?:can|am able to|have access to) (?:run|execute) (?:bash |shell )?commands?",
-    r"i (?:can|am able to) read (?:and write )?files",
-    r"i have (?:access to|the following) tools?",
-    r"available tools?:?\s*\n",
-    r"(?:Read|Write|Edit|Bash|Grep|Glob)\s*(?:tool|—|:|\()",
+    r"i (?:can|am able to) (?:run|execute) (?:bash |shell )?commands? (?:on|in) (?:your|the) (?:system|machine|environment)",
+    r"i have access to (?:tools like |the following tools:?\s*\n\s*[-\d])",
+    r"(?:WebFetch|TodoWrite|NotebookEdit|TaskCreate)\s*(?:[-—:\(]|tool\b)",
 ]
 _EXECUTION_RE = re.compile("|".join(_EXECUTION_PHRASES), re.IGNORECASE)
 
-_TOOL_MIN_MATCHES = 4
+_TOOL_MIN_MATCHES = 3
 _CONTEXT_MIN_MATCHES = 2
 
 
@@ -166,31 +163,43 @@ class D132_ClaudeCodeBackendDetection(BaseDetector):
             if len(matched_phrases) >= _CONTEXT_MIN_MATCHES:
                 signals.append("environment_context")
 
-            # Strong signal: model reports an actual directory path
-            if re.search(r"(?:/home/|/usr/|/var/|/tmp/|C:\\)", content):
+            # Strong signal: model claims a specific path as its OWN working
+            # directory (not just mentioning paths in a tutorial context).
+            # Pattern: "my/current/working directory is /home/..." or
+            # "I am in /home/..." — first-person possessive + path.
+            if re.search(
+                r"(?:my |current |the )?"
+                r"(?:working directory|cwd|workspace|project)"
+                r"[^.]{0,30}"
+                r"(?:/home/|/root/|/opt/|C:\\Users\\)",
+                content,
+            ):
                 signals.append("real_path")
                 ev["real_path"] = True
 
         ev["signals"] = signals
 
-        # Tool inventory alone is a strong signal (4+ Claude Code tool names)
+        # Tool inventory alone is a strong signal (3+ Claude Code-specific
+        # PascalCase tool names like WebFetch, TodoWrite, NotebookEdit)
         if "tool_inventory" in signals:
             return self._fail(
                 f"Claude Code backend detected: model lists {ev.get('tool_count', 0)} "
                 f"Claude Code tools ({', '.join(ev.get('matched_tools', [])[:5])})",
                 ev,
             )
-        # Environment context + execution claim
-        if "environment_context" in signals and "execution_claim" in signals:
+        # Environment context (Claude Code-specific phrases) + any other signal
+        if "environment_context" in signals and len(signals) >= 2:
             return self._fail(
-                "Claude Code backend detected: model claims execution "
-                "capabilities and references working environment",
+                "Claude Code backend detected: model references Claude Code "
+                "system context + additional signals",
                 ev,
             )
-        # Real filesystem path is a very strong standalone signal
-        if "real_path" in signals:
+        # Real path alone is not enough (models discuss paths in tutorials).
+        # Require at least one other supporting signal.
+        if "real_path" in signals and len(signals) >= 2:
             return self._fail(
-                "Claude Code backend detected: model reports real filesystem path",
+                "Claude Code backend detected: model reports real working "
+                "directory path with supporting signals",
                 ev,
             )
 
@@ -218,29 +227,39 @@ class D132_ClaudeCodeBackendDetection(BaseDetector):
             "I'm a language model that processes text."
         )
 
-        # Claude Code backend: lists specific tools
+        # Claude Code backend: lists PascalCase tools unique to Claude Code
         cc_tool = mk(
             "I have access to the following tools:\n"
             "1. Read - read files from the filesystem\n"
             "2. Write - write files to the filesystem\n"
-            "3. Edit - edit existing files\n"
-            "4. Bash - execute shell commands\n"
-            "5. Grep - search file contents\n"
-            "6. Glob - find files by pattern\n"
-            "7. Agent - spawn sub-agents"
+            "3. WebFetch - fetch web pages\n"
+            "4. WebSearch - search the web\n"
+            "5. TodoWrite - create todo items\n"
+            "6. NotebookEdit - edit Jupyter notebooks\n"
+            "7. TaskCreate - create tasks"
         )
         cc_ctx = mk(
             "My current working directory is /home/user/project. "
-            "This is a git repository with the following files..."
+            "As noted in CLAUDE.md, this is a git repository."
         )
 
-        # Edge case: model mentions "read" and "write" generically
-        generic_rw = mk(
-            "I can read and write text. I can also edit documents "
-            "and help with bash scripting questions."
+        # Edge case: model mentions grep/bash in a tutorial context
+        tutorial = mk(
+            "Use grep to search files, bash to run scripts, and "
+            "read the file with cat. The glob pattern *.py matches "
+            "Python files."
         )
-        generic_ctx = mk(
-            "I don't have a working directory. I'm an AI assistant."
+        tutorial_ctx = mk(
+            "To check your working directory, run pwd. "
+            "Files are typically at /home/user or /usr/local."
+        )
+
+        # Edge case: model with function calling lists its own tools
+        fc_model = mk(
+            "I have access to the following tools:\n"
+            "1. get_weather - get current weather\n"
+            "2. search_web - search the internet\n"
+            "3. send_email - send an email"
         )
 
         return [
@@ -248,8 +267,10 @@ class D132_ClaudeCodeBackendDetection(BaseDetector):
              [normal_tool, normal_ctx], "pass"),
             ("FAIL: Claude Code tool inventory",
              [cc_tool, cc_ctx], "fail"),
-            ("PASS: generic read/write mentions (below threshold)",
-             [generic_rw, generic_ctx], "pass"),
+            ("PASS: tutorial mentions of grep/bash/glob (not CC tools)",
+             [tutorial, tutorial_ctx], "pass"),
+            ("PASS: function-calling model lists own tools",
+             [fc_model, normal_ctx], "pass"),
             ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT"),
               normal_ctx], "pass"),
