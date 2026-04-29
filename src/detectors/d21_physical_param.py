@@ -68,8 +68,18 @@ class D21_PhysicalParamProbe(BaseDetector):
         subs = []
         ban = token_counter.find_single_token(LOGIT_BIAS_CANDIDATES, self.config.claimed_model)
         ban_word = ban[0].strip() if ban else ""
+        model_lower = self.config.claimed_model.lower()
+        _is_openai_native = (
+            any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
+            and not any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
+        )
         # 21a: temp=2.0
-        if r_a.is_network_error or r_a.status_code != 200:
+        # Non-OpenAI providers often clamp temperature to [0,1] — a clamped
+        # response looks "normal" but is a legitimate provider limitation,
+        # not evidence of a reverse proxy ignoring the parameter.
+        if not _is_openai_native:
+            subs.append(("21a_temp", None, "skipped: temperature range varies by provider"))
+        elif r_a.is_network_error or r_a.status_code != 200:
             subs.append(("21a_temp", None, r_a.error_detail if r_a.status_code != 200 else "network error"))
         elif not r_a.content or len(r_a.content.split()) < 5:
             subs.append(("21a_temp", None, "response too short for bigram analysis"))
@@ -80,11 +90,7 @@ class D21_PhysicalParamProbe(BaseDetector):
         # 21b/21c: logit_bias and logprobs are OpenAI-native capabilities.
         # Non-OpenAI backend models don't support them — a proxy can't
         # translate capabilities the backend model lacks.
-        model_lower = self.config.claimed_model.lower()
-        _skip_oai_params = (
-            not any(k in model_lower for k in ("gpt", "o1", "o3", "o4"))
-            or any(k in model_lower for k in ("claude", "gemini", "llama", "qwen", "mistral"))
-        )
+        _skip_oai_params = not _is_openai_native
         if _skip_oai_params:
             subs.append(("21b_logit", None, "skipped: logit_bias not supported by provider"))
         elif r_b.is_network_error or r_b.status_code != 200:

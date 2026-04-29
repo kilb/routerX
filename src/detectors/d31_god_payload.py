@@ -105,8 +105,13 @@ class D31_GodPayload(BaseDetector):
         content_lower = content.lower()
         leaked = [kw for kw in HIJACKED_KEYWORDS if kw.lower() in content_lower]
         subs.append(("system_leak", not leaked, f"leaked: {leaked}" if leaked else "clean"))
-        # Check 5: usage block
-        subs.append(("stream_usage", usage is not None, "present" if usage else "missing"))
+        # Check 5: usage block — stream_options.include_usage is OpenAI-native.
+        # Non-OpenAI providers (Bedrock, Gemini, etc.) may not return usage
+        # in streaming mode; this is a legitimate provider limitation.
+        if _skip_oai:
+            subs.append(("stream_usage", None, "skipped: stream usage is OpenAI-only"))
+        else:
+            subs.append(("stream_usage", usage is not None, "present" if usage else "missing"))
         fails = [n for n, p, _ in subs if p is False]
         ev = {"sub_checks": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": len(fails)}
         # "algebra", "stream_usage", and "json_schema" are capability-

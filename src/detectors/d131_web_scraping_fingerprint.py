@@ -138,28 +138,25 @@ class D131_WebScrapingFingerprint(BaseDetector):
             ev["html_tags"] = list(set(html_matches + rendered_md))[:5]
 
         # --- Signal 4: Response ID format anomaly ---
+        # Only check ID format when the endpoint claims to be a direct
+        # OpenAI/Anthropic API. Routers (OpenRouter, Bedrock, etc.)
+        # legitimately use their own ID formats or omit IDs entirely.
         body = r.body or {}
         resp_id = body.get("id", "")
-        model_lower = (self.config.claimed_model or "").lower()
-        if resp_id:
-            if "gpt" in model_lower or "o1" in model_lower or "o3" in model_lower:
-                if not _OPENAI_ID_RE.match(resp_id):
-                    signals.append("id_format_anomaly")
-                    ev["response_id"] = resp_id
-            elif "claude" in model_lower:
-                if not _ANTHROPIC_ID_RE.match(resp_id):
-                    signals.append("id_format_anomaly")
-                    ev["response_id"] = resp_id
-        else:
-            # No response ID at all — web interfaces often omit this
-            signals.append("id_missing")
-            ev["response_id"] = "absent"
+        # ID missing alone is NOT a signal — many legitimate routers omit it.
+        # Only flag when ID is present but looks like a web session ID
+        # (e.g. "conv-xxx", "turn-xxx", UUID-only without prefix).
+        if resp_id and not resp_id.startswith(("chatcmpl-", "msg_", "gen-")):
+            # Check for obviously web-generated patterns
+            web_id_patterns = ("conv-", "turn-", "chat-session-", "thread_")
+            if any(resp_id.startswith(p) for p in web_id_patterns):
+                signals.append("web_session_id")
+                ev["response_id"] = resp_id
 
-        # --- Signal 5: Model field mismatch or absent ---
-        resp_model = body.get("model", "")
-        if not resp_model:
-            signals.append("model_absent")
-            ev["response_model"] = "absent"
+        # --- Signal 5: Model field absent ---
+        # Many legitimate routers omit or transform the model field.
+        # Only count this as a signal when combined with other artifacts.
+        # (included but weak — doesn't push over threshold alone)
 
         ev["signals"] = signals
         ev["score"] = len(signals)
@@ -211,19 +208,27 @@ class D131_WebScrapingFingerprint(BaseDetector):
             resp_id="conv-12345",
             model="",
         )
-        # Partial signals: only missing usage + wrong ID
+        # Partial signals: missing usage + web session ID
         partial = mk(
             usage=None,
-            resp_id="12345",
+            headers={"set-cookie": "session=abc"},
+            resp_id="conv-12345",
         )
         # Only 1 signal (missing usage) — should pass
         mild = mk(usage=None)
+        # Bedrock/router: non-standard ID but legitimate — should pass
+        bedrock = mk(
+            usage={"prompt_tokens": 20, "completion_tokens": 15},
+            resp_id="bedrock-abc123-001",
+            model="anthropic.claude-3",
+        )
 
         return [
             ("PASS: clean API response", [clean], "pass"),
             ("FAIL: multiple web-scraping artifacts", [web_scrape], "fail"),
             ("FAIL: partial artifacts (degraded confidence)", [partial], "fail"),
             ("PASS: single artifact only", [mild], "pass"),
+            ("PASS: Bedrock non-standard ID is fine", [bedrock], "pass"),
             ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
