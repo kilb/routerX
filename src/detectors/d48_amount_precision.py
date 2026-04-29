@@ -22,6 +22,21 @@ AMOUNTS: list[tuple[str, str]] = [
 ROUTER_DEVIATION_THRESHOLD = 0.01   # >1% deviation on router side → suspicious
 DIRECT_DEVIATION_THRESHOLD = 0.001  # <0.1% deviation on direct side → confirms tampering
 
+
+def _is_rounding(original: float, returned: float) -> bool:
+    """True if *returned* equals ``round(original, n)`` for any n in 0..10.
+
+    Also covers truncation: ``int(original * 10**n) / 10**n`` for each n.
+    """
+    for dp in range(0, 11):
+        if returned == round(original, dp):
+            return True
+        # Truncation (floor): int(1.23456789 * 100) / 100 = 1.23
+        truncated = int(original * 10**dp) / 10**dp
+        if returned == truncated:
+            return True
+    return False
+
 _TRANSFER_TOOL = {
     "type": "function",
     "function": {
@@ -162,26 +177,13 @@ class D48_AmountPrecisionProbe(BaseDetector):
                         )
             else:
                 if router_deviation > ROUTER_DEVIATION_THRESHOLD:
-                    # Distinguish model rounding (truncation to fewer decimals)
-                    # from malicious tampering (different value entirely).
-                    # Rounding/truncation: the returned amount is a rounded
-                    # version of the original (e.g. 1.23456789 → 1.23 or 1.2).
-                    amt_str = f"{router_amount:.10f}".rstrip("0")
-                    req_str = f"{requested:.10f}".rstrip("0")
-                    is_truncation = req_str.startswith(amt_str) or amt_str.startswith(req_str[:len(amt_str)])
-                    # Also check: is the deviation a clean rounding pattern?
-                    # Model outputs like 1.2, 1.23, 1.235 from 1.23456789
-                    # are rounding; 1.33456789 or 0.9 are not.
-                    rounded_variants = set()
-                    for dp in range(0, 10):
-                        rounded_variants.add(round(requested, dp))
-                    is_rounding = router_amount in rounded_variants
-
-                    if is_truncation or is_rounding:
+                    # Any rounding = PASS. Models commonly truncate/round
+                    # to fewer decimal places. Only FAIL when the value is
+                    # not any rounded form of the original.
+                    if _is_rounding(requested, router_amount):
                         return self._pass({
-                            "note": f"amount {router_amount} is a rounded/truncated "
-                                    f"form of {requested} — model precision limit, "
-                                    f"not tampering",
+                            "note": f"amount {router_amount} is a rounded form "
+                                    f"of {requested} — model precision limit",
                             "token": token,
                             "requested": requested,
                             "router_amount": router_amount,
