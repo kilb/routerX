@@ -47,7 +47,7 @@ class CreateTestRequest(BaseModel):
         default="full", pattern="^(full|essential)$",
         description="full: all 85 detectors; essential: ~40 high-confidence detectors only",
     )
-    timeout: float = Field(default=30.0, ge=5.0, le=120.0)
+    timeout: float = Field(default=60.0, ge=5.0, le=120.0)
     concurrency: int = Field(default=3, ge=1, le=10)
     only: list[str] | None = None
     callback_url: str | None = None
@@ -108,7 +108,7 @@ class CreateBenchmarkRequest(BaseModel):
     auth_method: str = Field(
         default="bearer", pattern="^(bearer|x-api-key|query)$",
     )
-    timeout: float = Field(default=30.0, ge=5.0, le=120.0)
+    timeout: float = Field(default=60.0, ge=5.0, le=120.0)
 
 
 class CreateBenchmarkResponse(BaseModel):

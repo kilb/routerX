@@ -288,7 +288,7 @@ class TestConfig(BaseModel):
     scan_mode: ScanMode = ScanMode.FULL
 
     # Runtime parameters
-    timeout: float = 30.0
+    timeout: float = 60.0
     max_concurrent: int = 5
     min_request_interval: float = 0.1
     detector_concurrency: int = 3

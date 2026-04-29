@@ -50,7 +50,7 @@ class RouterClient:
         api_key: str,
         auth_method: AuthMethod = AuthMethod.BEARER,
         extra_headers: dict[str, str] | None = None,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
         max_concurrent: int = 5,
         min_interval: float = 0.1,
         event_bus: EventBus | None = None,
@@ -364,7 +364,7 @@ class RouterClient:
         can run for any total duration as long as chunks keep arriving
         within ``self.timeout`` seconds of each other.  This is the correct
         behavior: a 60-second stream generating tokens every 50ms will
-        never hit the 30s read timeout.
+        never hit the 60s read timeout.
 
         Returns ``(None, retry_after_seconds)`` when the upstream returned 429
         (signalling the caller should retry with the server-requested backoff).
