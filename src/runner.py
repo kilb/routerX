@@ -85,6 +85,8 @@ ESSENTIAL_DETECTORS: set[str] = {
     "D87", "D57", "D30", "D130",
     # P0: reverse proxy / web scraping
     "D131",
+    # S0: Claude Code Max reverse proxy
+    "D132",
     # P1: context
     "D24b", "D24c", "D42",
     # P1: other clear signals
