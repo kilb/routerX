@@ -15,6 +15,7 @@ class D32a_StreamingBasicProbe(BaseDetector):
     priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 1
+    detector_timeout = 60.0
     description = "Detect fake streaming (non-stream result split into chunks)"
 
     async def send_probes(self) -> list[ProbeResponse]:

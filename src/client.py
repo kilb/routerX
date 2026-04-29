@@ -358,6 +358,14 @@ class RouterClient:
     ) -> tuple[ProbeResponse | None, float | None]:
         """Open the SSE stream and assemble a ProbeResponse.
 
+        Timeout semantics for streaming differ from non-streaming:
+        httpx's ``read`` timeout applies to each individual socket read,
+        which for SSE effectively means **inter-chunk timeout** — the stream
+        can run for any total duration as long as chunks keep arriving
+        within ``self.timeout`` seconds of each other.  This is the correct
+        behavior: a 60-second stream generating tokens every 50ms will
+        never hit the 30s read timeout.
+
         Returns ``(None, retry_after_seconds)`` when the upstream returned 429
         (signalling the caller should retry with the server-requested backoff).
         Returns ``(ProbeResponse, None)`` for any terminal outcome.

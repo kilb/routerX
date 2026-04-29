@@ -35,6 +35,7 @@ class D110_StreamChunkIntegrity(BaseDetector):
     priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 2
+    detector_timeout = 60.0
     description = "Detect content divergence between streaming and non-streaming responses"
 
     async def send_probes(self) -> list[ProbeResponse]:
