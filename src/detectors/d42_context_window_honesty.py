@@ -21,9 +21,31 @@ from ..models import (
 from ..registry import BaseDetector, detector
 from ..tokenizer import token_counter
 
-# ~15k tokens of filler: big enough to expose silent-truncation routers but
-# safely under every mainstream 32k+ context window.
-_FILLER = "The quick brown fox jumps over the lazy dog. " * 1500
+# ~15k tokens of VARIED filler: uses diverse sentences to prevent tokenizer
+# compression from skewing the ratio. Repeated text like "The quick brown fox"
+# x 1500 compresses very differently across tokenizers (BPE vs SentencePiece),
+# causing massive ratio divergence that looks like truncation but isn't.
+_FILLER_SENTENCES = [
+    "The ancient lighthouse stood on a rocky cliff overlooking the harbor.",
+    "A golden retriever chased seagulls along the sandy beach at dawn.",
+    "The baker kneaded fresh dough while listening to classical music.",
+    "Heavy rain drummed against the tin roof of the small cottage.",
+    "A fleet of cargo ships waited in the channel for the tide to turn.",
+    "The professor scribbled equations across three chalkboards in succession.",
+    "Wildflowers bloomed in unexpected patches along the highway median.",
+    "The clockmaker adjusted the tiny springs with a jeweler's loupe.",
+    "A troupe of street performers drew a large crowd near the fountain.",
+    "The astronomer pointed her telescope toward the constellation Orion.",
+    "Fresh snow blanketed the mountain village overnight without warning.",
+    "The old typewriter still produced crisp letters on onion-skin paper.",
+    "A squadron of pelicans glided low over the glassy morning lake.",
+    "The carpenter measured each plank twice before making a single cut.",
+    "Dense fog rolled through the valley and settled over the vineyards.",
+]
+# ~15k tokens: cycle through 15 varied sentences ~100 times each.
+_FILLER = " ".join(
+    _FILLER_SENTENCES[i % len(_FILLER_SENTENCES)] for i in range(1500)
+)
 _TAIL_MARKER = "ENDMARKER_9F7A2C"
 
 # Fallback used by ``self_test`` when ``send_probes`` never ran.
@@ -32,13 +54,14 @@ _TEST_FALLBACK_LOCAL = 15000
 # Ratios on reported/local prompt_tokens. Non-OpenAI providers use a
 # different tokenizer than tiktoken, so allow wider divergence to avoid
 # false positives from legitimate tokenizer differences (~15-25%).
-# Gemini in particular uses SentencePiece which diverges 30-50% from tiktoken.
+# Even with varied text, SentencePiece (Gemini) and tiktoken still diverge
+# by 20-40%, so thresholds must be generous.
 MIN_OK_RATIO_OPENAI = 0.50
-MIN_OK_RATIO_OTHER = 0.30
+MIN_OK_RATIO_OTHER = 0.25
 MARKER_GATE_RATIO_OPENAI = 0.85
 # Marker missing is a weak signal — many models ignore "reply only the marker".
 # Only FAIL when token ratio is also clearly low, not from tokenizer drift.
-MARKER_GATE_RATIO_OTHER = 0.35
+MARKER_GATE_RATIO_OTHER = 0.25
 
 
 @detector

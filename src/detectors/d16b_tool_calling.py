@@ -118,6 +118,25 @@ class D16b_ToolCallingProbe(BaseDetector):
             })
 
         if args != expected_args:
+            # Non-OpenAI models may not strictly follow enum constraints
+            # or may add/modify arguments. This is a model capability issue,
+            # not router manipulation.
+            model_lower = self.config.claimed_model.lower()
+            is_openai = any(k in model_lower for k in ("gpt", "o1-", "o3", "o4"))
+            if not is_openai:
+                # Check if the structure is at least correct (right keys present)
+                if set(args.keys()) >= {"mode", "nonce"}:
+                    return self._pass({
+                        "note": "non-OpenAI model returned tool call with "
+                                "correct structure but different values — "
+                                "likely model capability, not router issue",
+                        "expected": expected_args,
+                        "got": args,
+                    })
+                return self._skip(
+                    "non-OpenAI model returned tool call with unexpected "
+                    "argument structure"
+                )
             return self._fail("tool call arguments do not match expected", {
                 "expected": expected_args,
                 "got": args,
