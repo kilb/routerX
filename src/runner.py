@@ -194,32 +194,10 @@ class TestRunner:
             )
         return all_cls
 
-    # Model → provider routing for routers that support provider pinning.
-    _MODEL_PROVIDER_MAP: dict[str, str] = {
-        "anthropic/claude-opus-4.5": "anthropic",
-        "anthropic/claude-opus-4.6": "anthropic",
-        "anthropic/claude-sonnet-4.5": "anthropic",
-        "anthropic/claude-sonnet-4.6": "anthropic",
-        "google/gemini-3-flash-preview": "google",
-        "google/gemini-3.1-flash-lite-preview": "google",
-        "google/gemini-3.1-pro-preview": "google",
-        "openai/gpt-4.1": "azure",
-        "openai/gpt-4o-mini": "azure",
-        "openai/gpt-5.2": "azure",
-        "openai/gpt-5.4": "azure",
-    }
-
     def _resolve_routing(self) -> dict | None:
-        """Build routing config: use explicit config, or auto-resolve from model name."""
+        """Build routing config: use explicit config, or return None."""
         if self.config.routing:
             return self.config.routing
-        model = self.config.claimed_model
-        provider = self._MODEL_PROVIDER_MAP.get(model)
-        if provider:
-            return {
-                "strategy": "balanced",
-                "allowed_providers": [provider],
-            }
         return None
 
     async def _preflight_check(
