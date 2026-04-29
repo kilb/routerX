@@ -160,6 +160,7 @@ class D131_WebScrapingFingerprint(BaseDetector):
 
         ev["signals"] = signals
         ev["score"] = len(signals)
+        signals_set = set(signals)
 
         if len(signals) >= _FAIL_THRESHOLD:
             return self._fail(
@@ -167,7 +168,11 @@ class D131_WebScrapingFingerprint(BaseDetector):
                 f"{', '.join(signals)}",
                 ev,
             )
-        if len(signals) >= 2:
+        # 2 signals: only FAIL if at least one is a strong signal
+        # (HTML residue or web headers). Usage absence alone + any single
+        # weak signal is not sufficient — many legitimate routers omit usage.
+        _STRONG_SIGNALS = {"html_residue", "web_headers", "web_session_id"}
+        if len(signals) >= 2 and signals_set & _STRONG_SIGNALS:
             return self._fail(
                 f"{len(signals)} web-scraping artifacts: {', '.join(signals)}",
                 ev,

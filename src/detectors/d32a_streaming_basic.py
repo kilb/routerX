@@ -39,21 +39,25 @@ class D32a_StreamingBasicProbe(BaseDetector):
             # format), not fake streaming. Cannot determine.
             return self._pass({"note": "0 chunks received -- may be SSE parsing issue"})
         if chunk_count <= 2:
-            return self._fail(f"only {chunk_count} chunks: likely fake streaming", ev)
+            # Short responses (< 20 tokens) legitimately arrive in 1-2 chunks.
+            # Only flag when the response is substantive (many tokens) but
+            # still arrives in just 1-2 chunks — that's fake streaming.
+            full_content = body.get("full_content", "") or ""
+            if len(full_content.split()) < 20:
+                return self._pass({**ev, "note": f"only {chunk_count} chunks but short response — not suspicious"})
+            return self._fail(f"only {chunk_count} chunks for substantive response: likely fake streaming", ev)
         # Check content distribution
         if r.chunks and len(r.chunks) > 2:
             total_len = sum(len(self._chunk_content(c)) for c in r.chunks)
             last_len = len(self._chunk_content(r.chunks[-1]))
             if total_len > 0 and last_len / total_len > MAX_LAST_CHUNK_RATIO:
                 return self._fail("80%+ content in last chunk", {**ev, "last_ratio": last_len / total_len})
-        # Anthropic streaming does not always include usage; skip this check
-        # for Anthropic providers to avoid false positives.
-        _is_anthropic = (
-            self.config.claimed_provider == ProviderType.ANTHROPIC
-            or "claude" in self.config.claimed_model.lower()
-        )
-        if usage is None and not _is_anthropic:
-            return self._fail("no usage block in stream", ev)
+        # stream_options.include_usage is an OpenAI-native feature.
+        # Many legitimate routers/providers (Anthropic, Gemini, Bedrock,
+        # open-source backends) don't return usage in streaming mode.
+        # Missing usage alone is not evidence of fake streaming.
+        if usage is not None:
+            ev["has_usage"] = True
         return self._pass(ev)
 
     @staticmethod
@@ -78,12 +82,12 @@ class D32a_StreamingBasicProbe(BaseDetector):
         return [
             ("PASS: normal stream", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, {"total_tokens": 60}),
                                                     chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "pass"),
-            ("FAIL: only 2 chunks", [ProbeResponse(status_code=200, body=stream_body("1\n2", 2, {"total_tokens": 10}),
+            ("FAIL: only 2 chunks for long response", [ProbeResponse(status_code=200, body=stream_body(" ".join(str(i) for i in range(100)), 2, {"total_tokens": 100}),
                                                     chunks=[{}, {}], chunk_timestamps=[0.1, 0.2])], "fail"),
             ("FAIL: 80% in last chunk", [ProbeResponse(status_code=200, body=stream_body("xx" + "y" * 1000, 3, {"total_tokens": 10}),
                                                         chunks=big_last, chunk_timestamps=[0.1, 0.2, 0.3])], "fail"),
-            ("FAIL: no usage block", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, None),
-                                                     chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "fail"),
+            ("PASS: no usage block (legitimate for non-OpenAI)", [ProbeResponse(status_code=200, body=stream_body("1\n2\n3", 50, None),
+                                                     chunks=small_chunks, chunk_timestamps=[i * 0.1 for i in range(50)])], "pass"),
             ("PASS: network error", [ProbeResponse(status_code=0, error="TIMEOUT")], "pass"),
         ]
 

@@ -51,10 +51,17 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
         if EXPECTED_PATTERN.search(content):
             return self._pass({"answer": EXPECTED_ANSWER, "content_snippet": content[:120]})
         if CANNOT_FIND_PATTERN.search(content):
-            return self._fail(
-                "model reports variables not found — context likely truncated",
-                {"content_snippet": content[:120]},
-            )
+            # "Cannot find variables" could mean:
+            # 1. Router truncated the input (fraud) — variables were cut off
+            # 2. Model's actual context window is smaller than claimed
+            # 3. Model simply failed to locate variables in long text
+            # Without a secondary signal (e.g. prompt_tokens << expected),
+            # we cannot distinguish these. Err on the side of caution.
+            return self._pass({
+                "note": "model reports variables not found — could be "
+                        "truncation or model limitation, insufficient evidence",
+                "content_snippet": content[:120],
+            })
         return self._pass({"note": "wrong algebra answer — may be model error rather than truncation",})
 
     @classmethod
@@ -78,10 +85,10 @@ class D24b_ContextTruncationAlgebra(BaseDetector):
             ("PASS: wrong answer is inconclusive",
              [make_resp("The answer is 19.")],
              "pass"),
-            # FAIL: model says it cannot find the variables
-            ("FAIL: model cannot find variables",
+            # PASS: model says it cannot find — could be truncation or model limit
+            ("PASS: model cannot find variables (ambiguous)",
              [make_resp("I cannot find var_X or var_Y in the provided text.")],
-             "fail"),
+             "pass"),
             # INCONCLUSIVE: network error
             ("PASS: network error",
              [ProbeResponse(status_code=0, error="TIMEOUT")],
