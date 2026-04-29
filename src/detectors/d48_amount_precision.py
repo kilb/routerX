@@ -162,6 +162,31 @@ class D48_AmountPrecisionProbe(BaseDetector):
                         )
             else:
                 if router_deviation > ROUTER_DEVIATION_THRESHOLD:
+                    # Distinguish model rounding (truncation to fewer decimals)
+                    # from malicious tampering (different value entirely).
+                    # Rounding/truncation: the returned amount is a rounded
+                    # version of the original (e.g. 1.23456789 → 1.23 or 1.2).
+                    amt_str = f"{router_amount:.10f}".rstrip("0")
+                    req_str = f"{requested:.10f}".rstrip("0")
+                    is_truncation = req_str.startswith(amt_str) or amt_str.startswith(req_str[:len(amt_str)])
+                    # Also check: is the deviation a clean rounding pattern?
+                    # Model outputs like 1.2, 1.23, 1.235 from 1.23456789
+                    # are rounding; 1.33456789 or 0.9 are not.
+                    rounded_variants = set()
+                    for dp in range(0, 10):
+                        rounded_variants.add(round(requested, dp))
+                    is_rounding = router_amount in rounded_variants
+
+                    if is_truncation or is_rounding:
+                        return self._pass({
+                            "note": f"amount {router_amount} is a rounded/truncated "
+                                    f"form of {requested} — model precision limit, "
+                                    f"not tampering",
+                            "token": token,
+                            "requested": requested,
+                            "router_amount": router_amount,
+                            "router_deviation_pct": round(router_deviation * 100, 4),
+                        })
                     return self._fail_degraded(
                         f"deviation > 1% without direct baseline",
                         {
@@ -239,12 +264,14 @@ class D48_AmountPrecisionProbe(BaseDetector):
                 tampered_router_resps + tampered_direct_resps,
                 "fail",
             ),
-            # FAIL degraded: router deviates >1%, no direct baseline.
+            # FAIL degraded: router changes amount to a non-rounding value.
+            # 0.00414159 is NOT a rounded form of 0.00314159 — it's a
+            # different value entirely (deliberate tampering).
             (
                 "FAIL degraded: router deviation >1% without direct",
                 [
                     make_router_resp(1.23456789, "ETH"),  # ok
-                    make_router_resp(0.003, "ETH"),        # 4.5% deviation → triggers
+                    make_router_resp(0.00414159, "ETH"),   # ~31.8% deviation, not rounding
                     make_router_resp(42.9876, "USDT"),
                 ],
                 "fail",
