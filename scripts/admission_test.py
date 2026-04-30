@@ -47,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=["bearer", "x-api-key", "query"])
     p.add_argument("--output", default="report.json")
     p.add_argument("--junit-xml")
-    p.add_argument("--timeout", type=float, default=30.0)
+    p.add_argument("--timeout", type=float, default=60.0)
     p.add_argument("--log-level", default="INFO",
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     p.add_argument("--scan-mode", default="full",
