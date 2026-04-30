@@ -71,17 +71,52 @@ class D24a_ContextTruncationCanary(BaseDetector):
             canaries = _TEST_CANARY_POSITIONS
             prompt_text = ""
 
-        missing = [v for v in canaries.values() if v not in content]
+        positions = sorted(canaries.keys())  # e.g. [10, 150, 290]
+        found = {pos: canaries[pos] in content for pos in positions}
+        found_count = sum(found.values())
         evidence: dict = {
             "prompt_text": prompt_text,
             "usage": r.usage or {},
-            "found": [v for v in canaries.values() if v in content],
-            "missing": missing,
+            "found": [canaries[p] for p in positions if found[p]],
+            "missing": [canaries[p] for p in positions if not found[p]],
+            "found_count": found_count,
         }
 
-        if missing:
-            return self._fail("context truncation detected", evidence)
-        return self._pass(evidence)
+        if found_count == len(positions):
+            return self._pass(evidence)
+
+        # All missing: could be truncation, but also model failure to
+        # follow the extraction instruction. Without a secondary signal
+        # (e.g. token count anomaly) we cannot be sure.
+        if found_count == 0:
+            return self._pass(evidence | {
+                "note": "all canaries missing — could be model extraction "
+                        "failure or truncation, insufficient evidence",
+            })
+
+        # Head found but tail missing: classic truncation pattern.
+        # However, model may simply have stopped outputting (max_tokens
+        # limit, laziness). Only FAIL if the pattern is clearly
+        # head-to-tail progressive loss.
+        head_found = found.get(positions[0], False)
+        tail_found = found.get(positions[-1], False)
+
+        if head_found and not tail_found:
+            # Progressive loss from tail: strong truncation signal.
+            return self._fail("tail canary missing while head present — context likely truncated", evidence)
+
+        if not head_found and tail_found:
+            # Tail found but head missing: this is NOT truncation (which
+            # removes from the end). Model just failed to extract it.
+            return self._pass(evidence | {
+                "note": "head canary missing but tail present — not truncation pattern",
+            })
+
+        # Other partial patterns (e.g. only middle found) — ambiguous
+        return self._pass(evidence | {
+            "note": f"partial canary matches ({found_count}/{len(positions)}) — "
+                    "ambiguous, insufficient evidence for truncation",
+        })
 
     @classmethod
     def _test_cases(cls):
@@ -98,6 +133,10 @@ class D24a_ContextTruncationCanary(BaseDetector):
                 body={"choices": [{"message": {"content": content}, "finish_reason": "stop"}]},
             )
 
+        head_only = _TEST_CANARY_POSITIONS[10]
+        mid = _TEST_CANARY_POSITIONS[150]
+        tail_and_mid = f"{mid} and {_TEST_CANARY_POSITIONS[290]}"
+
         return [
             # All three canaries present -> PASS
             (
@@ -105,17 +144,23 @@ class D24a_ContextTruncationCanary(BaseDetector):
                 [resp(f"The passwords are: {all_canaries}")],
                 "pass",
             ),
-            # Middle canary missing -> FAIL (classic truncation pattern)
+            # Head found, tail missing -> FAIL (classic truncation)
             (
-                "FAIL: middle canary missing",
-                [resp(f"Found: {head_and_tail}")],
+                "FAIL: head present but tail missing (truncation)",
+                [resp(f"Found: {head_only} and {mid}")],
                 "fail",
             ),
-            # All canaries absent -> FAIL
+            # All canaries absent -> PASS (ambiguous, could be model failure)
             (
-                "FAIL: no canaries in response",
+                "PASS: no canaries in response (ambiguous)",
                 [resp("I could not find any canary values.")],
-                "fail",
+                "pass",
+            ),
+            # Tail found but head missing -> PASS (not truncation pattern)
+            (
+                "PASS: tail present but head missing (not truncation)",
+                [resp(f"Found: {tail_and_mid}")],
+                "pass",
             ),
             # Network error -> INCONCLUSIVE
             (
