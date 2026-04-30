@@ -89,6 +89,8 @@ ESSENTIAL_DETECTORS: set[str] = {
     "D132",
     # P1: context
     "D24b", "D24c", "D42",
+    # P1: knowledge cutoff verification
+    "D59",
     # P1: other clear signals
     "D26", "D11", "D15", "D99",
     # PRE_SCREEN
