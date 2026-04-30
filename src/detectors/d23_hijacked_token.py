@@ -31,19 +31,22 @@ class D23_HijackedTokenProbe(BaseDetector):
         # 23a: three variants — empty, whitespace, and minimal single-char.
         # The single-char fallback ensures at least one probe succeeds on
         # proxies that reject empty content.
+        # Avoid truly empty content — many routers reject it with a
+        # connection reset that triggers rate-limiting or WAF rules,
+        # affecting subsequent detectors. Use minimal but valid content.
         probes_23a = [
-            ProbeRequest(
-                payload={"model": model, "temperature": 0, "max_tokens": 100,
-                         "messages": [{"role": "user", "content": ""}]},
-                endpoint_path=ep, description="empty content probe (23a)"),
-            ProbeRequest(
-                payload={"model": model, "temperature": 0, "max_tokens": 100,
-                         "messages": [{"role": "user", "content": "   "}]},
-                endpoint_path=ep, description="whitespace content probe (23a)"),
             ProbeRequest(
                 payload={"model": model, "temperature": 0, "max_tokens": 100,
                          "messages": [{"role": "user", "content": "."}]},
                 endpoint_path=ep, description="minimal content probe (23a)"),
+            ProbeRequest(
+                payload={"model": model, "temperature": 0, "max_tokens": 100,
+                         "messages": [{"role": "user", "content": "hi"}]},
+                endpoint_path=ep, description="greeting probe (23a)"),
+            ProbeRequest(
+                payload={"model": model, "temperature": 0, "max_tokens": 100,
+                         "messages": [{"role": "user", "content": "hello"}]},
+                endpoint_path=ep, description="hello probe (23a)"),
         ]
         # 23b: system prompt extraction
         probe_23b = ProbeRequest(
@@ -165,9 +168,9 @@ class D23_HijackedTokenProbe(BaseDetector):
              [make_resp("", status_code=400), neutral_23a, neutral_23a, neutral_23b],
              "pass"),
 
-            # INCONCLUSIVE: all 23a probes fail + 23b neutral
+            # PASS: all 23a probes fail + 23b neutral
             ("PASS: all 23a probes fail",
-             [ProbeResponse(status_code=0, error="TIMEOUT"),
+             [make_resp("", status_code=400),
               make_resp("", status_code=400),
               make_resp(""),
               neutral_23b],

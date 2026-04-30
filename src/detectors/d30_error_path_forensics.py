@@ -25,10 +25,11 @@ GATEWAY_HEADER_INDICATORS: frozenset[str] = frozenset({
     "x-openai-proxy",
 })
 
-# Models used in probes: use well-known names that legitimate providers will
-# accept or reject with a standard error (not a gateway-level interception).
-PROBE_MODEL_OVERFLOW = "claude-sonnet-4-20250514"
-PROBE_MODEL_FAKE = "claude-3-opus-20240229-beta-internal-test"
+# Fake model name suffix appended to the CLAIMED model to trigger a
+# model-not-found error. Using the claimed model's prefix ensures the
+# request passes any provider-routing rules (e.g. "anthropic/" prefix
+# on Commonstack) and reaches the actual backend for error handling.
+_FAKE_MODEL_SUFFIX = "-nonexistent-probe-9f7a2c"
 
 
 def _find_gateway_fingerprint(raw: str) -> str | None:
@@ -74,9 +75,14 @@ class D30_ErrorPathForensics(BaseDetector):
 
     async def send_probes(self) -> list[ProbeResponse]:
         """Send three deliberately invalid requests and capture their error responses."""
+        # Use the claimed model as base to ensure requests pass provider
+        # routing rules. Construct invalid variants from it.
+        base_model = self.config.claimed_model
+        fake_model = base_model + _FAKE_MODEL_SUFFIX
+
         probe_30a = ProbeRequest(
             payload={
-                "model": PROBE_MODEL_OVERFLOW,
+                "model": base_model,
                 "temperature": 2.5,
                 "messages": [{"role": "user", "content": "hi"}],
             },
@@ -85,7 +91,7 @@ class D30_ErrorPathForensics(BaseDetector):
         )
         probe_30b = ProbeRequest(
             payload={
-                "model": PROBE_MODEL_FAKE,
+                "model": fake_model,
                 "messages": [{"role": "user", "content": "hi"}],
             },
             endpoint_path=self.config.default_endpoint_path,
@@ -93,7 +99,7 @@ class D30_ErrorPathForensics(BaseDetector):
         )
         probe_30c = ProbeRequest(
             payload={
-                "model": self.config.claimed_model,
+                "model": base_model,
                 "max_tokens": -1,
                 "messages": [{"role": "user", "content": "hi"}],
             },
