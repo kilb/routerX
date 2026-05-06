@@ -17,6 +17,7 @@ class D21_PhysicalParamProbe(BaseDetector):
     priority = Priority.P1
     judge_mode = JudgeMode.ONCE
     request_count = 5
+    detector_timeout = 60.0
     description = "Detect web reverse proxy by checking physical parameter blindspots"
 
     async def send_probes(self) -> list[ProbeResponse]:
