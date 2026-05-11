@@ -64,8 +64,10 @@ DETECTOR_CONCURRENCY = 3
 # tool calling (D16b/D16c/D119/D56), misc (D11/D15/D26/D53/D97/D99).
 ESSENTIAL_DETECTORS: set[str] = {
     # S0: financial/supply-chain security — always run
+    # D100 (CrossKeyIsolation) excluded: requires second_api_key which
+    # is rarely available; almost always SKIPs in practice.
     "D28", "D45", "D45b", "D45c", "D47", "D48",
-    "D84", "D100", "D116", "D117", "D118",
+    "D84", "D116", "D117", "D118",
     # P0: security & integrity
     "D23", "D40", "D81", "D114", "D97",
     "D24a", "D22",
