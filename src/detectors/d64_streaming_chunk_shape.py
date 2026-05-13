@@ -70,9 +70,11 @@ class D64_StreamingChunkShape(BaseDetector):
         near_zero = sum(1 for d in deltas if d < _NEAR_ZERO_DELTA_S)
         near_zero_frac = near_zero / len(deltas) if deltas else 0.0
 
+        ttft_ms = timestamps[0] * 1000 if timestamps else None
         ev = {"chunk_count": len(timestamps), "tokens": tokens,
               "chunks_per_100_tokens": chunks_per_100,
-              "near_zero_delta_frac": near_zero_frac}
+              "near_zero_delta_frac": near_zero_frac,
+              "ttft_ms": ttft_ms}
 
         if chunks_per_100 < _MIN_CHUNKS_PER_100_TOKENS:
             return self._fail(

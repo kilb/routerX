@@ -81,10 +81,15 @@ class D110_StreamChunkIntegrity(BaseDetector):
             c_s_clean = c_s
 
         jaccard = _jaccard_words(c_ns_clean, c_s_clean)
+        # Record TTFT from the streaming response so the report can
+        # aggregate average TTFT even when other streaming detectors SKIP.
+        stream_ts = stream.chunk_timestamps
+        ttft_ms = stream_ts[0] * 1000 if stream_ts else None
         evidence = {
             "non_stream_preview": c_ns[:120],
             "stream_preview": c_s[:120],
             "jaccard": f"{jaccard:.3f}",
+            "ttft_ms": ttft_ms,
         }
 
         if jaccard < JACCARD_FAIL_THRESHOLD:

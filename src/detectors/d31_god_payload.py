@@ -113,7 +113,10 @@ class D31_GodPayload(BaseDetector):
         else:
             subs.append(("stream_usage", usage is not None, "present" if usage else "missing"))
         fails = [n for n, p, _ in subs if p is False]
-        ev = {"sub_checks": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": len(fails)}
+        # Record TTFT for report-level aggregation
+        stream_ts = r.chunk_timestamps
+        ttft_ms = stream_ts[0] * 1000 if stream_ts else None
+        ev = {"sub_checks": [{"name": n, "passed": p, "detail": d} for n, p, d in subs], "fail_count": len(fails), "ttft_ms": ttft_ms}
         # "algebra", "stream_usage", and "json_schema" are capability-
         # dependent — many proxies don't support strict json_schema, and
         # stream_options/algebra fail on many models. Only system_leak

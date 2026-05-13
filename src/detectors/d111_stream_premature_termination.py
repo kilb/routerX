@@ -55,11 +55,15 @@ class D111_StreamPrematureTermination(BaseDetector):
         # Rough token estimate: word count
         word_count = len(content.split()) if content else 0
 
+        # Record TTFT from chunk timestamps for report-level aggregation.
+        stream_ts = r.chunk_timestamps
+        ttft_ms = stream_ts[0] * 1000 if stream_ts else None
         evidence = {
             "finish_reason": finish_reason,
             "chunk_count": chunk_count,
             "word_count": word_count,
             "content_preview": (content or "")[:100],
+            "ttft_ms": ttft_ms,
         }
 
         if not finish_reason and word_count < MIN_CONTENT_TOKENS:

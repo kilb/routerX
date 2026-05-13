@@ -86,6 +86,7 @@ class D91_ArtificialLatencyPadding(BaseDetector):
         evidence = {
             "ttft_short_ms": ttft_short,
             "ttft_long_ms": ttft_long,
+            "ttft_ms": ttft_long,  # standard key for report aggregation
             "ratio": ttft_short / max(ttft_long, 1e-6),
         }
 
